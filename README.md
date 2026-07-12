@@ -141,36 +141,146 @@ to use the managed database instead.
 └── .env.example              All required environment variables
 ```
 
-## Deploy: Render (backend) + Netlify (frontend)
+## 🚢 Hướng dẫn deploy chi tiết: Render (backend) + Netlify (frontend)
 
-Both platforms deploy from a GitHub repository containing this whole folder.
+Kiến trúc khi deploy:
 
-**1. Supabase (once)** — create the project, note the Session-pooler DB credentials,
-create a **public** Storage bucket named `portfolio` (see section above).
+```
+Trình duyệt ──► Netlify (Angular static site)
+                  │  proxy /api/* (đã cấu hình trong netlify.toml)
+                  ▼
+                Render (Spring Boot, Docker) ──► Supabase (PostgreSQL + Storage)
+```
 
-**2. Backend → Render** (`render.yaml` is already included):
+Nhờ Netlify proxy `/api/*` về Render, trình duyệt luôn gọi API **cùng origin** với
+trang web → cookie đăng nhập (`SameSite=Strict`) và CORS hoạt động y hệt local,
+không cần sửa bất kỳ dòng code frontend nào.
 
-- Dashboard → **New → Blueprint** → select this repo → Render picks up `render.yaml`.
-- Fill the prompted env vars: `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`,
-  `ADMIN_PASSWORD`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and
-  `CORS_ALLOWED_ORIGINS` = your Netlify URL (e.g. `https://your-site.netlify.app`).
-  `JWT_SECRET` is generated automatically.
-- First start runs Flyway against Supabase (schema + CV seed data) and creates the
-  admin account. Note your service URL: `https://portfolio-backend-xxxx.onrender.com`.
-- Free plan sleeps after 15 min idle — the first request may take ~1 min to wake up.
+### Bước 0 — Đẩy code lên GitHub
 
-**3. Frontend → Netlify** (`netlify.toml` is already included):
+Cả Render và Netlify đều deploy từ GitHub. Repo git đã được khởi tạo sẵn ở thư mục
+gốc, chỉ cần:
 
-- Edit `netlify.toml` first: replace `RENDER_BACKEND_URL.onrender.com` with your real
-  Render URL (both the `/api/*` and `/uploads/*` rules), commit + push.
-- Dashboard → **Add new site → Import an existing project** → select this repo.
-  Netlify reads everything from `netlify.toml` (base `frontend`, Node 22, publish dir).
-- The `/api/*` proxy makes the site and API same-origin, so cookies and CORS
-  work exactly like local dev. After the first deploy, set the final Netlify URL
-  in Render's `CORS_ALLOWED_ORIGINS` if it changed.
+1. Tạo repo mới trên <https://github.com/new> (chọn **Private** nếu không muốn lộ
+   số điện thoại trong file CV PDF — hoặc xoá file CV khỏi repo:
+   `git rm --cached "CV Eng_TranVuThien.pdf" && git commit -m "remove CV"`).
+2. Push:
 
-**4. Smoke test**: open `https://your-site.netlify.app` (data loads from Supabase),
-log in at `/admin`, edit something, refresh the public page.
+   ```bash
+   git remote add origin https://github.com/<username>/<repo>.git
+   git push -u origin main
+   ```
+
+### Bước 1 — Tạo project Supabase (database + storage)
+
+1. Vào <https://supabase.com> → **New project** → đặt tên, chọn region gần
+   (Singapore `ap-southeast-1` cho VN), đặt **Database Password** (lưu lại!).
+2. **Lấy connection string**: *Project Settings → Database → Connection string*,
+   chọn tab **Session pooler** (⚠️ đừng dùng *Direct connection* — chỉ hỗ trợ IPv6,
+   Render sẽ không kết nối được; cũng đừng dùng *Transaction pooler* port 6543 —
+   không tương thích prepared statements của JDBC). Chuỗi có dạng:
+
+   ```
+   postgresql://postgres.abcdefghijk:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
+   ```
+
+   Tách nó thành 3 giá trị cho Render:
+
+   | Biến | Giá trị từ chuỗi trên |
+   | --- | --- |
+   | `DATABASE_URL` | `jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres` (thêm tiền tố `jdbc:`, bỏ phần user/password) |
+   | `DATABASE_USERNAME` | `postgres.abcdefghijk` |
+   | `DATABASE_PASSWORD` | mật khẩu DB bạn đặt ở bước 1 |
+
+3. **Tạo bucket ảnh**: menu **Storage** → *New bucket* → tên `portfolio` →
+   bật **Public bucket** → Create. (Ảnh avatar/project do admin upload sẽ nằm đây.)
+4. **Lấy API keys**: *Project Settings → API*:
+   - `SUPABASE_URL` = `https://<project-ref>.supabase.co`
+   - `SUPABASE_SERVICE_ROLE_KEY` = key **service_role** (mục *Project API keys*).
+     ⚠️ Key này có toàn quyền — chỉ đặt trên Render, không bao giờ đưa vào frontend.
+
+### Bước 2 — Deploy backend lên Render
+
+1. Vào <https://dashboard.render.com> → **New → Blueprint** → **Connect** repo
+   GitHub vừa push. Render tự đọc file `render.yaml` và hiện form các biến cần điền.
+2. Điền các biến (bảng dưới); `JWT_SECRET` được Render **tự sinh ngẫu nhiên**,
+   không cần điền:
+
+   | Biến | Điền gì |
+   | --- | --- |
+   | `DATABASE_URL` | chuỗi JDBC ở Bước 1.2 |
+   | `DATABASE_USERNAME` | `postgres.<project-ref>` |
+   | `DATABASE_PASSWORD` | mật khẩu DB |
+   | `ADMIN_PASSWORD` | mật khẩu đăng nhập trang `/admin` — **đặt mạnh** |
+   | `CORS_ALLOWED_ORIGINS` | điền tạm `https://placeholder.netlify.app`, sửa lại ở Bước 4 |
+   | `SUPABASE_URL` | `https://<project-ref>.supabase.co` |
+   | `SUPABASE_SERVICE_ROLE_KEY` | key service_role |
+
+3. **Apply / Deploy** và mở tab **Logs**. Lần build đầu mất ~5–10 phút (Docker
+   build Maven). Deploy thành công khi log có:
+
+   ```
+   Successfully applied 2 migrations ...   ← Flyway đã tạo schema + seed dữ liệu CV lên Supabase
+   Admin user 'tranvuthien1708@gmail.com' created.
+   Started PortfolioBackendApplication
+   ```
+
+4. Ghi lại **URL của service** hiển thị đầu trang, dạng
+   `https://portfolio-backend-xxxx.onrender.com`. Kiểm tra nhanh:
+   mở `https://portfolio-backend-xxxx.onrender.com/api/v1/health` → `{"status":"UP"}`
+   và `/api/v1/profile` → JSON dữ liệu CV.
+
+### Bước 3 — Trỏ Netlify proxy về Render rồi deploy frontend
+
+1. Mở file **`netlify.toml`** ở gốc repo, thay `RENDER_BACKEND_URL.onrender.com`
+   bằng URL Render thật ở **cả 2 chỗ** (`/api/*` và `/uploads/*`):
+
+   ```toml
+   to = "https://portfolio-backend-xxxx.onrender.com/api/:splat"
+   ```
+
+   Commit + push:
+
+   ```bash
+   git add netlify.toml && git commit -m "point netlify proxy to render" && git push
+   ```
+
+2. Vào <https://app.netlify.com> → **Add new site → Import an existing project**
+   → chọn repo GitHub. Netlify tự đọc `netlify.toml` (base `frontend`, Node 22,
+   build `npm run build`, publish `dist/frontend/browser`) — **không cần chỉnh gì**,
+   bấm **Deploy**.
+3. Xong sẽ có URL dạng `https://<tên-ngẫu-nhiên>.netlify.app`. Đổi tên đẹp hơn tại
+   *Site configuration → Site details → Change site name*
+   (vd `tranvuthien.netlify.app`).
+
+### Bước 4 — Cập nhật CORS trên Render
+
+Quay lại Render → service `portfolio-backend` → **Environment** → sửa
+`CORS_ALLOWED_ORIGINS` = đúng URL Netlify cuối cùng (vd
+`https://tranvuthien.netlify.app`) → **Save** (service tự restart).
+
+### Bước 5 — Kiểm tra sau deploy
+
+- [ ] Mở site Netlify: hero hiện tên + hiệu ứng gõ chữ, skills/projects load từ Supabase
+- [ ] Gửi thử form **Contact** → báo thành công
+- [ ] Vào `/admin`, đăng nhập bằng `ADMIN_EMAIL` / `ADMIN_PASSWORD` đã đặt trên Render
+- [ ] Thấy tin nhắn contact vừa gửi trong mục **Messages**
+- [ ] Sửa một skill / upload avatar → refresh trang public thấy thay đổi ngay
+- [ ] Ảnh upload có URL dạng `https://<project-ref>.supabase.co/storage/v1/object/public/portfolio/...`
+
+### Sự cố thường gặp
+
+| Triệu chứng | Nguyên nhân & cách xử lý |
+| --- | --- |
+| Request đầu tiên chờ ~1 phút | Render **free tier ngủ sau 15 phút** không có traffic. Bình thường; nâng plan Starter nếu muốn luôn thức. |
+| Log Render: `The connection attempt failed` / `UnknownHostException` | Dùng nhầm *Direct connection* (IPv6). Đổi sang **Session pooler** port 5432 như Bước 1.2. |
+| Log Render: lỗi `prepared statement "S_1" already exists` | Dùng nhầm *Transaction pooler* (port 6543). Đổi sang **Session pooler** port 5432. |
+| Form contact / login trả lỗi CORS hoặc 403 `Invalid CORS request` | `CORS_ALLOWED_ORIGINS` trên Render chưa đúng URL Netlify (phải có `https://`, không có `/` cuối). |
+| Login được nhưng refresh trang bị văng ra | Kiểm tra đã truy cập qua **https** của Netlify (cookie có cờ `Secure`), và `/api/*` proxy trong `netlify.toml` trỏ đúng URL Render. |
+| Upload ảnh lỗi `Supabase storage is not configured` | Thiếu `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` trên Render. |
+| Upload xong ảnh không hiển thị | Bucket `portfolio` chưa bật **Public**. Vào Supabase → Storage → bucket → Edit → Public. |
+| Netlify build fail vì Node version | `netlify.toml` đã ghim `NODE_VERSION=22`; đừng override trong UI Netlify. |
+| Đổi mật khẩu admin | Đổi `ADMIN_PASSWORD` trên Render chỉ áp dụng khi user **chưa tồn tại**. Cách nhanh: xoá dòng trong bảng `users` (Supabase → Table Editor) rồi restart service để tạo lại từ env. |
 
 ## Tests
 
