@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans antialiased text-ink bg-lav-50 dark:text-lav-100 dark:bg-[#181630];
+  }
+
+  ::selection {
+    @apply bg-lav-400/60 text-ink;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/60 backdrop-blur-xl border border-white/60 shadow-soft
+           dark:bg-[#232048]/60 dark:border-lav-700/40;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-lav-600 via-peri-500 to-sky2-400 bg-clip-text text-transparent
+           dark:from-lav-400 dark:via-peri-300 dark:to-sky2-300;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 font-display font-semibold
+           text-white bg-gradient-to-r from-lav-500 to-peri-500 shadow-soft
+           transition-all duration-300 hover:shadow-glow hover:-translate-y-0.5 active:translate-y-0
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 font-display font-semibold
+           text-lav-700 dark:text-lav-200 border-2 border-lav-300 dark:border-lav-600
+           transition-all duration-300 hover:bg-lav-100/70 dark:hover:bg-lav-800/40 hover:-translate-y-0.5
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium
+           bg-lav-100 text-lav-700 border border-lav-200
+           dark:bg-lav-800/50 dark:text-lav-200 dark:border-lav-700/50;
+  }
+
+  .section-title {
+    @apply font-display text-3xl sm:text-4xl font-extrabold tracking-tight;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-lav-200 bg-white/80 px-4 py-2.5 text-sm text-ink
+           placeholder:text-lav-500/50 transition-colors
+           focus:border-lav-400 focus:outline-none focus:ring-2 focus:ring-lav-300/50
+           dark:border-lav-700/60 dark:bg-[#1d1a3a] dark:text-lav-100 dark:placeholder:text-lav-400/40;
+  }
+
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-lav-600 dark:text-lav-300;
+  }
+
+  .card {
+    @apply glass rounded-3xl;
+  }
+}
+
+/* ---------- Scroll reveal (driven by RevealDirective) ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal.from-left {
+  transform: translateX(-44px);
+}
+
+.reveal.from-right {
+  transform: translateX(44px);
+}
+
+.reveal.from-scale {
+  transform: scale(0.9);
+}
+
+.reveal.reveal-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Skill bars: fill only after the card is revealed ---------- */
+.bar-fill {
+  transition: width 1.1s cubic-bezier(0.22, 0.61, 0.36, 1) 0.15s;
+}
+
+.reveal:not(.reveal-visible) .bar-fill {
+  width: 0 !important;
+}
+
+/* ---------- Skeleton loaders ---------- */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background-color: rgba(226, 220, 255, 0.6);
+}
+
+.dark .skeleton {
+  background-color: rgba(77, 63, 143, 0.35);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  animation: shimmer 1.6s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ---------- Custom scrollbar ---------- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #b8b5ff, #a8d8ea);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #9d8df1, #7fc3de);
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal,
+  .reveal.from-left,
+  .reveal.from-right,
+  .reveal.from-scale {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

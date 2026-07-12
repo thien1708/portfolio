@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: portfolio-backend
+  autoconfigure:
+    # Auth is handled by JwtAuthenticationFilter + AuthService, not UserDetailsService
+    exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/portfolio}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 3MB
+
+server:
+  # Render injects PORT; SERVER_PORT kept for other hosts; 8080 for local dev
+  port: ${PORT:${SERVER_PORT:8080}}
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  jwt:
+    # HMAC secret, at least 32 characters. REQUIRED in production.
+    secret: ${JWT_SECRET:}
+    access-token-minutes: 15
+    refresh-token-days: 7
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  security:
+    cookie-secure: ${COOKIE_SECURE:true}
+  storage:
+    provider: ${STORAGE_PROVIDER:supabase}
+    upload-dir: uploads
+    supabase:
+      url: ${SUPABASE_URL:}
+      service-key: ${SUPABASE_SERVICE_ROLE_KEY:}
+      bucket: ${SUPABASE_STORAGE_BUCKET:portfolio}
+  admin:
+    email: ${ADMIN_EMAIL:tranvuthien1708@gmail.com}
+    password: ${ADMIN_PASSWORD:}
