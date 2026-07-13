@@ -215,6 +215,8 @@ gốc, chỉ cần:
    | `CORS_ALLOWED_ORIGINS` | điền tạm `https://placeholder.netlify.app`, sửa lại ở Bước 4 |
    | `SUPABASE_URL` | `https://<project-ref>.supabase.co` |
    | `SUPABASE_SERVICE_ROLE_KEY` | key service_role |
+   | `MAIL_USERNAME` | Gmail dùng để gửi thông báo khi có người liên hệ — để trống nếu không cần |
+   | `MAIL_PASSWORD` | **App Password** 16 ký tự của Gmail (Google Account → Security → 2-Step Verification → App passwords), *không phải* mật khẩu Gmail thường |
 
 3. **Apply / Deploy** và mở tab **Logs**. Lần build đầu mất ~5–10 phút (Docker
    build Maven). Deploy thành công khi log có:

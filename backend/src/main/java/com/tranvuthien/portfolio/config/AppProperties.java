@@ -3,7 +3,7 @@ package com.tranvuthien.portfolio.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app")
-public record AppProperties(Jwt jwt, Cors cors, Security security, Storage storage, Admin admin) {
+public record AppProperties(Jwt jwt, Cors cors, Security security, Storage storage, Admin admin, Mail mail) {
 
     public record Jwt(String secret, int accessTokenMinutes, int refreshTokenDays) {
     }
@@ -21,5 +21,12 @@ public record AppProperties(Jwt jwt, Cors cors, Security security, Storage stora
     }
 
     public record Admin(String email, String password) {
+    }
+
+    public record Mail(String from, String to) {
+
+        public boolean enabled() {
+            return from != null && !from.isBlank();
+        }
     }
 }

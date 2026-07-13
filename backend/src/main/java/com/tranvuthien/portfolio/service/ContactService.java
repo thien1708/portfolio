@@ -14,9 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ContactService {
 
     private final ContactMessageRepository repository;
+    private final ContactNotificationService notificationService;
 
-    public ContactService(ContactMessageRepository repository) {
+    public ContactService(ContactMessageRepository repository,
+                          ContactNotificationService notificationService) {
         this.repository = repository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -27,6 +30,7 @@ public class ContactService {
         message.setSubject(request.subject());
         message.setMessage(request.message());
         repository.save(message);
+        notificationService.notifyNewMessage(request);
     }
 
     @Transactional(readOnly = true)
