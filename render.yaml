@@ -30,6 +30,14 @@ services:
       # contact form and admin panel to work through the Netlify proxy.
       - key: CORS_ALLOWED_ORIGINS
         sync: false # e.g. https://your-site.netlify.app
+      # --- Contact-form email notifications (Gmail SMTP, optional) ---
+      # MAIL_PASSWORD is a Gmail App Password (Google Account -> Security
+      # -> 2-Step Verification -> App passwords). Leave MAIL_USERNAME
+      # empty to disable notifications.
+      - key: MAIL_USERNAME
+        sync: false # your-gmail@gmail.com
+      - key: MAIL_PASSWORD
+        sync: false # 16-char app password
       # --- Supabase Storage (image uploads from the admin panel) ---
       - key: STORAGE_PROVIDER
         value: supabase
