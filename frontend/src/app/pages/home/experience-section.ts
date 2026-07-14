@@ -1,10 +1,12 @@
 import { Component, input } from '@angular/core';
 import { Experience } from '../../core/models';
 import { RevealDirective } from '../../shared/reveal.directive';
+import { Icon } from '../../shared/icon';
+import { SpotlightDirective } from '../../shared/spotlight.directive';
 
 @Component({
   selector: 'app-experience-section',
-  imports: [RevealDirective],
+  imports: [RevealDirective, Icon, SpotlightDirective],
   template: `
     <section id="experience" class="mx-auto max-w-5xl scroll-mt-24 px-6 py-24">
       <div appReveal class="mb-16 text-center">
@@ -14,8 +16,8 @@ import { RevealDirective } from '../../shared/reveal.directive';
 
       @if (experiences().length > 0) {
         <div class="relative">
-          <!-- Timeline line -->
-          <div class="absolute left-5 top-0 h-full w-0.5 bg-gradient-to-b from-lav-400 via-peri-400 to-sky2-300 md:left-1/2 md:-translate-x-1/2"></div>
+          <!-- Timeline line (draws in on scroll) -->
+          <div appReveal class="timeline-line absolute left-5 top-0 h-full w-0.5 bg-gradient-to-b from-lav-400 via-peri-400 to-sky2-300 md:left-1/2 md:-translate-x-1/2"></div>
 
           <ol class="space-y-12">
             @for (exp of experiences(); track exp.id; let i = $index) {
@@ -33,9 +35,10 @@ import { RevealDirective } from '../../shared/reveal.directive';
 
                 <div
                   [appReveal]="i % 2 === 0 ? 'left' : 'right'"
+                  appSpotlight
                   class="card group p-6 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow"
                 >
-                  <span class="chip mb-3">🗓 {{ exp.period }}</span>
+                  <span class="chip mb-3 gap-1.5"><app-icon name="calendar" class="text-xs" /> {{ exp.period }}</span>
                   <h3 class="font-display text-xl font-bold">{{ exp.role }}</h3>
                   <p class="mt-0.5 font-medium text-lav-600 dark:text-lav-300">{{ exp.company }}</p>
                   @if (exp.description) {

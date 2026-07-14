@@ -1,39 +1,49 @@
 import { Component, OnDestroy, effect, input, signal } from '@angular/core';
 import { Profile } from '../../core/models';
 import { RevealDirective } from '../../shared/reveal.directive';
+import { Icon } from '../../shared/icon';
+import { MagneticDirective } from '../../shared/magnetic.directive';
+import { TiltDirective } from '../../shared/tilt.directive';
+import { SplitTextDirective } from '../../shared/split-text.directive';
 
 @Component({
   selector: 'app-hero',
   template: `
     <section id="hero" class="relative flex min-h-screen items-center overflow-hidden pt-24">
-      <!-- Animated pastel background -->
+      <!-- Aurora mesh background -->
       <div class="pointer-events-none absolute inset-0 -z-10">
         <div class="absolute inset-0 bg-gradient-to-br from-lav-50 via-peri-100/60 to-sky2-100 dark:from-[#181630] dark:via-[#1e1a3f] dark:to-[#16213a]"></div>
-        <div class="absolute -left-24 -top-24 h-96 w-96 rounded-full bg-lav-400/40 blur-3xl animate-blob dark:bg-lav-600/30"></div>
-        <div class="absolute right-0 top-1/4 h-[28rem] w-[28rem] rounded-full bg-sky2-300/40 blur-3xl animate-blob-slow dark:bg-sky2-500/20"></div>
-        <div class="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-peri-400/40 blur-3xl animate-blob dark:bg-peri-600/25" style="animation-delay: -8s"></div>
-        <!-- Floating particles -->
-        @for (p of particles; track $index) {
-          <span
-            class="absolute rounded-full bg-lav-400/50 dark:bg-lav-300/30 animate-float"
-            [style.left.%]="p.x"
-            [style.top.%]="p.y"
-            [style.width.px]="p.size"
-            [style.height.px]="p.size"
-            [style.animation-delay]="p.delay + 's'"
-            [style.animation-duration]="p.duration + 's'"
-          ></span>
-        }
+        <!-- Blobs drift up on scroll (native scroll-driven parallax) -->
+        <div class="parallax-slow absolute inset-0">
+          <div class="aurora-blob -left-24 -top-24 h-[30rem] w-[30rem] bg-lav-400/45 animate-aurora dark:bg-lav-600/30"></div>
+          <div class="aurora-blob right-0 top-1/4 h-[32rem] w-[32rem] bg-sky2-300/45 animate-aurora-slow dark:bg-sky2-500/20"></div>
+          <div class="aurora-blob bottom-0 left-1/3 h-[26rem] w-[26rem] bg-peri-400/45 animate-aurora dark:bg-peri-600/25" style="animation-delay: -8s"></div>
+          <div class="aurora-blob right-1/4 bottom-1/4 h-72 w-72 bg-lav-300/40 animate-aurora-slow dark:bg-lav-500/15" style="animation-delay: -14s"></div>
+        </div>
+        <!-- Floating particles drift faster -->
+        <div class="parallax-fast absolute inset-0">
+          @for (p of particles; track $index) {
+            <span
+              class="absolute rounded-full bg-lav-400/50 dark:bg-lav-300/30 animate-float"
+              [style.left.%]="p.x"
+              [style.top.%]="p.y"
+              [style.width.px]="p.size"
+              [style.height.px]="p.size"
+              [style.animation-delay]="p.delay + 's'"
+              [style.animation-duration]="p.duration + 's'"
+            ></span>
+          }
+        </div>
       </div>
 
       <div class="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-16 lg:grid-cols-[1.2fr_1fr]">
         <div class="order-2 text-center lg:order-1 lg:text-left">
           @if (profile(); as p) {
-            <p appReveal class="mb-4 font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-600 dark:text-lav-300">
-              👋 Hello, I am
+            <p appReveal class="mb-4 flex items-center justify-center gap-2 font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-600 dark:text-lav-300 lg:justify-start">
+              <app-icon name="hand" class="text-base" /> Hello, I am
             </p>
-            <h1 appReveal [revealDelay]="100" class="font-display text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-              <span class="gradient-text">{{ p.fullName }}</span>
+            <h1 class="font-display text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+              <span appSplitText="gradient">{{ p.fullName }}</span>
             </h1>
             <div appReveal [revealDelay]="200" class="mt-4 flex h-9 items-center justify-center font-display text-xl font-semibold text-lav-700 dark:text-lav-200 sm:text-2xl lg:justify-start">
               <span>{{ typed() }}</span>
@@ -43,30 +53,42 @@ import { RevealDirective } from '../../shared/reveal.directive';
               {{ p.summary }}
             </p>
             <div appReveal [revealDelay]="420" class="mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
-              <button type="button" class="btn-primary" (click)="scrollTo('projects')">
-                🚀 View Projects
+              <button type="button" appMagnetic class="btn-primary" (click)="scrollTo('projects')">
+                <app-icon name="rocket" /> View Projects
               </button>
               @if (p.cvUrl) {
-                <a class="btn-ghost" [href]="p.cvUrl" target="_blank" rel="noopener">📄 Download CV</a>
+                <a appMagnetic class="btn-ghost" [href]="p.cvUrl" target="_blank" rel="noopener">
+                  <app-icon name="download" /> Download CV
+                </a>
               } @else {
-                <button type="button" class="btn-ghost" (click)="scrollTo('contact')">💬 Contact Me</button>
+                <button type="button" appMagnetic class="btn-ghost" (click)="scrollTo('contact')">
+                  <app-icon name="mail" /> Contact Me
+                </button>
               }
             </div>
             <div appReveal [revealDelay]="520" class="mt-8 flex items-center justify-center gap-3 lg:justify-start">
               @if (p.githubUrl) {
                 <a [href]="p.githubUrl" target="_blank" rel="noopener" aria-label="GitHub"
-                   class="glass grid h-11 w-11 place-items-center rounded-xl text-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-glow">🐙</a>
+                   class="glass grid h-11 w-11 place-items-center rounded-xl text-lg text-lav-700 transition-all duration-300 hover:-translate-y-1 hover:text-lav-500 hover:shadow-glow dark:text-lav-200">
+                  <app-icon name="github" />
+                </a>
               }
               @if (p.linkedinUrl) {
                 <a [href]="p.linkedinUrl" target="_blank" rel="noopener" aria-label="LinkedIn"
-                   class="glass grid h-11 w-11 place-items-center rounded-xl text-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-glow">💼</a>
+                   class="glass grid h-11 w-11 place-items-center rounded-xl text-lg text-lav-700 transition-all duration-300 hover:-translate-y-1 hover:text-lav-500 hover:shadow-glow dark:text-lav-200">
+                  <app-icon name="linkedin" />
+                </a>
               }
               @if (p.facebookUrl) {
                 <a [href]="p.facebookUrl" target="_blank" rel="noopener" aria-label="Facebook"
-                   class="glass grid h-11 w-11 place-items-center rounded-xl text-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-glow">📘</a>
+                   class="glass grid h-11 w-11 place-items-center rounded-xl text-lg text-lav-700 transition-all duration-300 hover:-translate-y-1 hover:text-lav-500 hover:shadow-glow dark:text-lav-200">
+                  <app-icon name="facebook" />
+                </a>
               }
               <a [href]="'mailto:' + p.email" aria-label="Email"
-                 class="glass grid h-11 w-11 place-items-center rounded-xl text-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-glow">✉️</a>
+                 class="glass grid h-11 w-11 place-items-center rounded-xl text-lg text-lav-700 transition-all duration-300 hover:-translate-y-1 hover:text-lav-500 hover:shadow-glow dark:text-lav-200">
+                <app-icon name="mail" />
+              </a>
             </div>
           } @else {
             <!-- Skeleton while profile loads -->
@@ -85,7 +107,7 @@ import { RevealDirective } from '../../shared/reveal.directive';
 
         <!-- Avatar -->
         <div class="order-1 flex justify-center lg:order-2">
-          <div appReveal="scale" class="relative">
+          <div appReveal="scale" [appTilt]="10" class="relative">
             <div class="absolute -inset-3 rounded-full bg-gradient-to-tr from-lav-400 via-peri-400 to-sky2-300 opacity-70 blur-lg animate-gradient-x" style="background-size: 200% 200%"></div>
             <div class="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-lav-400 via-peri-400 to-sky2-300 animate-gradient-x" style="background-size: 200% 200%"></div>
             @if (profile()?.avatarUrl) {
@@ -106,15 +128,15 @@ import { RevealDirective } from '../../shared/reveal.directive';
       <!-- Scroll indicator -->
       <button
         type="button"
-        class="absolute bottom-8 left-1/2 -translate-x-1/2 text-2xl text-lav-500 animate-bounce"
+        class="absolute bottom-8 left-1/2 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full text-2xl text-lav-500 animate-bounce"
         (click)="scrollTo('about')"
         aria-label="Scroll down"
       >
-        ⌄
+        <app-icon name="chevron-down" />
       </button>
     </section>
   `,
-  imports: [RevealDirective],
+  imports: [RevealDirective, Icon, MagneticDirective, TiltDirective, SplitTextDirective],
 })
 export class Hero implements OnDestroy {
   readonly profile = input<Profile | null>(null);

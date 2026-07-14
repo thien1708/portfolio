@@ -54,6 +54,15 @@ module.exports = {
           '0%, 100%': { 'background-position': '0% 50%' },
           '50%': { 'background-position': '100% 50%' },
         },
+        aurora: {
+          '0%, 100%': { transform: 'translate(0, 0) rotate(0deg) scale(1)' },
+          '33%': { transform: 'translate(4%, -6%) rotate(8deg) scale(1.15)' },
+          '66%': { transform: 'translate(-5%, 4%) rotate(-6deg) scale(0.95)' },
+        },
+        marquee: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
         blink: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0' },
@@ -71,6 +80,10 @@ module.exports = {
         'blob-slow': 'blob 22s ease-in-out infinite reverse',
         float: 'float 5s ease-in-out infinite',
         'gradient-x': 'gradient-x 8s ease infinite',
+        aurora: 'aurora 24s ease-in-out infinite',
+        'aurora-slow': 'aurora 34s ease-in-out infinite reverse',
+        marquee: 'marquee 32s linear infinite',
+        'marquee-slow': 'marquee 60s linear infinite',
         blink: 'blink 1s step-end infinite',
         'pulse-ring': 'pulse-ring 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         shimmer: 'shimmer 1.6s infinite',

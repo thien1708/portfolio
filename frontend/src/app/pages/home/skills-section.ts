@@ -1,6 +1,9 @@
 import { Component, computed, input } from '@angular/core';
 import { Skill } from '../../core/models';
 import { RevealDirective } from '../../shared/reveal.directive';
+import { Icon } from '../../shared/icon';
+import { SpotlightDirective } from '../../shared/spotlight.directive';
+import { TiltDirective } from '../../shared/tilt.directive';
 
 interface SkillGroup {
   category: string;
@@ -9,16 +12,16 @@ interface SkillGroup {
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
-  backend: '⚙️',
-  frontend: '🎨',
-  database: '🗄️',
-  'messaging / integration': '📡',
-  tools: '🧰',
+  backend: 'server',
+  frontend: 'sparkles',
+  database: 'database',
+  'messaging / integration': 'share',
+  tools: 'wrench',
 };
 
 @Component({
   selector: 'app-skills-section',
-  imports: [RevealDirective],
+  imports: [RevealDirective, Icon, SpotlightDirective, TiltDirective],
   template: `
     <section id="skills" class="relative scroll-mt-24 overflow-hidden py-24">
       <div class="pointer-events-none absolute inset-0 -z-10">
@@ -37,12 +40,14 @@ const CATEGORY_ICONS: Record<string, string> = {
             @for (group of groups(); track group.category; let gi = $index) {
               <div
                 appReveal
+                appSpotlight
+                [appTilt]="5"
                 [revealDelay]="gi * 90"
-                class="card group p-6 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow"
+                class="card group p-6 transition-shadow duration-300 hover:shadow-glow"
               >
                 <div class="mb-5 flex items-center gap-3">
-                  <span class="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-lav-200 to-sky2-200 text-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 dark:from-lav-800 dark:to-sky2-500/30">
-                    {{ group.icon }}
+                  <span class="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-lav-200 to-sky2-200 text-xl text-lav-700 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 dark:from-lav-800 dark:to-sky2-500/30 dark:text-lav-100">
+                    <app-icon [name]="group.icon" />
                   </span>
                   <h3 class="font-display text-lg font-bold">{{ group.category }}</h3>
                 </div>
@@ -88,7 +93,7 @@ export class SkillsSection {
     }
     return [...map.entries()].map(([category, skills]) => ({
       category,
-      icon: CATEGORY_ICONS[category.toLowerCase()] ?? '⭐',
+      icon: CATEGORY_ICONS[category.toLowerCase()] ?? 'layers',
       skills,
     }));
   });
