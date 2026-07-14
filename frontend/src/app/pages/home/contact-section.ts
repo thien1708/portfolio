@@ -4,10 +4,14 @@ import { ApiService } from '../../core/api.service';
 import { Profile } from '../../core/models';
 import { ToastService } from '../../core/toast.service';
 import { RevealDirective } from '../../shared/reveal.directive';
+import { Icon } from '../../shared/icon';
+import { SpotlightDirective } from '../../shared/spotlight.directive';
+import { MagneticDirective } from '../../shared/magnetic.directive';
+import { burstConfetti } from '../../shared/confetti';
 
 @Component({
   selector: 'app-contact-section',
-  imports: [ReactiveFormsModule, RevealDirective],
+  imports: [ReactiveFormsModule, RevealDirective, Icon, SpotlightDirective, MagneticDirective],
   template: `
     <section id="contact" class="relative scroll-mt-24 overflow-hidden py-24">
       <div class="pointer-events-none absolute inset-0 -z-10">
@@ -30,7 +34,7 @@ import { RevealDirective } from '../../shared/reveal.directive';
             @if (profile(); as p) {
               <ul class="space-y-4 text-sm">
                 <li class="flex items-center gap-4">
-                  <span class="glass grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-xl">✉️</span>
+                  <span class="glass grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-xl text-lav-600 dark:text-lav-300"><app-icon name="mail" /></span>
                   <div>
                     <p class="text-xs uppercase tracking-wider text-lav-500">Email</p>
                     <a class="font-medium transition-colors hover:text-lav-600 dark:hover:text-lav-300" [href]="'mailto:' + p.email">{{ p.email }}</a>
@@ -38,7 +42,7 @@ import { RevealDirective } from '../../shared/reveal.directive';
                 </li>
                 @if (p.phone) {
                   <li class="flex items-center gap-4">
-                    <span class="glass grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-xl">📞</span>
+                    <span class="glass grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-xl text-lav-600 dark:text-lav-300"><app-icon name="phone" /></span>
                     <div>
                       <p class="text-xs uppercase tracking-wider text-lav-500">Phone</p>
                       <p class="font-medium">{{ p.phone }}</p>
@@ -47,7 +51,7 @@ import { RevealDirective } from '../../shared/reveal.directive';
                 }
                 @if (p.location) {
                   <li class="flex items-center gap-4">
-                    <span class="glass grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-xl">📍</span>
+                    <span class="glass grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-xl text-lav-600 dark:text-lav-300"><app-icon name="map-pin" /></span>
                     <div>
                       <p class="text-xs uppercase tracking-wider text-lav-500">Location</p>
                       <p class="font-medium">{{ p.location }}</p>
@@ -58,7 +62,7 @@ import { RevealDirective } from '../../shared/reveal.directive';
             }
           </div>
 
-          <form appReveal="right" [formGroup]="form" (ngSubmit)="submit()" class="card space-y-5 p-8">
+          <form appReveal="right" appSpotlight [formGroup]="form" (ngSubmit)="submit($event)" class="card space-y-5 p-8">
             <div class="grid gap-5 sm:grid-cols-2">
               <div>
                 <label class="label" for="contact-name">Name *</label>
@@ -86,12 +90,12 @@ import { RevealDirective } from '../../shared/reveal.directive';
                 <p class="mt-1 text-xs text-rose-500">Please write a message.</p>
               }
             </div>
-            <button type="submit" class="btn-primary w-full" [disabled]="sending()">
+            <button type="submit" appMagnetic class="btn-primary w-full" [disabled]="sending()">
               @if (sending()) {
                 <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
                 Sending…
               } @else {
-                ✈️ Send Message
+                <app-icon name="send" /> Send Message
               }
             </button>
           </form>
@@ -121,7 +125,7 @@ export class ContactSection {
     return c !== null && c.invalid && (c.dirty || c.touched);
   }
 
-  protected submit(): void {
+  protected submit(event?: Event): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -132,11 +136,25 @@ export class ContactSection {
         this.sending.set(false);
         this.form.reset();
         this.toast.success('Message sent! I will get back to you soon. 🙌');
+        this.celebrate(event);
       },
       error: () => {
         this.sending.set(false);
         this.toast.error('Could not send the message. Please try again later.');
       },
     });
+  }
+
+  private celebrate(event?: Event): void {
+    // Fire confetti from the submit button, if we can locate it.
+    const submitter = (event as SubmitEvent | undefined)?.submitter as HTMLElement | undefined;
+    const target =
+      (event?.target as HTMLElement | undefined)?.querySelector('button[type=submit]') ?? submitter;
+    const rect = target?.getBoundingClientRect();
+    if (rect) {
+      burstConfetti(rect.left + rect.width / 2, rect.top);
+    } else {
+      burstConfetti();
+    }
   }
 }
