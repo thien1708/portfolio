@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   AfterViewInit,
   Component,
   ElementRef,
@@ -11,6 +12,7 @@ import {
  * decorative and non-interactive; hidden on touch and reduced-motion.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-cursor-glow',
   template: `<div class="cursor-glow" #glow></div>`,
 })

@@ -6,14 +6,28 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Portfolio of Trần Vũ Thiện — Software Development Engineer specialized in Java Spring Boot, Angular and distributed systems.">
-  <meta name="theme-color" content="#B8B5FF">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#B8B5FF">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#181630">
   <meta property="og:title" content="Trần Vũ Thiện — Software Development Engineer">
   <meta property="og:description" content="Full-stack Java developer portfolio: Spring Boot, Angular, Oracle/MySQL, Kafka, gRPC, Redis.">
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Trần Vũ Thiện Portfolio">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Trần Vũ Thiện — Software Development Engineer">
+  <meta name="twitter:description" content="Full-stack Java developer portfolio: Spring Boot, Angular, Oracle/MySQL, Kafka, gRPC, Redis.">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Trần Vũ Thiện",
+    "jobTitle": "Software Development Engineer",
+    "knowsAbout": ["Java", "Spring Boot", "Angular", "TypeScript", "PostgreSQL", "Kafka", "Redis", "Docker"]
+  }
+  </script>
   <script>
     // Apply the persisted theme before first paint to avoid a flash.
     try {
@@ -23,8 +37,58 @@
       }
     } catch (e) { }
   </script>
+  <style>
+    /* Splash screen shown until Angular bootstraps and replaces it. */
+    .boot-splash {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: #f7f5ff;
+    }
+    .dark .boot-splash { background: #181630; }
+    .boot-mark {
+      font: 800 2.6rem/1 'Plus Jakarta Sans', system-ui, sans-serif;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #9d8df1, #8b98d4, #7fc3de, #9d8df1);
+      background-size: 300% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: boot-shimmer 1.8s linear infinite;
+    }
+    .boot-bar {
+      margin-top: 1.4rem;
+      width: 8.5rem;
+      height: 3px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(157, 141, 241, 0.18);
+    }
+    .boot-bar::after {
+      content: '';
+      display: block;
+      height: 100%;
+      width: 40%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #9d8df1, #7fc3de);
+      animation: boot-slide 1.1s ease-in-out infinite alternate;
+    }
+    @keyframes boot-shimmer { to { background-position: 300% center; } }
+    @keyframes boot-slide { from { transform: translateX(-30%); } to { transform: translateX(240%); } }
+    @media (prefers-reduced-motion: reduce) {
+      .boot-mark, .boot-bar::after { animation: none; }
+    }
+  </style>
 </head>
 <body>
-  <app-root></app-root>
+  <app-root>
+    <div class="boot-splash" role="status" aria-label="Loading portfolio">
+      <div style="text-align:center">
+        <div class="boot-mark">TVT</div>
+        <div class="boot-bar"></div>
+      </div>
+    </div>
+  </app-root>
 </body>
 </html>

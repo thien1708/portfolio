@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ToastService } from '../core/toast.service';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-toast-outlet',
   template: `
     <div class="pointer-events-none fixed right-6 top-6 z-[100] flex w-80 max-w-[calc(100vw-3rem)] flex-col gap-3">

@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   AfterViewInit,
   Component,
   ElementRef,
@@ -25,6 +26,7 @@ const CY = 105;
 const R = 72;
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-skill-radar',
   template: `
     @if (axes().length >= 3) {

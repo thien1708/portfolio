@@ -58,7 +58,13 @@ interface SideLink {
       </aside>
 
       @if (sidebarOpen()) {
-        <div class="fixed inset-0 z-30 bg-ink/30 backdrop-blur-sm lg:hidden" (click)="sidebarOpen.set(false)"></div>
+        <button
+          type="button"
+          class="fixed inset-0 z-30 cursor-default bg-ink/30 backdrop-blur-sm lg:hidden"
+          aria-label="Close menu"
+          tabindex="-1"
+          (click)="sidebarOpen.set(false)"
+        ></button>
       }
 
       <!-- Main -->

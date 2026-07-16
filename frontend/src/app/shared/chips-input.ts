@@ -1,4 +1,4 @@
-import { Component, forwardRef, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 /**
@@ -6,6 +6,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
  * Enter or comma adds the draft; backspace on empty draft removes the last chip.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-chips-input',
   providers: [
     {

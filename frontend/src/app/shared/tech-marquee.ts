@@ -1,10 +1,11 @@
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 /**
  * Infinite horizontal ticker of technology names. The track is duplicated
  * so the -50% translate loops seamlessly. Pauses on hover.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-tech-marquee',
   template: `
     @if (items().length > 0) {

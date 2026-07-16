@@ -1,12 +1,14 @@
-import { Component, OnDestroy, effect, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, effect, input, signal } from '@angular/core';
 import { Profile } from '../../core/models';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { Icon } from '../../shared/icon';
 import { MagneticDirective } from '../../shared/magnetic.directive';
 import { TiltDirective } from '../../shared/tilt.directive';
 import { SplitTextDirective } from '../../shared/split-text.directive';
+import { HeroScene } from '../../three/hero-scene';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-hero',
   template: `
     <section id="hero" class="relative flex min-h-screen items-center overflow-hidden pt-24">
@@ -20,20 +22,8 @@ import { SplitTextDirective } from '../../shared/split-text.directive';
           <div class="aurora-blob bottom-0 left-1/3 h-[26rem] w-[26rem] bg-peri-400/45 animate-aurora dark:bg-peri-600/25" style="animation-delay: -8s"></div>
           <div class="aurora-blob right-1/4 bottom-1/4 h-72 w-72 bg-lav-300/40 animate-aurora-slow dark:bg-lav-500/15" style="animation-delay: -14s"></div>
         </div>
-        <!-- Floating particles drift faster -->
-        <div class="parallax-fast absolute inset-0">
-          @for (p of particles; track $index) {
-            <span
-              class="absolute rounded-full bg-lav-400/50 dark:bg-lav-300/30 animate-float"
-              [style.left.%]="p.x"
-              [style.top.%]="p.y"
-              [style.width.px]="p.size"
-              [style.height.px]="p.size"
-              [style.animation-delay]="p.delay + 's'"
-              [style.animation-duration]="p.duration + 's'"
-            ></span>
-          }
-        </div>
+        <!-- Three.js galaxy + floating glass solids (lazy chunk, WebGL only) -->
+        <app-hero-scene />
       </div>
 
       <div class="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-16 lg:grid-cols-[1.2fr_1fr]">
@@ -136,19 +126,12 @@ import { SplitTextDirective } from '../../shared/split-text.directive';
       </button>
     </section>
   `,
-  imports: [RevealDirective, Icon, MagneticDirective, TiltDirective, SplitTextDirective],
+  imports: [RevealDirective, Icon, MagneticDirective, TiltDirective, SplitTextDirective, HeroScene],
 })
 export class Hero implements OnDestroy {
   readonly profile = input<Profile | null>(null);
 
   protected readonly typed = signal('');
-  protected readonly particles = Array.from({ length: 14 }, (_, i) => ({
-    x: (i * 37) % 100,
-    y: (i * 53) % 90 + 5,
-    size: 4 + (i % 4) * 2,
-    delay: (i % 7) * 0.8,
-    duration: 4 + (i % 5),
-  }));
 
   private timer: ReturnType<typeof setTimeout> | undefined;
   private started = false;

@@ -32,10 +32,13 @@ import { ToastService } from '../core/toast.service';
         <div class="space-y-3">
           @for (msg of page()!.content; track msg.id) {
             <article
-              class="card cursor-pointer !rounded-2xl p-5 transition-all duration-200 hover:shadow-glow"
+              class="card cursor-pointer !rounded-2xl p-5 transition-all duration-200 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400"
               [class.border-l-4]="!msg.read"
               [class.border-l-lav-500]="!msg.read"
+              tabindex="0"
+              role="button"
               (click)="toggleExpand(msg)"
+              (keydown.enter)="toggleExpand(msg)"
             >
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-3">
@@ -95,7 +98,13 @@ import { ToastService } from '../core/toast.service';
 
     @if (confirmDeleteId() !== null) {
       <div class="fixed inset-0 z-50 grid place-items-center px-6">
-        <div class="absolute inset-0 bg-ink/30 backdrop-blur-sm" (click)="confirmDeleteId.set(null)"></div>
+        <button
+          type="button"
+          class="absolute inset-0 cursor-default bg-ink/30 backdrop-blur-sm"
+          aria-label="Cancel"
+          tabindex="-1"
+          (click)="confirmDeleteId.set(null)"
+        ></button>
         <div class="card relative w-full max-w-sm p-8 text-center">
           <p class="text-4xl">🗑️</p>
           <h3 class="mt-3 font-display text-lg font-extrabold">Delete this message?</h3>

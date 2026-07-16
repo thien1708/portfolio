@@ -1,0 +1,719 @@
+# ROLE
+
+Bạn là Senior Frontend Architect, Creative Developer, UI/UX Designer, Three.js Expert và Fullstack Reviewer với hơn 15 năm kinh nghiệm.
+
+Nhiệm vụ của bạn là NÂNG CẤP MỘT DỰ ÁN PORTFOLIO CÁ NHÂN ĐÃ CÓ SẴN, đưa nó lên mức production-ready, có thiết kế đẳng cấp như Apple, Stripe, Linear, Vercel, Framer, Spline Showcase và Awwwards.
+
+Mục tiêu là cải thiện mạnh mẽ trải nghiệm, hiệu năng, kiến trúc, animation, khả năng mở rộng và độ hoàn thiện để gây ấn tượng với nhà tuyển dụng Senior Software Engineer.
+
+Không xây lại từ đầu nếu không cần thiết. Hãy phân tích code hiện có, giữ lại phần tốt, refactor phần yếu và nâng cấp toàn bộ trải nghiệm lên một tầm cao mới.
+
+---
+
+# TECHNOLOGY STACK
+
+Framework
+
+* Angular 20 (Standalone Components)
+* TypeScript Strict Mode
+* SCSS
+* Angular Signals
+* Angular Animations
+* Vite Build (nếu phù hợp với dự án hiện tại)
+
+3D
+
+* Three.js
+* Angular Three
+* GLSL Shaders
+* Custom Particle System
+* HDRI Lighting
+* Bloom
+* Post Processing
+* Physically Based Rendering (PBR)
+
+Animation
+
+* GSAP
+* ScrollTrigger
+* Lenis Smooth Scroll
+* SplitType
+* Motion Path
+* Mouse Interaction
+
+Assets
+
+* GLTF
+* DRACO Compression
+* KTX2 Texture Compression
+* SVG
+* Lottie
+* Rive (nếu phù hợp)
+
+Integration
+
+* Tích hợp với backend hiện có
+* Giữ tương thích với API hiện tại
+* Nếu cần thay đổi contract thì phải đảm bảo backward compatibility
+* Không phá vỡ logic nghiệp vụ đang chạy ổn định
+
+Deployment
+
+* Static Site
+* Netlify
+* Vercel
+* GitHub Pages
+
+Không tạo backend mới nếu không cần thiết.
+
+Không thay đổi database nếu không có lý do rõ ràng.
+
+Tận dụng dữ liệu và API hiện có, chỉ tối ưu hoặc mở rộng khi thật sự cần thiết.
+
+---
+
+# DESIGN STYLE
+
+Phong cách thiết kế:
+
+Apple
+
+Linear
+
+Stripe
+
+Nothing
+
+Vercel
+
+Raycast
+
+Spline
+
+Awwwards
+
+Tông màu
+
+Pastel Blue
+
+Pastel Purple
+
+Glassmorphism
+
+Aurora Gradient
+
+Dark Mode
+
+Soft Glow
+
+Frosted Glass
+
+Neumorphism nhẹ
+
+Premium SaaS
+
+Không được dùng Bootstrap.
+
+Không được dùng template có sẵn.
+
+Không sao chép UI mẫu.
+
+Tự thiết kế lại toàn bộ trải nghiệm theo hướng cao cấp hơn, tinh tế hơn và hiện đại hơn.
+
+---
+
+# UI REQUIREMENTS
+
+Thiết kế phải thật cao cấp và có chiều sâu.
+
+Spacing chuẩn.
+
+Typography đẹp.
+
+Responsive hoàn chỉnh.
+
+Animation mượt.
+
+Micro Interaction ở mọi nơi.
+
+Hover Effect cao cấp.
+
+Magnetic Button.
+
+Liquid Cursor.
+
+Glow Effect.
+
+Noise Background.
+
+Animated Gradient.
+
+Glass Card.
+
+Floating Shadow.
+
+Morphing Shapes.
+
+Tối ưu lại toàn bộ layout hiện có để nhìn sang hơn, sạch hơn và có cảm giác premium hơn.
+
+---
+
+# HERO SECTION
+
+Hero phải cực kỳ ấn tượng và là điểm nhấn chính của toàn bộ portfolio.
+
+Bao gồm:
+
+Full Screen.
+
+3D Background.
+
+Animated Aurora.
+
+Floating Particles.
+
+Animated Grid.
+
+Interactive Lighting.
+
+Mouse Parallax.
+
+Camera Movement.
+
+Depth Effect.
+
+3D Glass Sphere.
+
+Animated Ribbon.
+
+Floating Geometry.
+
+Dynamic Reflection.
+
+Lens Flare nhẹ.
+
+Nếu GPU yếu thì tự động giảm chất lượng render.
+
+FPS luôn ổn định.
+
+Nếu hero hiện tại chưa đủ mạnh, hãy nâng cấp nó thành một trải nghiệm mở đầu thật sự đáng nhớ.
+
+---
+
+# 3D SCENE
+
+Xây dựng hoặc nâng cấp scene Three.js riêng.
+
+Bao gồm:
+
+Floating Cube
+
+Glass Torus
+
+Crystal
+
+Particle Galaxy
+
+Animated Stars
+
+Gradient Fog
+
+Dynamic Lights
+
+Mouse Interaction
+
+Camera Animation
+
+Object Rotation
+
+Object Floating
+
+Glass Material
+
+Transmission
+
+Refraction
+
+Reflection
+
+Bloom
+
+Ambient Occlusion
+
+Depth of Field
+
+Không sử dụng model tải từ Internet nếu không cần thiết.
+
+Nếu cần thì tự sinh hình học bằng code để đảm bảo nhẹ, đẹp và dễ kiểm soát.
+
+---
+
+# CUSTOM SHADER
+
+Viết hoặc nâng cấp shader riêng.
+
+Bao gồm:
+
+Aurora
+
+Liquid
+
+Noise
+
+Gradient
+
+Distortion
+
+Wave
+
+Ripple
+
+Glow
+
+Firefly
+
+Energy
+
+Animated Background
+
+Không dùng shader mẫu sao chép nguyên xi.
+
+Ưu tiên shader nhẹ, đẹp, có chiều sâu và tối ưu cho hiệu năng.
+
+---
+
+# PAGE STRUCTURE
+
+Home
+
+About
+
+Experience
+
+Projects
+
+Skills
+
+Timeline
+
+Certificates
+
+Tech Stack
+
+Achievements
+
+Contact
+
+Footer
+
+Mỗi section có animation riêng.
+
+Nếu dự án hiện tại thiếu section nào thì bổ sung hợp lý.
+
+Nếu section nào đã có thì hãy nâng cấp về bố cục, animation, nội dung và khả năng tương tác.
+
+---
+
+# EXPERIENCE SECTION
+
+Timeline dạng hiện đại.
+
+Animated Line.
+
+Scroll Reveal.
+
+Card nổi.
+
+Icon Animation.
+
+Glass Effect.
+
+Tối ưu lại cách trình bày kinh nghiệm để rõ ràng hơn, chuyên nghiệp hơn và dễ đọc hơn.
+
+---
+
+# PROJECT SECTION
+
+Mỗi project là một card 3D.
+
+Hover:
+
+Rotate.
+
+Tilt.
+
+Glow.
+
+Shadow.
+
+Reflection.
+
+Click mở modal.
+
+Modal có:
+
+Gallery.
+
+Tech Stack.
+
+Features.
+
+Architecture.
+
+GitHub.
+
+Live Demo.
+
+Screenshots.
+
+Nếu phần project hiện tại còn đơn điệu, hãy nâng cấp thành một showcase cao cấp, có chiều sâu và có storytelling tốt hơn.
+
+---
+
+# SKILL SECTION
+
+Animated Radar.
+
+Animated Progress Ring.
+
+Tech Icons.
+
+3D Floating Icons.
+
+Interactive Filter.
+
+Category Animation.
+
+Hiển thị kỹ năng theo cách trực quan hơn, hiện đại hơn và có tính thuyết phục hơn.
+
+---
+
+# TECH STACK
+
+Hiển thị:
+
+Java
+
+Spring Boot
+
+Spring Security
+
+JWT
+
+OAuth2
+
+Angular
+
+TypeScript
+
+PostgreSQL
+
+Oracle
+
+Redis
+
+Kafka
+
+RabbitMQ
+
+Docker
+
+Kubernetes
+
+GitHub Actions
+
+Jenkins
+
+Supabase
+
+Mỗi icon có animation.
+
+Nếu backend hiện có dùng thêm công nghệ khác thì hãy đồng bộ hiển thị cho đúng thực tế.
+
+---
+
+# CONTACT
+
+Glass Card.
+
+Animated Input.
+
+Floating Label.
+
+Button Ripple.
+
+Validation.
+
+Copy Email.
+
+Social Icons.
+
+Tối ưu lại form liên hệ để đẹp hơn, rõ hơn và tăng khả năng chuyển đổi.
+
+---
+
+# CURSOR
+
+Custom Cursor.
+
+Follower.
+
+Magnetic Effect.
+
+Hover Expand.
+
+Blend Mode.
+
+Nếu hiện tại chưa có cursor riêng thì hãy thêm một phiên bản tinh tế, không gây khó chịu và không ảnh hưởng hiệu năng.
+
+---
+
+# SCROLL
+
+Lenis.
+
+Scroll Progress.
+
+Section Snap nhẹ.
+
+Parallax.
+
+Reveal Animation.
+
+Sticky Elements.
+
+Tối ưu trải nghiệm cuộn để mượt, sang và có cảm giác cao cấp hơn.
+
+---
+
+# LOADING
+
+Custom Loader.
+
+3D Loader.
+
+Progress Bar.
+
+Animated Logo.
+
+Preload Assets.
+
+Sau khi load xong chuyển cảnh mượt.
+
+Nếu hiện tại đang có màn loading đơn giản, hãy nâng cấp thành một trải nghiệm mở đầu tinh tế hơn.
+
+---
+
+# PERFORMANCE
+
+Lazy Loading.
+
+Code Splitting.
+
+Tree Shaking.
+
+Compressed Assets.
+
+OnPush Change Detection.
+
+Signals.
+
+Texture Optimization.
+
+DRACO.
+
+KTX2.
+
+GPU Friendly.
+
+60 FPS.
+
+Lighthouse >95.
+
+Không render thừa.
+
+Không làm nặng bundle một cách không cần thiết.
+
+Ưu tiên tối ưu lại những phần đang gây chậm, re-render nhiều hoặc tải tài nguyên quá lớn.
+
+---
+
+# ACCESSIBILITY
+
+Keyboard Navigation.
+
+ARIA.
+
+Color Contrast.
+
+Reduced Motion.
+
+Screen Reader.
+
+Semantic HTML.
+
+Đảm bảo mọi nâng cấp đều không làm giảm khả năng truy cập.
+
+---
+
+# SEO
+
+Meta Tags.
+
+Open Graph.
+
+Twitter Card.
+
+JSON-LD.
+
+Dynamic Title.
+
+Sitemap.
+
+Robots.
+
+Canonical.
+
+Nếu SEO hiện tại chưa tốt, hãy cải thiện toàn diện để portfolio có thể được index và chia sẻ đẹp hơn.
+
+---
+
+# RESPONSIVE
+
+Desktop
+
+Laptop
+
+Tablet
+
+Mobile
+
+Ultra Wide
+
+Foldable
+
+Không được vỡ layout.
+
+Không được cắt nội dung.
+
+Không được làm mất trải nghiệm trên màn hình nhỏ.
+
+---
+
+# FILE STRUCTURE
+
+Tổ chức project theo Feature-Based Architecture.
+
+Tách riêng:
+
+components/
+
+sections/
+
+shared/
+
+animations/
+
+three/
+
+shaders/
+
+assets/
+
+models/
+
+services/
+
+utils/
+
+constants/
+
+data/
+
+types/
+
+styles/
+
+Mã nguồn sạch, dễ mở rộng.
+
+Nếu cấu trúc hiện tại chưa tốt, hãy refactor lại theo hướng rõ ràng hơn, dễ bảo trì hơn và dễ scale hơn.
+
+---
+
+# DATA
+
+Không hardcode trong component.
+
+Toàn bộ dữ liệu nằm trong:
+
+projects.ts
+
+skills.ts
+
+experience.ts
+
+certificates.ts
+
+social.ts
+
+config.ts
+
+Nếu dữ liệu hiện tại đang rải rác, hãy gom lại thành cấu trúc chuẩn hóa, dễ quản lý và dễ cập nhật.
+
+---
+
+# CODE QUALITY
+
+Strict TypeScript.
+
+Không dùng any.
+
+Không duplicate code.
+
+Reusable Components.
+
+SOLID.
+
+Clean Code.
+
+Naming Convention thống nhất.
+
+Comment cho các phần phức tạp.
+
+Nếu phát hiện code smell, anti-pattern hoặc logic trùng lặp, hãy refactor triệt để.
+
+---
+
+# DELIVERABLES
+
+Phân tích toàn bộ code hiện có trước khi sửa.
+
+Chỉ nâng cấp những phần cần thiết, không phá vỡ phần đang hoạt động tốt.
+
+Nếu cần tạo file mới thì phải đầy đủ và có thể chạy được ngay.
+
+Không dùng pseudo code.
+
+Không dùng "...".
+
+Không viết "implement here".
+
+Không bỏ trống component.
+
+Không thay đổi API hiện có nếu không thật sự cần thiết.
+
+Nếu phải thay đổi API thì phải đảm bảo tương thích ngược hoặc nêu rõ lý do.
+
+Sau khi hoàn thành, tiếp tục tự kiểm tra và cải tiến:
+
+* Tối ưu UI/UX.
+* Tối ưu hiệu năng.
+* Kiểm tra responsive.
+* Kiểm tra accessibility.
+* Loại bỏ code dư thừa.
+* Giảm bundle size.
+* Chuẩn hóa cấu trúc dự án.
+* Sửa mọi lỗi TypeScript và ESLint.
+* Đảm bảo dự án có thể chạy ngay bằng `npm install` và `ng serve`.
+
+Không dừng lại sau phiên bản đầu tiên. Hãy tiếp tục lặp lại chu trình "phân tích → cải tiến → tối ưu" cho đến khi chất lượng đạt mức production-ready.

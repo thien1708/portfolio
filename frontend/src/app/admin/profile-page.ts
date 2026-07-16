@@ -60,7 +60,7 @@ import { ChipsInput } from '../shared/chips-input';
           </div>
 
           <div>
-            <label class="label">Typing roles (hero animation)</label>
+            <span class="label">Typing roles (hero animation)</span>
             <app-chips-input formControlName="typingRoles" />
             <p class="mt-1 text-xs text-ink/50 dark:text-lav-100/50">Cycled by the typewriter effect in the hero section.</p>
           </div>

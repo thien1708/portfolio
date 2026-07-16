@@ -1,4 +1,4 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { Profile } from '../../core/models';
@@ -10,6 +10,7 @@ import { MagneticDirective } from '../../shared/magnetic.directive';
 import { burstConfetti } from '../../shared/confetti';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-contact-section',
   imports: [ReactiveFormsModule, RevealDirective, Icon, SpotlightDirective, MagneticDirective],
   template: `
@@ -35,9 +36,19 @@ import { burstConfetti } from '../../shared/confetti';
               <ul class="space-y-4 text-sm">
                 <li class="flex items-center gap-4">
                   <span class="glass grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-xl text-lav-600 dark:text-lav-300"><app-icon name="mail" /></span>
-                  <div>
+                  <div class="min-w-0">
                     <p class="text-xs uppercase tracking-wider text-lav-500">Email</p>
-                    <a class="font-medium transition-colors hover:text-lav-600 dark:hover:text-lav-300" [href]="'mailto:' + p.email">{{ p.email }}</a>
+                    <div class="flex items-center gap-2">
+                      <a class="truncate font-medium transition-colors hover:text-lav-600 dark:hover:text-lav-300" [href]="'mailto:' + p.email">{{ p.email }}</a>
+                      <button
+                        type="button"
+                        class="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-lav-500 transition-all hover:bg-lav-100/70 hover:text-lav-700 dark:hover:bg-lav-800/40 dark:hover:text-lav-200"
+                        (click)="copyEmail(p.email)"
+                        [attr.aria-label]="copied() ? 'Email copied' : 'Copy email address'"
+                      >
+                        <app-icon [name]="copied() ? 'check' : 'copy'" class="text-sm" />
+                      </button>
+                    </div>
                   </div>
                 </li>
                 @if (p.phone) {
@@ -112,6 +123,16 @@ export class ContactSection {
   private readonly fb = inject(FormBuilder);
 
   protected readonly sending = signal(false);
+  protected readonly copied = signal(false);
+  private copyTimer: ReturnType<typeof setTimeout> | undefined;
+
+  protected copyEmail(email: string): void {
+    navigator.clipboard?.writeText(email).then(() => {
+      this.copied.set(true);
+      clearTimeout(this.copyTimer);
+      this.copyTimer = setTimeout(() => this.copied.set(false), 2000);
+    });
+  }
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(120)]],

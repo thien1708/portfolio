@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { Experience, Profile, Project, Skill } from '../../core/models';
 import { CountUpDirective } from '../../shared/count-up.directive';
 import { RevealDirective } from '../../shared/reveal.directive';
@@ -8,6 +8,7 @@ import { TiltDirective } from '../../shared/tilt.directive';
 import { SkillRadar } from '../../shared/skill-radar';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-about',
   imports: [
     RevealDirective,
