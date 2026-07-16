@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { ApiService } from '../../core/api.service';
 import {
   Certification,
@@ -26,6 +26,7 @@ import { SectionDots } from '../../shared/section-dots';
 import { CommandPalette } from '../../shared/command-palette';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-home',
   imports: [
     Navbar,

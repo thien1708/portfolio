@@ -270,6 +270,24 @@ Quay lại Render → service `portfolio-backend` → **Environment** → sửa
 - [ ] Sửa một skill / upload avatar → refresh trang public thấy thay đổi ngay
 - [ ] Ảnh upload có URL dạng `https://<project-ref>.supabase.co/storage/v1/object/public/portfolio/...`
 
+### Bước 6 — Hoàn thiện SEO khi đã có URL chính thức
+
+`frontend/src/index.html` đã có sẵn meta description, Open Graph, Twitter card và
+JSON-LD; `frontend/public/robots.txt` đã chặn `/admin`. Còn vài thứ **phải chờ có
+URL thật** mới điền được — sau khi chốt tên miền (vd `https://tranvuthien.netlify.app`
+hoặc domain riêng), sửa `frontend/src/index.html` thêm vào `<head>`:
+
+```html
+<link rel="canonical" href="https://<URL-cua-ban>/">
+<meta property="og:url" content="https://<URL-cua-ban>/">
+<!-- nếu có ảnh preview 1200x630 đặt tại frontend/public/og-image.png -->
+<meta property="og:image" content="https://<URL-cua-ban>/og-image.png">
+```
+
+Tuỳ chọn: tạo `frontend/public/sitemap.xml` (site một trang chỉ cần URL gốc) và thêm
+dòng `Sitemap: https://<URL-cua-ban>/sitemap.xml` vào cuối `robots.txt`, rồi submit
+trên [Google Search Console](https://search.google.com/search-console).
+
 ### Sự cố thường gặp
 
 | Triệu chứng | Nguyên nhân & cách xử lý |

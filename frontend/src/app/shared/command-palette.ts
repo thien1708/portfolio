@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   HostListener,
   computed,
@@ -22,14 +23,21 @@ interface Command {
  * Keyboard: ↑/↓ to move, Enter to run, Esc to close.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-command-palette',
   imports: [Icon],
   template: `
     @if (open()) {
-      <div class="cmdk-backdrop" (click)="close()">
+      <div class="cmdk-backdrop">
+        <button
+          type="button"
+          class="absolute inset-0 cursor-default"
+          aria-label="Close command palette"
+          tabindex="-1"
+          (click)="close()"
+        ></button>
         <div
-          class="cmdk-panel glass w-full max-w-lg overflow-hidden rounded-2xl shadow-soft-lg"
-          (click)="$event.stopPropagation()"
+          class="cmdk-panel glass relative w-full max-w-lg overflow-hidden rounded-2xl shadow-soft-lg"
         >
           <div class="flex items-center gap-3 border-b border-lav-200/50 px-4 py-3 dark:border-lav-700/40">
             <span class="text-lav-500"><app-icon name="sparkles" /></span>

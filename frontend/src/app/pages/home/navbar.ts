@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   AfterViewInit,
   Component,
   ElementRef,
@@ -21,6 +22,7 @@ interface NavLink {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-navbar',
   imports: [Icon, MagneticDirective],
   template: `
@@ -36,8 +38,9 @@ interface NavLink {
         [class.sm:mx-auto]="true"
       >
         <a
+          href="#hero"
           class="cursor-pointer font-display text-lg font-extrabold tracking-tight"
-          (click)="scrollTo('hero')"
+          (click)="scrollToBrand($event)"
         >
           <span class="gradient-text">{{ brand() }}</span>
         </a>
@@ -216,6 +219,12 @@ export class Navbar implements OnInit, AfterViewInit, OnDestroy {
 
   protected scrollTo(id: string): void {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /** Brand link: keep the semantic href for a11y but scroll smoothly. */
+  protected scrollToBrand(event: Event): void {
+    event.preventDefault();
+    this.scrollTo('hero');
   }
 
   ngOnDestroy(): void {

@@ -1,10 +1,21 @@
-import { Component, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  HostListener,
+  computed,
+  effect,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { Project } from '../../core/models';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { Icon } from '../../shared/icon';
 import { SpotlightDirective } from '../../shared/spotlight.directive';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-projects-section',
   imports: [RevealDirective, Icon, SpotlightDirective],
   template: `
@@ -59,8 +70,12 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                 appSpotlight
                 [style.animation-delay]="(i % 3) * 70 + 'ms'"
                 [class.conic-border]="project.featured"
-                class="card-enter card group flex cursor-pointer flex-col overflow-hidden !rounded-3xl transition-all duration-300 hover:-translate-y-2 hover:shadow-glow"
+                class="card-enter card group flex cursor-pointer flex-col overflow-hidden !rounded-3xl transition-all duration-300 hover:-translate-y-2 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="'View details of ' + project.name"
                 (click)="openLightbox(project, $event)"
+                (keydown.enter)="openLightbox(project, $event)"
               >
                 <!-- Cover -->
                 <div class="relative h-44 overflow-hidden">
@@ -157,10 +172,19 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
 
       <!-- Lightbox -->
       @if (selected(); as p) {
-        <div class="lightbox-backdrop" (click)="closeLightbox()">
+        <div class="lightbox-backdrop">
+          <button
+            type="button"
+            class="absolute inset-0 cursor-default"
+            aria-label="Close dialog"
+            tabindex="-1"
+            (click)="closeLightbox()"
+          ></button>
           <div
-            class="lightbox-panel glass flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl shadow-soft-lg"
-            (click)="$event.stopPropagation()"
+            role="dialog"
+            aria-modal="true"
+            [attr.aria-label]="p.name"
+            class="lightbox-panel glass relative flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl shadow-soft-lg"
           >
             <div class="relative h-52 shrink-0 overflow-hidden">
               @if (p.imageUrl) {
@@ -171,6 +195,7 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                 </div>
               }
               <button
+                #lightboxClose
                 type="button"
                 class="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/85 text-lav-700 shadow backdrop-blur transition-transform hover:scale-110 dark:bg-ink/70 dark:text-lav-200"
                 (click)="closeLightbox()"
@@ -221,6 +246,31 @@ export class ProjectsSection {
   protected readonly filter = signal<string | null>(null);
   protected readonly selected = signal<Project | null>(null);
 
+  private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('lightboxClose');
+  /** Element that opened the lightbox; focus returns to it on close. */
+  private opener: HTMLElement | null = null;
+
+  constructor() {
+    // Move focus into the dialog when it opens and lock body scroll.
+    effect(() => {
+      const open = this.selected() !== null;
+      document.body.style.overflow = open ? 'hidden' : '';
+      if (open) {
+        this.closeButton()?.nativeElement.focus();
+      } else {
+        this.opener?.focus();
+        this.opener = null;
+      }
+    });
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.selected() !== null) {
+      this.closeLightbox();
+    }
+  }
+
   // Changes whenever the active filter changes, re-keying @for so surviving
   // cards replay the entrance animation on each filter switch.
   protected readonly filterKey = computed(() => this.filter() ?? 'all');
@@ -270,11 +320,12 @@ export class ProjectsSection {
       .filter((l) => l.length > 0);
   }
 
-  protected openLightbox(project: Project, event: MouseEvent): void {
+  protected openLightbox(project: Project, event: Event): void {
     // Ignore clicks that landed on the quick-action links.
     if ((event.target as HTMLElement).closest('a')) {
       return;
     }
+    this.opener = event.currentTarget as HTMLElement;
     const show = () => this.selected.set(project);
     const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
     if (doc.startViewTransition) {

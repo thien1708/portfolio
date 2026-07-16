@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   OnDestroy,
   OnInit,
@@ -12,6 +13,7 @@ interface Dot {
 
 /** Fixed vertical dots (desktop) marking each section, with active state. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-section-dots',
   template: `
     <nav

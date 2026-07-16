@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 type IconDef = { fill?: boolean; body: string };
@@ -98,9 +98,16 @@ const ICONS: Record<string, IconDef> = {
   'arrow-right': {
     body: '<path d="M5 12h14M12 5l7 7-7 7"/>',
   },
+  copy: {
+    body: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  },
+  check: {
+    body: '<path d="M20 6 9 17l-5-5"/>',
+  },
 };
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-icon',
   template: `<span [innerHTML]="svg()"></span>`,
   host: {

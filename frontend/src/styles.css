@@ -5,10 +5,14 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Reveal animations translate elements sideways before they enter the
+       viewport; clip instead of letting them widen the page on mobile. */
+    overflow-x: clip;
   }
 
   body {
     @apply font-sans antialiased text-ink bg-lav-50 dark:text-lav-100 dark:bg-[#181630];
+    overflow-x: clip;
   }
 
   ::selection {

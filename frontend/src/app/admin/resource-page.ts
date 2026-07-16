@@ -72,7 +72,13 @@ type Row = Record<string, unknown> & { id: number };
       <!-- Drawer -->
       @if (drawerMode() !== null) {
         <div class="fixed inset-0 z-50 flex justify-end">
-          <div class="absolute inset-0 bg-ink/30 backdrop-blur-sm" (click)="closeDrawer()"></div>
+          <button
+            type="button"
+            class="absolute inset-0 cursor-default bg-ink/30 backdrop-blur-sm"
+            aria-label="Close drawer"
+            tabindex="-1"
+            (click)="closeDrawer()"
+          ></button>
           <div class="relative flex h-full w-full max-w-lg flex-col overflow-y-auto border-l border-lav-200/70 bg-white p-8 shadow-soft-lg dark:border-lav-700/40 dark:bg-[#1d1a3a]">
             <div class="mb-6 flex items-center justify-between">
               <h3 class="font-display text-xl font-extrabold">
@@ -145,7 +151,13 @@ type Row = Record<string, unknown> & { id: number };
       <!-- Delete confirm -->
       @if (confirmDeleteId() !== null) {
         <div class="fixed inset-0 z-50 grid place-items-center px-6">
-          <div class="absolute inset-0 bg-ink/30 backdrop-blur-sm" (click)="confirmDeleteId.set(null)"></div>
+          <button
+            type="button"
+            class="absolute inset-0 cursor-default bg-ink/30 backdrop-blur-sm"
+            aria-label="Cancel"
+            tabindex="-1"
+            (click)="confirmDeleteId.set(null)"
+          ></button>
           <div class="card relative w-full max-w-sm p-8 text-center">
             <p class="text-4xl">🗑️</p>
             <h3 class="mt-3 font-display text-lg font-extrabold">Delete this {{ cfg.singular }}?</h3>

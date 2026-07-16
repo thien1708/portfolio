@@ -1,7 +1,8 @@
-import { Component, ElementRef, HostListener, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, inject } from '@angular/core';
 
 /** Thin gradient bar at the top of the page reflecting scroll progress. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-scroll-progress',
   template: `<div class="scroll-progress"></div>`,
 })
