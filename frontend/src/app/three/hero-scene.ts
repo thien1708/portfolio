@@ -13,14 +13,16 @@ import type { HeroSceneEngine } from './hero-scene.engine';
  * itself) is pulled in via dynamic import after first paint, so it ships as
  * a separate lazy chunk and costs the initial bundle nothing. Skipped
  * entirely when WebGL is unavailable — the CSS aurora underneath remains.
+ * Purely decorative; no pointer interaction.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-hero-scene',
   template: `<div class="absolute inset-0 overflow-hidden" aria-hidden="true"></div>`,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeroScene implements OnDestroy {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
   private engine?: HeroSceneEngine;
   private themeObserver?: MutationObserver;
   private destroyed = false;

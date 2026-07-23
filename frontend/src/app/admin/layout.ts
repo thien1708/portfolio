@@ -1,4 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { AdminApiService } from '../core/admin-api.service';
@@ -12,6 +20,7 @@ interface SideLink {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-admin-layout',
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `
@@ -26,7 +35,7 @@ interface SideLink {
           <span class="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-lav-500 to-peri-500 text-lg shadow-soft">⚡</span>
           <div>
             <p class="font-display text-sm font-extrabold">Portfolio Admin</p>
-            <p class="max-w-[9rem] truncate text-xs text-ink/50 dark:text-lav-100/50">{{ auth.email() }}</p>
+            <p class="max-w-[9rem] truncate text-xs text-ink/70 dark:text-lav-100/70">{{ auth.email() }}</p>
           </div>
         </div>
 
@@ -94,11 +103,13 @@ export class AdminLayout implements OnInit {
   protected readonly theme = inject(ThemeService);
   private readonly adminApi = inject(AdminApiService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly sidebarOpen = signal(false);
   protected readonly unread = signal(0);
 
   protected readonly links: SideLink[] = [
+    { path: 'dashboard', label: 'Dashboard', icon: '📊' },
     { path: 'profile', label: 'Profile', icon: '👤' },
     { path: 'skills', label: 'Skills', icon: '🛠️' },
     { path: 'experiences', label: 'Experience', icon: '💼' },
@@ -111,7 +122,10 @@ export class AdminLayout implements OnInit {
   ngOnInit(): void {
     this.refreshUnread();
     this.router.events
-      .pipe(filter((e) => e instanceof NavigationEnd))
+      .pipe(
+        filter((e) => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe(() => this.refreshUnread());
   }
 

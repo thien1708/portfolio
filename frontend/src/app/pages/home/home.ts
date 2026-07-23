@@ -8,6 +8,7 @@ import {
   Project,
   Skill,
 } from '../../core/models';
+import { I18nService } from '../../core/i18n.service';
 import { ToastService } from '../../core/toast.service';
 import { Navbar } from './navbar';
 import { Hero } from './hero';
@@ -77,7 +78,7 @@ import { CommandPalette } from '../../shared/command-palette';
         type="button"
         class="fixed bottom-6 right-6 z-40 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-lav-500 to-peri-500 text-lg text-white shadow-soft-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-glow"
         (click)="scrollTop()"
-        aria-label="Back to top"
+        [attr.aria-label]="i18n.t('misc.backToTop')"
       >
         <app-icon name="arrow-up" />
       </button>
@@ -95,6 +96,8 @@ export class Home implements OnInit {
   protected readonly education = signal<EducationItem[]>([]);
   protected readonly certifications = signal<Certification[]>([]);
   protected readonly showTop = signal(false);
+
+  protected readonly i18n = inject(I18nService);
 
   // Unique technology names across skills, projects and experience for the ticker.
   protected readonly techList = computed(() => {
@@ -120,7 +123,7 @@ export class Home implements OnInit {
   ngOnInit(): void {
     this.api.getProfile().subscribe({
       next: (p) => this.profile.set(p),
-      error: () => this.toast.error('Could not load the portfolio data. Is the backend running?'),
+      error: () => this.toast.error(this.i18n.t('misc.loadFail')),
     });
     this.api.getSkills().subscribe((s) => this.skills.set(s));
     this.api.getExperiences().subscribe((e) => this.experiences.set(e));

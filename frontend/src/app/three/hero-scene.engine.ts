@@ -12,7 +12,6 @@ import {
   Mesh,
   Object3D,
   PerspectiveCamera,
-  Points,
   RingGeometry,
   Scene,
   ShaderMaterial,
@@ -25,8 +24,6 @@ import {
 import {
   ATMO_FRAGMENT,
   ATMO_VERTEX,
-  PARTICLE_FRAGMENT,
-  PARTICLE_VERTEX,
   PLANET_FRAGMENT,
   PLANET_VERTEX,
   RING_FRAGMENT,
@@ -38,9 +35,7 @@ import {
 } from './shaders';
 
 interface ThemePalette {
-  particles: [Color, Color, Color];
   fog: Color;
-  particleOpacity: number;
   sunGlowInner: number;
   sunGlowOuter: number;
   atmoIntensity: number;
@@ -52,9 +47,7 @@ interface ThemePalette {
 }
 
 const LIGHT: ThemePalette = {
-  particles: [new Color('#7e6bd9'), new Color('#6f7ec0'), new Color('#57aacb')],
   fog: new Color('#f7f5ff'),
-  particleOpacity: 0.3,
   sunGlowInner: 0.75,
   sunGlowOuter: 0.4,
   atmoIntensity: 0.4,
@@ -66,9 +59,7 @@ const LIGHT: ThemePalette = {
 };
 
 const DARK: ThemePalette = {
-  particles: [new Color('#b8b5ff'), new Color('#a6b1e1'), new Color('#a8d8ea')],
   fog: new Color('#181630'),
-  particleOpacity: 0.55,
   sunGlowInner: 1.0,
   sunGlowOuter: 0.65,
   atmoIntensity: 0.9,
@@ -81,12 +72,12 @@ const DARK: ThemePalette = {
 
 /** Pastel planets: orbit radius, body size, angular speed, start angle, tilt, band frequency. */
 const PLANETS = [
-  { color: '#a6b1e1', radius: 1.25, size: 0.1, speed: 0.5, phase: 0.8, incl: 0.07, bands: 9.0 },
-  { color: '#7fc3de', radius: 1.75, size: 0.14, speed: 0.37, phase: 2.4, incl: -0.06, bands: 6.0 },
-  { color: '#9d8df1', radius: 2.35, size: 0.18, speed: 0.27, phase: 4.4, incl: 0.1, bands: 5.0, moon: true },
-  { color: '#e8a7c8', radius: 3.0, size: 0.13, speed: 0.2, phase: 1.6, incl: -0.09, bands: 8.0 },
-  { color: '#cfc5ff', radius: 3.8, size: 0.24, speed: 0.14, phase: 5.3, incl: 0.06, bands: 4.0, ring: true },
-  { color: '#9fe0cb', radius: 4.6, size: 0.15, speed: 0.1, phase: 3.1, incl: -0.05, bands: 7.0 },
+  { label: 'Java', color: '#a6b1e1', radius: 1.25, size: 0.1, speed: 0.5, phase: 0.8, incl: 0.07, bands: 9.0 },
+  { label: 'Spring Boot', color: '#7fc3de', radius: 1.75, size: 0.14, speed: 0.37, phase: 2.4, incl: -0.06, bands: 6.0 },
+  { label: 'Angular', color: '#9d8df1', radius: 2.35, size: 0.18, speed: 0.27, phase: 4.4, incl: 0.1, bands: 5.0, moon: true },
+  { label: 'TypeScript', color: '#e8a7c8', radius: 3.0, size: 0.13, speed: 0.2, phase: 1.6, incl: -0.09, bands: 8.0 },
+  { label: 'PostgreSQL', color: '#cfc5ff', radius: 3.8, size: 0.24, speed: 0.14, phase: 5.3, incl: 0.06, bands: 4.0, ring: true },
+  { label: 'Docker', color: '#9fe0cb', radius: 4.6, size: 0.15, speed: 0.1, phase: 3.1, incl: -0.05, bands: 7.0 },
 ];
 
 interface PlanetRuntime {
@@ -102,9 +93,10 @@ interface PlanetRuntime {
 /**
  * The hero background: a pastel solar system — an fBm-churning sun with a
  * two-layer glow, six banded planets with fresnel atmospheres on inclined
- * orbits (one ringed, one with a moon), comet-tail orbit trails — floating
- * in a swirling particle starfield over faint nebulae. Loaded via dynamic
- * import so three.js ships as its own lazy chunk, off the critical path.
+ * orbits (one ringed, one with a moon), comet-tail orbit trails — over
+ * faint static nebulae. Loaded via dynamic import so three.js ships as its
+ * own lazy chunk, off the critical path. Purely decorative: no pointer
+ * interaction, the camera only drifts on a slow idle path.
  *
  * Perf guards: DPR is capped and steps down automatically when the frame
  * rate drops, the loop pauses while the canvas is offscreen or the tab is
@@ -115,7 +107,6 @@ export class HeroSceneEngine {
   private readonly scene = new Scene();
   private readonly camera: PerspectiveCamera;
   private readonly solar = new Group();
-  private readonly particleMaterial: ShaderMaterial;
   private readonly sunMaterial: ShaderMaterial;
   private glowInner!: SpriteMaterial;
   private glowOuter!: SpriteMaterial;
@@ -134,8 +125,6 @@ export class HeroSceneEngine {
   private lastFrame = 0;
   private running = false;
   private inView = true;
-  private pointerX = 0;
-  private pointerY = 0;
   /** Rolling frame-time average for the adaptive-quality step-down. */
   private frameAvg = 16.7;
   private dpr: number;
@@ -156,7 +145,6 @@ export class HeroSceneEngine {
     this.scene.fog = new Fog(LIGHT.fog, 9, 30);
 
     this.buildGlowTexture();
-    this.particleMaterial = this.buildParticles();
     this.buildNebulae();
 
     // Solar system, tilted so the orbits read as ellipses with depth.
@@ -185,7 +173,6 @@ export class HeroSceneEngine {
     if (this.reducedMotion) {
       this.renderOnce();
     } else {
-      window.addEventListener('pointermove', this.onPointer, { passive: true });
       this.running = true;
       this.syncLoop();
     }
@@ -194,17 +181,6 @@ export class HeroSceneEngine {
   /** Re-tint every material for light/dark without rebuilding the scene. */
   setTheme(dark: boolean): void {
     const p = dark ? DARK : LIGHT;
-    this.particleMaterial.uniforms['uOpacity'].value = p.particleOpacity;
-
-    const geometry = (this.scene.getObjectByName('galaxy') as Points).geometry;
-    const colorAttr = geometry.getAttribute('aColor') as BufferAttribute;
-    const seeds = geometry.getAttribute('aPhase') as BufferAttribute;
-    for (let i = 0; i < colorAttr.count; i++) {
-      const c = p.particles[Math.floor(seeds.getX(i) * 997) % 3];
-      colorAttr.setXYZ(i, c.r, c.g, c.b);
-    }
-    colorAttr.needsUpdate = true;
-
     this.glowInner.opacity = p.sunGlowInner;
     this.glowOuter.opacity = p.sunGlowOuter;
     for (const nebula of this.nebulaMaterials) {
@@ -228,7 +204,6 @@ export class HeroSceneEngine {
     cancelAnimationFrame(this.raf);
     this.resizeObserver.disconnect();
     this.intersection.disconnect();
-    window.removeEventListener('pointermove', this.onPointer);
     document.removeEventListener('visibilitychange', this.onVisibility);
     for (const d of this.disposables) d.dispose();
     this.renderer.dispose();
@@ -248,52 +223,6 @@ export class HeroSceneEngine {
     ctx.fillRect(0, 0, 128, 128);
     this.glowTexture = new CanvasTexture(canvas);
     this.disposables.push(this.glowTexture);
-  }
-
-  private buildParticles(): ShaderMaterial {
-    const count = 650;
-    const positions = new Float32Array(count * 3);
-    const scales = new Float32Array(count);
-    const phases = new Float32Array(count);
-    const colors = new Float32Array(count * 3);
-
-    for (let i = 0; i < count; i++) {
-      const radius = Math.pow(Math.random(), 0.6) * 12 + 0.6;
-      const angle = Math.random() * Math.PI * 2;
-      positions[i * 3] = Math.cos(angle) * radius;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * (0.7 + radius * 0.16);
-      positions[i * 3 + 2] = Math.sin(angle) * radius;
-      // Mostly small crisp stars; the occasional bigger soft glow for depth.
-      scales[i] = Math.random() < 0.88 ? 2.5 + Math.random() * 6 : 10 + Math.random() * 8;
-      phases[i] = Math.random();
-    }
-
-    const geometry = new BufferGeometry();
-    geometry.setAttribute('position', new BufferAttribute(positions, 3));
-    geometry.setAttribute('aScale', new BufferAttribute(scales, 1));
-    geometry.setAttribute('aPhase', new BufferAttribute(phases, 1));
-    geometry.setAttribute('aColor', new BufferAttribute(colors, 3));
-
-    const material = new ShaderMaterial({
-      vertexShader: PARTICLE_VERTEX,
-      fragmentShader: PARTICLE_FRAGMENT,
-      uniforms: {
-        uTime: { value: 0 },
-        uSize: { value: 20 },
-        uOpacity: { value: LIGHT.particleOpacity },
-      },
-      transparent: true,
-      depthWrite: false,
-      blending: AdditiveBlending,
-    });
-
-    const points = new Points(geometry, material);
-    points.name = 'galaxy';
-    points.rotation.x = 0.42;
-    points.position.set(0, -1.6, -7);
-    this.scene.add(points);
-    this.disposables.push(geometry, material);
-    return material;
   }
 
   /** Two faint colored clouds far behind everything — cheap depth and mood. */
@@ -499,11 +428,6 @@ export class HeroSceneEngine {
     }
   }
 
-  private readonly onPointer = (e: PointerEvent): void => {
-    this.pointerX = (e.clientX / window.innerWidth) * 2 - 1;
-    this.pointerY = (e.clientY / window.innerHeight) * 2 - 1;
-  };
-
   private readonly onVisibility = (): void => {
     this.syncLoop();
   };
@@ -534,7 +458,6 @@ export class HeroSceneEngine {
       this.applySize();
     }
 
-    this.particleMaterial.uniforms['uTime'].value = this.time;
     this.sunMaterial.uniforms['uTime'].value = this.time;
     // Slow corona breathing.
     const sun = this.solar.getObjectByName('sun') as Mesh | undefined;
@@ -559,9 +482,9 @@ export class HeroSceneEngine {
     // The whole system breathes very slowly.
     this.solar.rotation.y = Math.sin(this.time * 0.05) * 0.08;
 
-    // Mouse parallax + a slow idle drift so the scene never feels frozen.
-    const targetX = this.pointerX * 0.7 + Math.sin(this.time * 0.1) * 0.25;
-    const targetY = 0.6 - this.pointerY * 0.45 + Math.cos(this.time * 0.13) * 0.15;
+    // A slow idle drift so the scene never feels frozen.
+    const targetX = Math.sin(this.time * 0.1) * 0.25;
+    const targetY = 0.6 + Math.cos(this.time * 0.13) * 0.15;
     this.camera.position.x += (targetX - this.camera.position.x) * 0.03;
     this.camera.position.y += (targetY - this.camera.position.y) * 0.03;
     this.camera.lookAt(0, 0, -2);
@@ -572,7 +495,6 @@ export class HeroSceneEngine {
   };
 
   private renderOnce(): void {
-    this.particleMaterial.uniforms['uTime'].value = 12;
     this.sunMaterial.uniforms['uTime'].value = 12;
     this.solar.getObjectByName('sun')?.getWorldPosition(this.sunWorldPos);
     for (const planet of this.planets) {

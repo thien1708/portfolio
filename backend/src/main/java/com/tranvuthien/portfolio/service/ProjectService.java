@@ -6,6 +6,7 @@ import com.tranvuthien.portfolio.dto.ProjectResponse;
 import com.tranvuthien.portfolio.exception.NotFoundException;
 import com.tranvuthien.portfolio.repository.ProjectRepository;
 import com.tranvuthien.portfolio.util.Csv;
+import com.tranvuthien.portfolio.util.Lines;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,6 +72,8 @@ public class ProjectService {
         project.setDescription(request.description());
         project.setTechStack(Csv.toCsv(request.techStack()));
         project.setImageUrl(request.imageUrl());
+        project.setGalleryUrls(Lines.toJoined(request.galleryUrls()));
+        project.setHighlights(Lines.toJoined(request.highlights()));
         project.setDemoUrl(request.demoUrl());
         project.setRepoUrl(request.repoUrl());
         project.setFeatured(request.featured());
@@ -78,7 +81,8 @@ public class ProjectService {
 
     private ProjectResponse toResponse(Project p) {
         return new ProjectResponse(p.getId(), p.getName(), p.getPeriod(), p.getDescription(),
-                Csv.toList(p.getTechStack()), p.getImageUrl(), p.getDemoUrl(), p.getRepoUrl(),
+                Csv.toList(p.getTechStack()), p.getImageUrl(), Lines.toList(p.getGalleryUrls()),
+                Lines.toList(p.getHighlights()), p.getDemoUrl(), p.getRepoUrl(),
                 p.isFeatured(), p.getSortOrder());
     }
 }

@@ -41,6 +41,10 @@ export class CountUpDirective implements OnInit, OnDestroy {
 
   private animate(): void {
     const target = this.appCountUp();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.el.nativeElement.textContent = `${target}${this.suffix()}`;
+      return;
+    }
     const duration = this.durationMs();
     const start = performance.now();
     const step = (now: number) => {

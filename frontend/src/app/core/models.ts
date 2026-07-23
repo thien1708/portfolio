@@ -41,6 +41,8 @@ export interface Project {
   description: string | null;
   techStack: string[];
   imageUrl: string | null;
+  galleryUrls: string[];
+  highlights: string[];
   demoUrl: string | null;
   repoUrl: string | null;
   featured: boolean;

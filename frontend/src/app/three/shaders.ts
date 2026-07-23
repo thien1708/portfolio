@@ -48,47 +48,6 @@ const NOISE_GLSL = /* glsl */ `
   }
 `;
 
-export const PARTICLE_VERTEX = /* glsl */ `
-  attribute float aScale;
-  attribute vec3 aColor;
-  attribute float aPhase;
-  uniform float uTime;
-  uniform float uSize;
-  varying vec3 vColor;
-  varying float vAlpha;
-
-  void main() {
-    vec3 p = position;
-    // Slow differential swirl: inner particles orbit faster than outer ones.
-    float r = length(p.xz);
-    float ang = atan(p.z, p.x) + uTime * (0.015 + 0.09 / (r * 0.35 + 0.6));
-    p.x = cos(ang) * r;
-    p.z = sin(ang) * r;
-    p.y += sin(uTime * 0.5 + aPhase * 6.2831) * 0.14;
-
-    vec4 mv = modelViewMatrix * vec4(p, 1.0);
-    gl_PointSize = uSize * aScale / max(-mv.z, 0.1);
-    gl_Position = projectionMatrix * mv;
-
-    vColor = aColor;
-    vAlpha = 0.55 + 0.45 * sin(uTime * 0.7 + aPhase * 12.566);
-  }
-`;
-
-export const PARTICLE_FRAGMENT = /* glsl */ `
-  precision mediump float;
-  uniform float uOpacity;
-  varying vec3 vColor;
-  varying float vAlpha;
-
-  void main() {
-    // Soft round sprite: bright core, feathered edge.
-    float d = length(gl_PointCoord - 0.5);
-    float a = smoothstep(0.5, 0.06, d);
-    gl_FragColor = vec4(vColor, a * vAlpha * uOpacity);
-  }
-`;
-
 export const SUN_VERTEX = /* glsl */ `
   varying vec3 vNormal;
   varying vec3 vView;

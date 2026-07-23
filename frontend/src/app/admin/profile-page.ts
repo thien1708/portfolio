@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminApiService } from '../core/admin-api.service';
 import { ApiService } from '../core/api.service';
@@ -6,13 +6,14 @@ import { ToastService } from '../core/toast.service';
 import { ChipsInput } from '../shared/chips-input';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-admin-profile-page',
   imports: [ReactiveFormsModule, ChipsInput],
   template: `
     <div class="mx-auto max-w-3xl">
       <div class="mb-8">
         <h2 class="font-display text-2xl font-extrabold">👤 Profile</h2>
-        <p class="mt-1 text-sm text-ink/60 dark:text-lav-100/60">
+        <p class="mt-1 text-sm text-ink/70 dark:text-lav-100/70">
           The hero, about and contact sections of the public site are built from this data.
         </p>
       </div>
@@ -62,7 +63,7 @@ import { ChipsInput } from '../shared/chips-input';
           <div>
             <span class="label">Typing roles (hero animation)</span>
             <app-chips-input formControlName="typingRoles" />
-            <p class="mt-1 text-xs text-ink/50 dark:text-lav-100/50">Cycled by the typewriter effect in the hero section.</p>
+            <p class="mt-1 text-xs text-ink/70 dark:text-lav-100/70">Cycled by the typewriter effect in the hero section.</p>
           </div>
 
           <div class="grid gap-5 sm:grid-cols-2">

@@ -9,6 +9,8 @@ public record ProjectResponse(
         String description,
         List<String> techStack,
         String imageUrl,
+        List<String> galleryUrls,
+        List<String> highlights,
         String demoUrl,
         String repoUrl,
         boolean featured,

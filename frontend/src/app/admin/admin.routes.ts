@@ -12,7 +12,12 @@ export const ADMIN_ROUTES: Routes = [
     canActivate: [adminGuard],
     loadComponent: () => import('./layout').then((m) => m.AdminLayout),
     children: [
-      { path: '', redirectTo: 'profile', pathMatch: 'full' },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./dashboard-page').then((m) => m.DashboardPage),
+        title: 'Admin · Dashboard',
+      },
       {
         path: 'profile',
         loadComponent: () => import('./profile-page').then((m) => m.ProfilePage),

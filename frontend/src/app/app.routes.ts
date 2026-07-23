@@ -10,5 +10,9 @@ export const routes: Routes = [
     path: 'admin',
     loadChildren: () => import('./admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
-  { path: '**', redirectTo: '' },
+  {
+    path: '**',
+    loadComponent: () => import('./pages/not-found').then((m) => m.NotFound),
+    title: '404 — Trần Vũ Thiện',
+  },
 ];

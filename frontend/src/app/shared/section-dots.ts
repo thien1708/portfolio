@@ -23,7 +23,7 @@ interface Dot {
       @for (dot of dots; track dot.id) {
         <button
           type="button"
-          class="group relative flex items-center"
+          class="group relative flex items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400"
           (click)="go(dot.id)"
           [attr.aria-label]="dot.label"
         >

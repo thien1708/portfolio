@@ -1,14 +1,22 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { Skill } from '../../core/models';
+import { I18nService } from '../../core/i18n.service';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { Icon } from '../../shared/icon';
 import { SpotlightDirective } from '../../shared/spotlight.directive';
 import { TiltDirective } from '../../shared/tilt.directive';
 
+type SkillLevel = 'daily' | 'proficient' | 'familiar';
+
+interface LeveledSkill {
+  skill: Skill;
+  level: SkillLevel;
+}
+
 interface SkillGroup {
   category: string;
   icon: string;
-  skills: Skill[];
+  skills: LeveledSkill[];
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -18,6 +26,16 @@ const CATEGORY_ICONS: Record<string, string> = {
   'messaging / integration': 'share',
   tools: 'wrench',
 };
+
+/**
+ * Percentage bars invite the question "80% compared to whom?" — instead the
+ * stored proficiency maps to three honest usage tiers shown as colored dots.
+ */
+function toLevel(proficiency: number): SkillLevel {
+  if (proficiency >= 85) return 'daily';
+  if (proficiency >= 70) return 'proficient';
+  return 'familiar';
+}
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,12 +49,19 @@ const CATEGORY_ICONS: Record<string, string> = {
       </div>
 
       <div class="mx-auto max-w-6xl px-6">
-        <div appReveal class="mb-14 text-center">
-          <p class="font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-500">What I work with</p>
-          <h2 class="section-title mt-2">My <span class="gradient-text">Skills</span></h2>
+        <div appReveal class="mb-8 text-center">
+          <p class="font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-500">{{ i18n.t('skills.kicker') }}</p>
+          <h2 class="section-title mt-2">{{ i18n.t('skills.title1') }} <span class="gradient-text">{{ i18n.t('skills.title2') }}</span></h2>
         </div>
 
         @if (skills().length > 0) {
+          <!-- Level legend -->
+          <div appReveal [revealDelay]="80" class="mb-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-ink/70 dark:text-lav-100/70">
+            <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-lav-500 to-peri-500"></span>{{ i18n.t('skills.daily') }}</span>
+            <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-sky2-400"></span>{{ i18n.t('skills.proficient') }}</span>
+            <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full border border-lav-400 bg-lav-200/60 dark:bg-lav-700/40"></span>{{ i18n.t('skills.familiar') }}</span>
+          </div>
+
           <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             @for (group of groups(); track group.category; let gi = $index) {
               <div
@@ -52,19 +77,43 @@ const CATEGORY_ICONS: Record<string, string> = {
                   </span>
                   <h3 class="font-display text-lg font-bold">{{ group.category }}</h3>
                 </div>
-                <ul class="space-y-4">
-                  @for (skill of group.skills; track skill.id) {
+                <ul class="flex flex-wrap gap-2">
+                  @for (item of group.skills; track item.skill.id) {
                     <li>
-                      <div class="mb-1.5 flex items-center justify-between text-sm">
-                        <span class="font-medium">{{ skill.name }}</span>
-                        <span class="text-xs text-lav-500 dark:text-lav-300">{{ skill.proficiency }}%</span>
-                      </div>
-                      <div class="h-2 overflow-hidden rounded-full bg-lav-100 dark:bg-lav-800/50">
-                        <div
-                          class="bar-fill h-full rounded-full bg-gradient-to-r from-lav-500 via-peri-400 to-sky2-400"
-                          [style.width.%]="skill.proficiency"
-                        ></div>
-                      </div>
+                      <span
+                        class="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:shadow-soft"
+                        [class.border-lav-300]="item.level === 'daily'"
+                        [class.bg-lav-100/80]="item.level === 'daily'"
+                        [class.text-lav-800]="item.level === 'daily'"
+                        [class.dark:border-lav-500/50]="item.level === 'daily'"
+                        [class.dark:bg-lav-800/60]="item.level === 'daily'"
+                        [class.dark:text-lav-100]="item.level === 'daily'"
+                        [class.border-sky2-300]="item.level === 'proficient'"
+                        [class.bg-sky2-100/70]="item.level === 'proficient'"
+                        [class.text-ink]="item.level === 'proficient'"
+                        [class.dark:border-sky2-500/40]="item.level === 'proficient'"
+                        [class.dark:bg-sky2-500/15]="item.level === 'proficient'"
+                        [class.dark:text-sky2-200]="item.level === 'proficient'"
+                        [class.border-lav-200]="item.level === 'familiar'"
+                        [class.bg-white/50]="item.level === 'familiar'"
+                        [class.text-ink]="item.level === 'familiar'"
+                        [class.dark:border-lav-700/50]="item.level === 'familiar'"
+                        [class.dark:bg-lav-800/30]="item.level === 'familiar'"
+                        [class.dark:text-lav-200]="item.level === 'familiar'"
+                        [attr.title]="levelLabel(item.level)"
+                      >
+                        <span
+                          class="h-2 w-2 shrink-0 rounded-full"
+                          [class.bg-gradient-to-r]="item.level === 'daily'"
+                          [class.from-lav-500]="item.level === 'daily'"
+                          [class.to-peri-500]="item.level === 'daily'"
+                          [class.bg-sky2-400]="item.level === 'proficient'"
+                          [class.border]="item.level === 'familiar'"
+                          [class.border-lav-400]="item.level === 'familiar'"
+                          [class.bg-lav-200/60]="item.level === 'familiar'"
+                        ></span>
+                        {{ item.skill.name }}
+                      </span>
                     </li>
                   }
                 </ul>
@@ -74,7 +123,7 @@ const CATEGORY_ICONS: Record<string, string> = {
         } @else {
           <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             @for (i of [1, 2, 3]; track i) {
-              <div class="skeleton h-72 w-full rounded-3xl"></div>
+              <div class="skeleton h-56 w-full rounded-3xl"></div>
             }
           </div>
         }
@@ -84,6 +133,8 @@ const CATEGORY_ICONS: Record<string, string> = {
 })
 export class SkillsSection {
   readonly skills = input<Skill[]>([]);
+
+  protected readonly i18n = inject(I18nService);
 
   protected readonly groups = computed<SkillGroup[]>(() => {
     const map = new Map<string, Skill[]>();
@@ -95,7 +146,11 @@ export class SkillsSection {
     return [...map.entries()].map(([category, skills]) => ({
       category,
       icon: CATEGORY_ICONS[category.toLowerCase()] ?? 'layers',
-      skills,
+      skills: skills.map((skill) => ({ skill, level: toLevel(skill.proficiency) })),
     }));
   });
+
+  protected levelLabel(level: SkillLevel): string {
+    return this.i18n.t(level === 'daily' ? 'skills.daily' : level === 'proficient' ? 'skills.proficient' : 'skills.familiar');
+  }
 }

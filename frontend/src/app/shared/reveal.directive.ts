@@ -1,5 +1,34 @@
 import { Directive, ElementRef, OnDestroy, OnInit, inject, input } from '@angular/core';
 
+// One shared scroll/resize fallback for every pending reveal element —
+// dozens of per-element window listeners otherwise fire on each frame.
+const pending = new Set<RevealDirective>();
+let listening = false;
+
+function checkAllPending(): void {
+  for (const directive of pending) {
+    directive.checkViewport();
+  }
+}
+
+function watch(directive: RevealDirective): void {
+  pending.add(directive);
+  if (!listening) {
+    listening = true;
+    window.addEventListener('scroll', checkAllPending, { passive: true });
+    window.addEventListener('resize', checkAllPending, { passive: true });
+  }
+}
+
+function unwatch(directive: RevealDirective): void {
+  pending.delete(directive);
+  if (listening && pending.size === 0) {
+    listening = false;
+    window.removeEventListener('scroll', checkAllPending);
+    window.removeEventListener('resize', checkAllPending);
+  }
+}
+
 /**
  * Scroll-reveal: adds .reveal on init and .reveal-visible once the element
  * enters the viewport. Pairs with the CSS in styles.css; honours
@@ -47,15 +76,14 @@ export class RevealDirective implements OnInit, OnDestroy {
     );
     this.observer.observe(element);
 
-    // Fallbacks for cases where IO does not fire (anchor deep-links,
-    // headless rendering): check the viewport directly after layout and on
-    // scroll/resize until revealed.
+    // Fallbacks for cases where IO does not fire (anchor deep-links, very
+    // tall sections that never reach the threshold ratio): check the
+    // viewport directly after layout and on scroll/resize until revealed.
     requestAnimationFrame(() => this.checkViewport());
-    window.addEventListener('scroll', this.checkViewport, { passive: true });
-    window.addEventListener('resize', this.checkViewport, { passive: true });
+    watch(this);
   }
 
-  private readonly checkViewport = (): void => {
+  checkViewport(): void {
     if (this.revealed) {
       return;
     }
@@ -63,7 +91,7 @@ export class RevealDirective implements OnInit, OnDestroy {
     if (rect.top < window.innerHeight * 0.92 && rect.bottom > 0) {
       this.show();
     }
-  };
+  }
 
   private show(): void {
     if (this.revealed) {
@@ -76,8 +104,7 @@ export class RevealDirective implements OnInit, OnDestroy {
 
   private cleanup(): void {
     this.observer?.disconnect();
-    window.removeEventListener('scroll', this.checkViewport);
-    window.removeEventListener('resize', this.checkViewport);
+    unwatch(this);
   }
 
   ngOnDestroy(): void {
