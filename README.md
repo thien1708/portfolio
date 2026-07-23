@@ -8,7 +8,7 @@ managed in the database — no mock data anywhere.
 | Layer    | Tech                                                                     |
 | -------- | ------------------------------------------------------------------------ |
 | Backend  | Java 21 · Spring Boot 3.5 · Spring Security 6 (JWT) · JPA · Flyway       |
-| Frontend | Angular 20 (standalone, signals) · TailwindCSS 3 · Angular CDK           |
+| Frontend | Angular 20 (standalone, signals) · TailwindCSS 3 · Angular CDK · three.js (hero 3D, lazy chunk) |
 | Database | Supabase (PostgreSQL) — H2 file DB for the zero-setup local profile      |
 | Storage  | Supabase Storage (images) — local `./uploads` folder in the local profile |
 
@@ -33,6 +33,15 @@ npx ng serve
 - Admin panel: <http://localhost:4200/admin> — đăng nhập `tranvuthien1708@gmail.com` / `Admin@123`
   (mật khẩu dev mặc định của profile local — **đổi ngay khi deploy**)
 - Swagger UI: <http://localhost:8080/swagger-ui.html>
+
+> **Port 8080 bị chiếm?** (thường do một app khác đang chạy) Chạy backend trên port
+> khác và trỏ proxy của frontend theo: copy `frontend/proxy.conf.json` ra một file
+> mới, đổi `8080` → port mới, rồi:
+>
+> ```bash
+> ./mvnw spring-boot:run -Dspring-boot.run.profiles=local "-Dspring-boot.run.arguments=--server.port=8890"
+> npx ng serve --proxy-config proxy.local.json
+> ```
 
 ---
 
@@ -129,14 +138,16 @@ to use the managed database instead.
 │       │   ├── repository/   Spring Data repositories
 │       │   ├── dto/          Request/response records (+ validation)
 │       │   ├── service/      Business logic, storage (Supabase / local)
+│       │   ├── util/         Csv & Lines helpers (delimited text columns)
 │       │   └── web/          Public, auth and admin controllers + error handler
-│       └── resources/db/migration/   V1__schema.sql, V2__seed.sql (CV data)
+│       └── resources/db/migration/   V1__schema.sql … V4 (schema + CV seed + project gallery)
 ├── frontend/                 Angular 20 + Tailwind
 │   └── src/app/
-│       ├── core/             API services, auth, interceptor, theme, toasts
-│       ├── shared/           Reveal/count-up directives, chips input, toast outlet
+│       ├── core/             API services, auth, interceptor, theme, i18n (EN/VI), toasts
+│       ├── shared/           Reveal/count-up/tilt directives, chips input, command palette, toast outlet
+│       ├── three/            Lazy-loaded three.js solar-system hero (engine + shaders)
 │       ├── pages/home/       Public site (hero, skills, timeline, projects, …)
-│       └── admin/            Login, layout, generic CRUD, profile, messages
+│       └── admin/            Login, layout, dashboard, generic CRUD, image cropper, messages
 ├── docker-compose.yml        Postgres + backend + frontend (nginx)
 └── .env.example              All required environment variables
 ```
@@ -158,8 +169,9 @@ không cần sửa bất kỳ dòng code frontend nào.
 
 ### Bước 0 — Đẩy code lên GitHub
 
-Cả Render và Netlify đều deploy từ GitHub. Repo git đã được khởi tạo sẵn ở thư mục
-gốc, chỉ cần:
+Cả Render và Netlify đều deploy từ GitHub. Repo này đã có remote `origin`
+(`github.com/thien1708/portfolio`) với code mới nhất trên nhánh `main` — nếu bạn
+clone/fork sang repo khác thì:
 
 1. Tạo repo mới trên <https://github.com/new> (chọn **Private** nếu không muốn lộ
    số điện thoại trong file CV PDF — hoặc xoá file CV khỏi repo:
@@ -170,6 +182,11 @@ gốc, chỉ cần:
    git remote add origin https://github.com/<username>/<repo>.git
    git push -u origin main
    ```
+
+> **Về nhánh deploy**: Render và Netlify mặc định build **nhánh mặc định của repo**
+> (`main`). Quy trình của repo này: phát triển trên `develop` → merge vào `main`
+> khi ổn định. Nếu bạn cấu hình Render/Netlify theo dõi nhánh khác (vd `deploy`)
+> thì nhớ merge vào đúng nhánh đó mỗi lần muốn deploy.
 
 ### Bước 1 — Tạo project Supabase (database + storage)
 
@@ -222,10 +239,13 @@ gốc, chỉ cần:
    build Maven). Deploy thành công khi log có:
 
    ```
-   Successfully applied 2 migrations ...   ← Flyway đã tạo schema + seed dữ liệu CV lên Supabase
+   Successfully applied 4 migrations ...   ← Flyway đã tạo schema + seed dữ liệu CV lên Supabase
    Admin user 'tranvuthien1708@gmail.com' created.
    Started PortfolioBackendApplication
    ```
+
+   (Số migration tăng dần theo thời gian — quan trọng là dòng `Successfully applied`
+   không kèm lỗi.)
 
 4. Ghi lại **URL của service** hiển thị đầu trang, dạng
    `https://portfolio-backend-xxxx.onrender.com`. Kiểm tra nhanh:
@@ -272,16 +292,20 @@ Quay lại Render → service `portfolio-backend` → **Environment** → sửa
 
 ### Bước 6 — Hoàn thiện SEO khi đã có URL chính thức
 
-`frontend/src/index.html` đã có sẵn meta description, Open Graph, Twitter card và
-JSON-LD; `frontend/public/robots.txt` đã chặn `/admin`. Còn vài thứ **phải chờ có
-URL thật** mới điền được — sau khi chốt tên miền (vd `https://tranvuthien.netlify.app`
-hoặc domain riêng), sửa `frontend/src/index.html` thêm vào `<head>`:
+`frontend/src/index.html` đã có sẵn meta description, Open Graph (kèm `og:image`),
+Twitter card (`summary_large_image` + `twitter:image`) và JSON-LD; ảnh preview
+1200×630 nằm tại `frontend/public/og-image.png`; `frontend/public/robots.txt` đã
+chặn `/admin`. Còn vài thứ **phải chờ có URL thật** mới điền được — sau khi chốt
+tên miền (vd `https://tranvuthien.netlify.app` hoặc domain riêng), sửa
+`frontend/src/index.html` (vị trí đã đánh dấu bằng comment trong `<head>`):
 
 ```html
+<!-- thêm 2 dòng này -->
 <link rel="canonical" href="https://<URL-cua-ban>/">
 <meta property="og:url" content="https://<URL-cua-ban>/">
-<!-- nếu có ảnh preview 1200x630 đặt tại frontend/public/og-image.png -->
+<!-- và đổi og:image / twitter:image từ đường dẫn tương đối sang tuyệt đối -->
 <meta property="og:image" content="https://<URL-cua-ban>/og-image.png">
+<meta name="twitter:image" content="https://<URL-cua-ban>/og-image.png">
 ```
 
 Tuỳ chọn: tạo `frontend/public/sitemap.xml` (site một trang chỉ cần URL gốc) và thêm
@@ -302,9 +326,10 @@ trên [Google Search Console](https://search.google.com/search-console).
 | Netlify build fail vì Node version | `netlify.toml` đã ghim `NODE_VERSION=22`; đừng override trong UI Netlify. |
 | Đổi mật khẩu admin | Đổi `ADMIN_PASSWORD` trên Render chỉ áp dụng khi user **chưa tồn tại**. Cách nhanh: xoá dòng trong bảng `users` (Supabase → Table Editor) rồi restart service để tạo lại từ env. |
 
-## Tests
+## Tests & lint
 
 ```bash
 cd backend && ./mvnw test        # auth (lockout, rotation, reuse detection) + CRUD service
 cd frontend && npx ng test       # component smoke tests (needs Chrome)
+cd frontend && npx ng lint       # ESLint (angular-eslint, incl. template a11y rules)
 ```

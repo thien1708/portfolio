@@ -8,6 +8,12 @@ spring:
     password: ""
     driver-class-name: org.h2.Driver
 
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
 app:
   jwt:
     secret: local-dev-only-secret-0123456789abcdef0123456789abcdef

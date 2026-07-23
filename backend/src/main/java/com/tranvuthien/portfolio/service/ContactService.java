@@ -5,6 +5,7 @@ import com.tranvuthien.portfolio.dto.ContactMessageResponse;
 import com.tranvuthien.portfolio.dto.ContactRequest;
 import com.tranvuthien.portfolio.exception.NotFoundException;
 import com.tranvuthien.portfolio.repository.ContactMessageRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,12 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ContactService {
 
     private final ContactMessageRepository repository;
-    private final ContactNotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ContactService(ContactMessageRepository repository,
-                          ContactNotificationService notificationService) {
+                          ApplicationEventPublisher eventPublisher) {
         this.repository = repository;
-        this.notificationService = notificationService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -30,7 +31,9 @@ public class ContactService {
         message.setSubject(request.subject());
         message.setMessage(request.message());
         repository.save(message);
-        notificationService.notifyNewMessage(request);
+        // Delivered to the notification listener only AFTER this transaction
+        // commits — no email for a submission that failed to persist.
+        eventPublisher.publishEvent(new ContactMessageReceived(request));
     }
 
     @Transactional(readOnly = true)
@@ -48,7 +51,7 @@ public class ContactService {
         ContactMessage message = repository.findById(id)
                 .orElseThrow(() -> NotFoundException.of("Message", id));
         message.setRead(read);
-        return toResponse(repository.save(message));
+        return toResponse(message);
     }
 
     @Transactional

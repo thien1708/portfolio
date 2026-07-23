@@ -1,11 +1,6 @@
 package com.tranvuthien.portfolio.repository;
 
 import com.tranvuthien.portfolio.domain.Project;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-
-public interface ProjectRepository extends JpaRepository<Project, Long> {
-
-    List<Project> findAllByOrderBySortOrderAscIdAsc();
+public interface ProjectRepository extends SortedEntityRepository<Project> {
 }

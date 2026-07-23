@@ -4,8 +4,11 @@ import com.tranvuthien.portfolio.domain.Profile;
 import com.tranvuthien.portfolio.dto.ProfileRequest;
 import com.tranvuthien.portfolio.dto.ProfileResponse;
 import com.tranvuthien.portfolio.exception.NotFoundException;
+import com.tranvuthien.portfolio.config.CacheConfig;
 import com.tranvuthien.portfolio.repository.ProfileRepository;
 import com.tranvuthien.portfolio.util.Csv;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +21,7 @@ public class ProfileService {
         this.repository = repository;
     }
 
+    @Cacheable(CacheConfig.PROFILE)
     @Transactional(readOnly = true)
     public ProfileResponse get() {
         return repository.findFirstByOrderByIdAsc()
@@ -25,6 +29,7 @@ public class ProfileService {
                 .orElseThrow(() -> new NotFoundException("Profile is not configured yet"));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.PROFILE, allEntries = true)
     @Transactional
     public ProfileResponse update(ProfileRequest request) {
         Profile profile = repository.findFirstByOrderByIdAsc().orElseGet(Profile::new);

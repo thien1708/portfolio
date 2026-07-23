@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "certifications")
-public class Certification {
+public class Certification implements Sortable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

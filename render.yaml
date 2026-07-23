@@ -8,7 +8,8 @@ services:
     rootDir: backend
     dockerfilePath: ./Dockerfile
     plan: free
-    healthCheckPath: /api/v1/health
+    # Actuator health includes a real DB ping (the old /api/v1/health was static)
+    healthCheckPath: /actuator/health
     envVars:
       # --- Supabase PostgreSQL (Session pooler, port 5432) ---
       - key: DATABASE_URL
