@@ -59,8 +59,13 @@ server:
     include-message: never
     include-binding-errors: never
 
+# API docs are OFF by default (production): they expose the full admin API
+# surface. Set SWAGGER_ENABLED=true (or use the local profile) to enable.
 springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
   swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
     path: /swagger-ui.html
 
 management:
