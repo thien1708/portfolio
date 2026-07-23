@@ -13,7 +13,7 @@ import { ToastService } from '../core/toast.service';
     <div class="mx-auto max-w-4xl">
       <div class="mb-8">
         <h2 class="font-display text-2xl font-extrabold">📬 Messages</h2>
-        <p class="mt-1 text-sm text-ink/60 dark:text-lav-100/60">
+        <p class="mt-1 text-sm text-ink/70 dark:text-lav-100/70">
           Messages sent through the public contact form.
         </p>
       </div>
@@ -28,7 +28,7 @@ import { ToastService } from '../core/toast.service';
         <div class="card p-14 text-center">
           <p class="text-4xl">📭</p>
           <p class="mt-3 font-display font-bold">Inbox zero</p>
-          <p class="mt-1 text-sm text-ink/60 dark:text-lav-100/60">No messages yet.</p>
+          <p class="mt-1 text-sm text-ink/70 dark:text-lav-100/70">No messages yet.</p>
         </div>
       } @else {
         <div class="space-y-3">
@@ -60,10 +60,10 @@ import { ToastService } from '../core/toast.service';
                         <span class="ml-2 inline-block h-2 w-2 rounded-full bg-lav-500 align-middle"></span>
                       }
                     </p>
-                    <p class="text-xs text-ink/50 dark:text-lav-100/50">{{ msg.email }}</p>
+                    <p class="text-xs text-ink/70 dark:text-lav-100/70">{{ msg.email }}</p>
                   </div>
                 </div>
-                <div class="flex items-center gap-2 text-xs text-ink/50 dark:text-lav-100/50">
+                <div class="flex items-center gap-2 text-xs text-ink/70 dark:text-lav-100/70">
                   <span>{{ msg.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
                   <button
                     type="button"

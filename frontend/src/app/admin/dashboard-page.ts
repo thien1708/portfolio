@@ -21,7 +21,7 @@ interface StatCard {
   template: `
     <div class="mx-auto max-w-5xl">
       <h2 class="font-display text-2xl font-extrabold">📊 Dashboard</h2>
-      <p class="mt-1 text-sm text-ink/60 dark:text-lav-100/60">
+      <p class="mt-1 text-sm text-ink/70 dark:text-lav-100/70">
         Everything on the public site at a glance.
       </p>
 
@@ -35,7 +35,7 @@ interface StatCard {
             <p class="font-display font-bold">
               {{ unread() }} unread message{{ unread() === 1 ? '' : 's' }}
             </p>
-            <p class="text-sm text-ink/60 dark:text-lav-100/60">Someone reached out — take a look.</p>
+            <p class="text-sm text-ink/70 dark:text-lav-100/70">Someone reached out — take a look.</p>
           </div>
           <span class="text-lav-500">→</span>
         </a>
@@ -74,7 +74,7 @@ interface StatCard {
                 [class.border-l-lav-500]="!msg.read"
               >
                 <span class="font-display font-bold">{{ msg.name }}</span>
-                <span class="min-w-0 flex-1 truncate text-ink/60 dark:text-lav-100/60">
+                <span class="min-w-0 flex-1 truncate text-ink/70 dark:text-lav-100/70">
                   {{ msg.subject || msg.message }}
                 </span>
                 <span class="shrink-0 text-xs text-lav-500">{{ msg.createdAt | date: 'MMM d' }}</span>

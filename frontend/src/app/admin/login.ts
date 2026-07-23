@@ -20,7 +20,7 @@ import { ToastService } from '../core/toast.service';
         <div class="mb-8 text-center">
           <span class="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-lav-500 to-peri-500 text-3xl shadow-soft">🔐</span>
           <h1 class="font-display text-2xl font-extrabold">Admin <span class="gradient-text">Panel</span></h1>
-          <p class="mt-1 text-sm text-ink/60 dark:text-lav-100/60">Sign in to manage your portfolio</p>
+          <p class="mt-1 text-sm text-ink/70 dark:text-lav-100/70">Sign in to manage your portfolio</p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5">

@@ -68,7 +68,7 @@
 
   .input {
     @apply w-full rounded-xl border border-lav-200 bg-white/80 px-4 py-2.5 text-sm text-ink
-           placeholder:text-lav-500/50 transition-colors
+           placeholder:text-lav-500/70 transition-colors
            focus:border-lav-400 focus:outline-none focus:ring-2 focus:ring-lav-300/50
            dark:border-lav-700/60 dark:bg-[#1d1a3a] dark:text-lav-100 dark:placeholder:text-lav-400/40;
   }

@@ -56,7 +56,7 @@ function toLevel(proficiency: number): SkillLevel {
 
         @if (skills().length > 0) {
           <!-- Level legend -->
-          <div appReveal [revealDelay]="80" class="mb-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-ink/60 dark:text-lav-100/60">
+          <div appReveal [revealDelay]="80" class="mb-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-ink/70 dark:text-lav-100/70">
             <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-lav-500 to-peri-500"></span>{{ i18n.t('skills.daily') }}</span>
             <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-sky2-400"></span>{{ i18n.t('skills.proficient') }}</span>
             <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full border border-lav-400 bg-lav-200/60 dark:bg-lav-700/40"></span>{{ i18n.t('skills.familiar') }}</span>

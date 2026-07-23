@@ -35,7 +35,7 @@ interface SideLink {
           <span class="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-lav-500 to-peri-500 text-lg shadow-soft">⚡</span>
           <div>
             <p class="font-display text-sm font-extrabold">Portfolio Admin</p>
-            <p class="max-w-[9rem] truncate text-xs text-ink/50 dark:text-lav-100/50">{{ auth.email() }}</p>
+            <p class="max-w-[9rem] truncate text-xs text-ink/70 dark:text-lav-100/70">{{ auth.email() }}</p>
           </div>
         </div>
 

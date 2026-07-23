@@ -25,7 +25,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
       }
       <input
         type="text"
-        class="min-w-[8rem] flex-1 bg-transparent text-sm outline-none placeholder:text-lav-500/50"
+        class="min-w-[8rem] flex-1 bg-transparent text-sm outline-none placeholder:text-lav-500/70"
         aria-label="Add tag"
         [placeholder]="chips().length === 0 ? 'Type and press Enter…' : ''"
         [value]="draft()"

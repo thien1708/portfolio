@@ -8,7 +8,7 @@ import { I18nService } from '../../core/i18n.service';
   template: `
     <footer class="relative mt-8">
       <div class="h-px bg-gradient-to-r from-transparent via-lav-400 to-transparent"></div>
-      <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-ink/60 dark:text-lav-100/60 sm:flex-row">
+      <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-ink/70 dark:text-lav-100/70 sm:flex-row">
         <p>© {{ year }} {{ profile()?.fullName ?? 'Trần Vũ Thiện' }}. {{ i18n.t('footer.rights') }}</p>
         <p class="flex items-center gap-1.5">
           Built with

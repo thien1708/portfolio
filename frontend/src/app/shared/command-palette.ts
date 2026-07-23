@@ -49,7 +49,7 @@ interface Command {
             <input
               #search
               type="text"
-              class="w-full bg-transparent text-sm text-ink outline-none placeholder:text-lav-500/50 dark:text-lav-100"
+              class="w-full bg-transparent text-sm text-ink outline-none placeholder:text-lav-500/70 dark:text-lav-100"
               aria-label="Search commands"
               placeholder="Jump to a section or link…"
               [value]="query()"

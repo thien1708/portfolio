@@ -30,7 +30,7 @@ type Row = Record<string, unknown> & { id: number };
         <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 class="font-display text-2xl font-extrabold">{{ cfg.icon }} {{ cfg.title }}</h2>
-            <p class="mt-1 text-sm text-ink/60 dark:text-lav-100/60">
+            <p class="mt-1 text-sm text-ink/70 dark:text-lav-100/70">
               Drag rows to reorder — changes go live on the public site immediately.
             </p>
           </div>
@@ -47,7 +47,7 @@ type Row = Record<string, unknown> & { id: number };
           <div class="card p-14 text-center">
             <p class="text-4xl">🗂️</p>
             <p class="mt-3 font-display font-bold">Nothing here yet</p>
-            <p class="mt-1 text-sm text-ink/60 dark:text-lav-100/60">Add your first {{ cfg.singular }} to get started.</p>
+            <p class="mt-1 text-sm text-ink/70 dark:text-lav-100/70">Add your first {{ cfg.singular }} to get started.</p>
           </div>
         } @else {
           <div class="card overflow-x-auto !rounded-2xl">
@@ -165,7 +165,7 @@ type Row = Record<string, unknown> & { id: number };
                     }
                   }
                   @if (field.hint) {
-                    <p class="mt-1 text-xs text-ink/50 dark:text-lav-100/50">{{ field.hint }}</p>
+                    <p class="mt-1 text-xs text-ink/70 dark:text-lav-100/70">{{ field.hint }}</p>
                   }
                   @if (fieldInvalid(field)) {
                     <p class="mt-1 text-xs text-rose-500">This field is required.</p>
@@ -214,7 +214,7 @@ type Row = Record<string, unknown> & { id: number };
           >
             <p class="text-4xl">🗑️</p>
             <h3 class="mt-3 font-display text-lg font-extrabold">Delete this {{ cfg.singular }}?</h3>
-            <p class="mt-1 text-sm text-ink/60 dark:text-lav-100/60">This cannot be undone.</p>
+            <p class="mt-1 text-sm text-ink/70 dark:text-lav-100/70">This cannot be undone.</p>
             <div class="mt-6 flex gap-3">
               <button type="button" class="flex-1 rounded-2xl bg-rose-500 px-5 py-2.5 font-semibold text-white transition-all hover:bg-rose-600" (click)="doDelete()">Delete</button>
               <button type="button" class="btn-ghost flex-1 !px-5 !py-2.5" (click)="confirmDeleteId.set(null)">Cancel</button>

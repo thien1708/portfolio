@@ -57,7 +57,7 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                     <p class="text-sm text-lav-600 dark:text-lav-300">{{ cert.issuer }}</p>
                   }
                   @if (cert.issued) {
-                    <p class="mt-0.5 text-xs text-ink/50 dark:text-lav-100/50">{{ cert.issued }}</p>
+                    <p class="mt-0.5 text-xs text-ink/70 dark:text-lav-100/70">{{ cert.issued }}</p>
                   }
                   @if (cert.url) {
                     <a [href]="cert.url" target="_blank" rel="noopener"

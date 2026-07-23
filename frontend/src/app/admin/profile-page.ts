@@ -13,7 +13,7 @@ import { ChipsInput } from '../shared/chips-input';
     <div class="mx-auto max-w-3xl">
       <div class="mb-8">
         <h2 class="font-display text-2xl font-extrabold">👤 Profile</h2>
-        <p class="mt-1 text-sm text-ink/60 dark:text-lav-100/60">
+        <p class="mt-1 text-sm text-ink/70 dark:text-lav-100/70">
           The hero, about and contact sections of the public site are built from this data.
         </p>
       </div>
@@ -63,7 +63,7 @@ import { ChipsInput } from '../shared/chips-input';
           <div>
             <span class="label">Typing roles (hero animation)</span>
             <app-chips-input formControlName="typingRoles" />
-            <p class="mt-1 text-xs text-ink/50 dark:text-lav-100/50">Cycled by the typewriter effect in the hero section.</p>
+            <p class="mt-1 text-xs text-ink/70 dark:text-lav-100/70">Cycled by the typewriter effect in the hero section.</p>
           </div>
 
           <div class="grid gap-5 sm:grid-cols-2">

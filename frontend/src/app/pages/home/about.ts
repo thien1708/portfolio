@@ -64,13 +64,13 @@ import { SkillRadar } from '../../shared/skill-radar';
         <!-- Stat: years -->
         <div appSpotlight [appTilt]="6" class="card grid place-content-center p-6 text-center md:col-start-3 md:row-start-1">
           <p class="font-display text-4xl font-extrabold gradient-text" [appCountUp]="profile()?.yearsExperience ?? 0" suffix="+"></p>
-          <p class="mt-2 text-sm text-ink/60 dark:text-lav-100/60">{{ i18n.t('about.years') }}</p>
+          <p class="mt-2 text-sm text-ink/70 dark:text-lav-100/70">{{ i18n.t('about.years') }}</p>
         </div>
 
         <!-- Stat: projects -->
         <div appSpotlight [appTilt]="6" class="card grid place-content-center p-6 text-center md:col-start-4 md:row-start-1">
           <p class="font-display text-4xl font-extrabold gradient-text" [appCountUp]="projects().length"></p>
-          <p class="mt-2 text-sm text-ink/60 dark:text-lav-100/60">{{ i18n.t('about.projects') }}</p>
+          <p class="mt-2 text-sm text-ink/70 dark:text-lav-100/70">{{ i18n.t('about.projects') }}</p>
         </div>
 
         <!-- Radar -->
@@ -89,13 +89,13 @@ import { SkillRadar } from '../../shared/skill-radar';
         <!-- Stat: technologies -->
         <div appSpotlight [appTilt]="6" class="card grid place-content-center p-6 text-center md:col-start-1 md:row-start-3">
           <p class="font-display text-4xl font-extrabold gradient-text" [appCountUp]="skills().length"></p>
-          <p class="mt-2 text-sm text-ink/60 dark:text-lav-100/60">{{ i18n.t('about.technologies') }}</p>
+          <p class="mt-2 text-sm text-ink/70 dark:text-lav-100/70">{{ i18n.t('about.technologies') }}</p>
         </div>
 
         <!-- Stat: companies -->
         <div appSpotlight [appTilt]="6" class="card grid place-content-center p-6 text-center md:col-start-2 md:row-start-3">
           <p class="font-display text-4xl font-extrabold gradient-text" [appCountUp]="companies()"></p>
-          <p class="mt-2 text-sm text-ink/60 dark:text-lav-100/60">{{ i18n.t('about.companies') }}</p>
+          <p class="mt-2 text-sm text-ink/70 dark:text-lav-100/70">{{ i18n.t('about.companies') }}</p>
         </div>
       </div>
     </section>
