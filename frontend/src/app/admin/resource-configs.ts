@@ -3,12 +3,14 @@ import { AdminResource } from '../core/admin-api.service';
 export interface FieldDef {
   key: string;
   label: string;
-  type: 'text' | 'textarea' | 'number' | 'toggle' | 'chips' | 'image';
+  type: 'text' | 'textarea' | 'number' | 'toggle' | 'chips' | 'image' | 'images';
   required?: boolean;
   min?: number;
   max?: number;
   placeholder?: string;
   hint?: string;
+  /** For 'image': open the crop dialog with this aspect ratio (w/h). */
+  cropAspect?: number;
 }
 
 export interface ResourceConfig {
@@ -71,7 +73,9 @@ export const RESOURCE_CONFIGS: Record<string, ResourceConfig> = {
       { key: 'period', label: 'Period', type: 'text', placeholder: '04/2024 – 07/2024' },
       { key: 'description', label: 'Description', type: 'textarea', hint: 'One bullet point per line' },
       { key: 'techStack', label: 'Tech stack', type: 'chips', hint: 'Press Enter to add each technology' },
-      { key: 'imageUrl', label: 'Cover image', type: 'image' },
+      { key: 'highlights', label: 'Key results', type: 'chips', hint: 'Measurable outcomes, e.g. "Cut p99 latency by 40%" — shown in the case study' },
+      { key: 'imageUrl', label: 'Cover image', type: 'image', cropAspect: 16 / 10 },
+      { key: 'galleryUrls', label: 'Gallery screenshots', type: 'images', hint: 'Extra screenshots for the case-study slider' },
       { key: 'demoUrl', label: 'Demo URL', type: 'text', placeholder: 'https://…' },
       { key: 'repoUrl', label: 'Repository URL', type: 'text', placeholder: 'https://github.com/…' },
       { key: 'featured', label: 'Featured project', type: 'toggle' },

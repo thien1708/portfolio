@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { inject, ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { Experience } from '../../core/models';
+import { I18nService } from '../../core/i18n.service';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { Icon } from '../../shared/icon';
 import { SpotlightDirective } from '../../shared/spotlight.directive';
@@ -11,8 +12,8 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
   template: `
     <section id="experience" class="mx-auto max-w-5xl scroll-mt-24 px-6 py-24">
       <div appReveal class="mb-16 text-center">
-        <p class="font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-500">Where I've been</p>
-        <h2 class="section-title mt-2">Work <span class="gradient-text">Experience</span></h2>
+        <p class="font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-500">{{ i18n.t('exp.kicker') }}</p>
+        <h2 class="section-title mt-2">{{ i18n.t('exp.title1') }} <span class="gradient-text">{{ i18n.t('exp.title2') }}</span></h2>
       </div>
 
       @if (experiences().length > 0) {
@@ -75,6 +76,8 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
   `,
 })
 export class ExperienceSection {
+  protected readonly i18n = inject(I18nService);
+
   readonly experiences = input<Experience[]>([]);
 
   protected bullets(description: string): string[] {

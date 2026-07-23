@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { inject, ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { Certification, EducationItem } from '../../core/models';
+import { I18nService } from '../../core/i18n.service';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { Icon } from '../../shared/icon';
 import { SpotlightDirective } from '../../shared/spotlight.directive';
@@ -11,8 +12,8 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
   template: `
     <section id="education" class="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
       <div appReveal class="mb-14 text-center">
-        <p class="font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-500">Background</p>
-        <h2 class="section-title mt-2">Education & <span class="gradient-text">Certifications</span></h2>
+        <p class="font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-500">{{ i18n.t('edu.kicker') }}</p>
+        <h2 class="section-title mt-2">{{ i18n.t('edu.title1') }} <span class="gradient-text">{{ i18n.t('edu.title2') }}</span></h2>
       </div>
 
       <div class="grid gap-8 lg:grid-cols-2">
@@ -76,6 +77,8 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
   `,
 })
 export class EducationSection {
+  protected readonly i18n = inject(I18nService);
+
   readonly education = input<EducationItem[]>([]);
   readonly certifications = input<Certification[]>([]);
 }

@@ -29,6 +29,14 @@ public class Project {
     @Column(name = "image_url")
     private String imageUrl;
 
+    /** Newline-separated screenshot URLs for the case-study gallery. */
+    @Column(name = "gallery_urls", columnDefinition = "text")
+    private String galleryUrls;
+
+    /** Newline-separated headline results ("Cut p99 latency by 40%"). */
+    @Column(columnDefinition = "text")
+    private String highlights;
+
     @Column(name = "demo_url")
     private String demoUrl;
 
@@ -53,6 +61,10 @@ public class Project {
     public void setTechStack(String techStack) { this.techStack = techStack; }
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public String getGalleryUrls() { return galleryUrls; }
+    public void setGalleryUrls(String galleryUrls) { this.galleryUrls = galleryUrls; }
+    public String getHighlights() { return highlights; }
+    public void setHighlights(String highlights) { this.highlights = highlights; }
     public String getDemoUrl() { return demoUrl; }
     public void setDemoUrl(String demoUrl) { this.demoUrl = demoUrl; }
     public String getRepoUrl() { return repoUrl; }

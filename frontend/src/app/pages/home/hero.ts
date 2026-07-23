@@ -1,5 +1,14 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, effect, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { Profile } from '../../core/models';
+import { I18nService } from '../../core/i18n.service';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { Icon } from '../../shared/icon';
 import { MagneticDirective } from '../../shared/magnetic.directive';
@@ -30,7 +39,7 @@ import { HeroScene } from '../../three/hero-scene';
         <div class="order-2 text-center lg:order-1 lg:text-left">
           @if (profile(); as p) {
             <p appReveal class="mb-4 flex items-center justify-center gap-2 font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-600 dark:text-lav-300 lg:justify-start">
-              <app-icon name="hand" class="text-base" /> Hello, I am
+              <app-icon name="hand" class="text-base" /> {{ i18n.t('hero.hello') }}
             </p>
             <h1 class="font-display text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
               <span appSplitText="gradient">{{ p.fullName }}</span>
@@ -44,15 +53,15 @@ import { HeroScene } from '../../three/hero-scene';
             </p>
             <div appReveal [revealDelay]="420" class="mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
               <button type="button" appMagnetic class="btn-primary" (click)="scrollTo('projects')">
-                <app-icon name="rocket" /> View Projects
+                <app-icon name="rocket" /> {{ i18n.t('hero.viewProjects') }}
               </button>
               @if (p.cvUrl) {
                 <a appMagnetic class="btn-ghost" [href]="p.cvUrl" target="_blank" rel="noopener">
-                  <app-icon name="download" /> Download CV
+                  <app-icon name="download" /> {{ i18n.t('hero.downloadCv') }}
                 </a>
               } @else {
                 <button type="button" appMagnetic class="btn-ghost" (click)="scrollTo('contact')">
-                  <app-icon name="mail" /> Contact Me
+                  <app-icon name="mail" /> {{ i18n.t('hero.contactMe') }}
                 </button>
               }
             </div>
@@ -120,7 +129,7 @@ import { HeroScene } from '../../three/hero-scene';
         type="button"
         class="absolute bottom-8 left-1/2 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full text-2xl text-lav-500 animate-bounce"
         (click)="scrollTo('about')"
-        aria-label="Scroll down"
+        [attr.aria-label]="i18n.t('hero.scrollDown')"
       >
         <app-icon name="chevron-down" />
       </button>
@@ -131,6 +140,7 @@ import { HeroScene } from '../../three/hero-scene';
 export class Hero implements OnDestroy {
   readonly profile = input<Profile | null>(null);
 
+  protected readonly i18n = inject(I18nService);
   protected readonly typed = signal('');
 
   private timer: ReturnType<typeof setTimeout> | undefined;

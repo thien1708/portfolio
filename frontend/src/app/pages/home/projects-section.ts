@@ -5,11 +5,13 @@ import {
   HostListener,
   computed,
   effect,
+  inject,
   input,
   signal,
   viewChild,
 } from '@angular/core';
 import { Project } from '../../core/models';
+import { I18nService } from '../../core/i18n.service';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { Icon } from '../../shared/icon';
 import { SpotlightDirective } from '../../shared/spotlight.directive';
@@ -27,8 +29,8 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
 
       <div class="mx-auto max-w-6xl px-6">
         <div appReveal class="mb-10 text-center">
-          <p class="font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-500">What I've built</p>
-          <h2 class="section-title mt-2">Featured <span class="gradient-text">Projects</span></h2>
+          <p class="font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-500">{{ i18n.t('projects.kicker') }}</p>
+          <h2 class="section-title mt-2">{{ i18n.t('projects.title1') }} <span class="gradient-text">{{ i18n.t('projects.title2') }}</span></h2>
         </div>
 
         @if (projects().length > 0) {
@@ -45,7 +47,7 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
               [class.chip]="filter() !== null"
               (click)="filter.set(null)"
             >
-              All
+              {{ i18n.t('projects.all') }}
             </button>
             @for (tech of allTech(); track tech) {
               <button
@@ -113,7 +115,7 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                     </div>
                   }
                   @if (project.featured) {
-                    <span class="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white/85 px-3 py-1 text-xs font-bold text-lav-700 shadow backdrop-blur dark:bg-ink/70 dark:text-lav-200"><app-icon name="star" class="text-[0.7rem]" /> Featured</span>
+                    <span class="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white/85 px-3 py-1 text-xs font-bold text-lav-700 shadow backdrop-blur dark:bg-ink/70 dark:text-lav-200"><app-icon name="star" class="text-[0.7rem]" /> {{ i18n.t('projects.featured') }}</span>
                   }
                 </div>
 
@@ -146,13 +148,13 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                       @if (project.demoUrl) {
                         <a [href]="project.demoUrl" target="_blank" rel="noopener"
                            class="flex items-center gap-1.5 text-sm font-semibold text-lav-600 transition-colors hover:text-lav-800 dark:text-lav-300 dark:hover:text-lav-100">
-                          <app-icon name="external" /> Live demo
+                          <app-icon name="external" /> {{ i18n.t('projects.demo') }}
                         </a>
                       }
                       @if (project.repoUrl) {
                         <a [href]="project.repoUrl" target="_blank" rel="noopener"
                            class="flex items-center gap-1.5 text-sm font-semibold text-lav-600 transition-colors hover:text-lav-800 dark:text-lav-300 dark:hover:text-lav-100">
-                          <app-icon name="github" /> Source
+                          <app-icon name="github" /> {{ i18n.t('projects.source') }}
                         </a>
                       }
                     </div>
@@ -186,9 +188,41 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
             [attr.aria-label]="p.name"
             class="lightbox-panel glass relative flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl shadow-soft-lg"
           >
-            <div class="relative h-52 shrink-0 overflow-hidden">
-              @if (p.imageUrl) {
-                <img [src]="p.imageUrl" [alt]="p.name" class="h-full w-full object-cover" />
+            <div class="relative h-56 shrink-0 overflow-hidden">
+              @if (images(p).length > 0) {
+                <img [src]="images(p)[galleryIndex()]" [alt]="p.name" class="h-full w-full object-cover" />
+                @if (images(p).length > 1) {
+                  <button
+                    type="button"
+                    class="absolute left-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/85 text-lav-700 shadow backdrop-blur transition-transform hover:scale-110 dark:bg-ink/70 dark:text-lav-200"
+                    (click)="prevImage(p)"
+                    aria-label="Previous image"
+                  >
+                    <app-icon name="arrow-left" />
+                  </button>
+                  <button
+                    type="button"
+                    class="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/85 text-lav-700 shadow backdrop-blur transition-transform hover:scale-110 dark:bg-ink/70 dark:text-lav-200"
+                    (click)="nextImage(p)"
+                    aria-label="Next image"
+                  >
+                    <app-icon name="arrow-right" />
+                  </button>
+                  <div class="absolute inset-x-0 bottom-2 flex justify-center gap-1.5">
+                    @for (img of images(p); track $index) {
+                      <button
+                        type="button"
+                        class="h-1.5 rounded-full transition-all duration-200"
+                        [class.w-5]="galleryIndex() === $index"
+                        [class.bg-white]="galleryIndex() === $index"
+                        [class.w-1.5]="galleryIndex() !== $index"
+                        [class.bg-white/50]="galleryIndex() !== $index"
+                        (click)="galleryIndex.set($index)"
+                        [attr.aria-label]="i18n.t('projects.gallery') + ' ' + ($index + 1)"
+                      ></button>
+                    }
+                  </div>
+                }
               } @else {
                 <div class="grid h-full w-full place-items-center bg-gradient-to-br from-lav-500 to-sky2-400">
                   <span class="font-display text-6xl font-extrabold text-white/80">{{ initials(p.name) }}</span>
@@ -216,6 +250,21 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                   }
                 </ul>
               }
+              @if (p.highlights.length > 0) {
+                <div class="mt-6 rounded-2xl border border-lav-200/70 bg-lav-50/60 p-5 dark:border-lav-700/40 dark:bg-lav-800/20">
+                  <p class="mb-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-lav-600 dark:text-lav-300">
+                    {{ i18n.t('projects.highlights') }}
+                  </p>
+                  <ul class="space-y-2 text-sm leading-relaxed">
+                    @for (line of p.highlights; track $index) {
+                      <li class="flex gap-2.5">
+                        <span class="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-gradient-to-br from-lav-500 to-sky2-400 text-[0.6rem] text-white"><app-icon name="check" /></span>
+                        <span>{{ line }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
               @if (p.techStack.length > 0) {
                 <div class="mt-5 flex flex-wrap gap-1.5">
                   @for (tech of p.techStack; track tech) {
@@ -226,10 +275,10 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
               @if (p.demoUrl || p.repoUrl) {
                 <div class="mt-6 flex gap-3">
                   @if (p.demoUrl) {
-                    <a [href]="p.demoUrl" target="_blank" rel="noopener" class="btn-primary text-sm"><app-icon name="external" /> Live demo</a>
+                    <a [href]="p.demoUrl" target="_blank" rel="noopener" class="btn-primary text-sm"><app-icon name="external" /> {{ i18n.t('projects.demo') }}</a>
                   }
                   @if (p.repoUrl) {
-                    <a [href]="p.repoUrl" target="_blank" rel="noopener" class="btn-ghost text-sm"><app-icon name="github" /> Source</a>
+                    <a [href]="p.repoUrl" target="_blank" rel="noopener" class="btn-ghost text-sm"><app-icon name="github" /> {{ i18n.t('projects.source') }}</a>
                   }
                 </div>
               }
@@ -243,8 +292,26 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
 export class ProjectsSection {
   readonly projects = input<Project[]>([]);
 
+  protected readonly i18n = inject(I18nService);
   protected readonly filter = signal<string | null>(null);
   protected readonly selected = signal<Project | null>(null);
+  protected readonly galleryIndex = signal(0);
+
+  /** Cover + gallery, deduped — everything the case-study slider can show. */
+  protected images(p: Project): string[] {
+    const all = [p.imageUrl, ...p.galleryUrls].filter((u): u is string => !!u);
+    return [...new Set(all)];
+  }
+
+  protected prevImage(p: Project): void {
+    const count = this.images(p).length;
+    this.galleryIndex.update((i) => (i - 1 + count) % count);
+  }
+
+  protected nextImage(p: Project): void {
+    const count = this.images(p).length;
+    this.galleryIndex.update((i) => (i + 1) % count);
+  }
 
   private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('lightboxClose');
   /** Element that opened the lightbox; focus returns to it on close. */
@@ -326,6 +393,7 @@ export class ProjectsSection {
       return;
     }
     this.opener = event.currentTarget as HTMLElement;
+    this.galleryIndex.set(0);
     const show = () => this.selected.set(project);
     const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
     if (doc.startViewTransition) {

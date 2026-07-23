@@ -99,6 +99,7 @@ export class AdminLayout implements OnInit {
   protected readonly unread = signal(0);
 
   protected readonly links: SideLink[] = [
+    { path: 'dashboard', label: 'Dashboard', icon: '📊' },
     { path: 'profile', label: 'Profile', icon: '👤' },
     { path: 'skills', label: 'Skills', icon: '🛠️' },
     { path: 'experiences', label: 'Experience', icon: '💼' },

@@ -6,13 +6,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AdminApiService } from '../core/admin-api.service';
 import { ToastService } from '../core/toast.service';
 import { ChipsInput } from '../shared/chips-input';
+import { ImageCropper } from './image-cropper';
 import { FieldDef, RESOURCE_CONFIGS, ResourceConfig } from './resource-configs';
 
 type Row = Record<string, unknown> & { id: number };
 
 @Component({
   selector: 'app-resource-page',
-  imports: [ReactiveFormsModule, ChipsInput, CdkDropList, CdkDrag, CdkDragHandle],
+  imports: [ReactiveFormsModule, ChipsInput, ImageCropper, CdkDropList, CdkDrag, CdkDragHandle],
   template: `
     @if (config(); as cfg) {
       <div class="mx-auto max-w-5xl">
@@ -120,7 +121,25 @@ type Row = Record<string, unknown> & { id: number };
                         }
                         <label class="btn-ghost !px-4 !py-2 text-sm" [class.opacity-60]="uploading()">
                           @if (uploading()) { ⏳ Uploading… } @else { 🖼️ {{ form.get(field.key)?.value ? 'Replace' : 'Upload' }} image }
-                          <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" (change)="onFile($event, field.key)" [disabled]="uploading()" />
+                          <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" (change)="onFile($event, field)" [disabled]="uploading()" />
+                        </label>
+                      </div>
+                    }
+                    @case ('images') {
+                      <div class="space-y-3">
+                        @if (imageList(field.key).length > 0) {
+                          <div class="flex flex-wrap gap-3">
+                            @for (url of imageList(field.key); track $index) {
+                              <div class="relative">
+                                <img [src]="url" alt="Screenshot" class="h-20 w-32 rounded-lg border border-lav-200 object-cover dark:border-lav-700/50" />
+                                <button type="button" class="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full bg-rose-500 text-[0.65rem] text-white shadow" (click)="removeImageAt(field.key, $index)" aria-label="Remove screenshot">✕</button>
+                              </div>
+                            }
+                          </div>
+                        }
+                        <label class="btn-ghost !px-4 !py-2 text-sm" [class.opacity-60]="uploading()">
+                          @if (uploading()) { ⏳ Uploading… } @else { ➕ Add screenshot }
+                          <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" (change)="onFile($event, field)" [disabled]="uploading()" />
                         </label>
                       </div>
                     }
@@ -146,6 +165,16 @@ type Row = Record<string, unknown> & { id: number };
             </form>
           </div>
         </div>
+      }
+
+      <!-- Crop dialog -->
+      @if (cropState(); as crop) {
+        <app-image-cropper
+          [file]="crop.file"
+          [aspect]="crop.aspect"
+          (confirmed)="onCropped($event)"
+          (cancelled)="cropState.set(null)"
+        />
       }
 
       <!-- Delete confirm -->
@@ -187,6 +216,7 @@ export class ResourcePage implements OnInit {
   protected readonly confirmDeleteId = signal<number | null>(null);
   protected readonly saving = signal(false);
   protected readonly uploading = signal(false);
+  protected readonly cropState = signal<{ file: File; key: string; aspect: number } | null>(null);
 
   protected form: FormGroup = this.fb.group({});
   private editingId: number | null = null;
@@ -241,7 +271,13 @@ export class ResourcePage implements OnInit {
         validators.push(Validators.max(field.max));
       }
       const fallback =
-        field.type === 'toggle' ? false : field.type === 'chips' ? [] : field.type === 'number' ? 0 : '';
+        field.type === 'toggle'
+          ? false
+          : field.type === 'chips' || field.type === 'images'
+            ? []
+            : field.type === 'number'
+              ? 0
+              : '';
       group[field.key] = [row?.[field.key] ?? fallback, validators];
     }
     this.form = this.fb.group(group);
@@ -332,22 +368,47 @@ export class ResourcePage implements OnInit {
     });
   }
 
-  protected onFile(event: Event, key: string): void {
+  protected onFile(event: Event, field: FieldDef): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = '';
     if (!file) {
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      this.toast.error('Image is too large (max 2 MB).');
+    if (file.size > 8 * 1024 * 1024) {
+      this.toast.error('Image is too large (max 8 MB).');
       return;
     }
+    // Single images with a configured aspect go through the crop dialog
+    // (which also recompresses); everything else uploads as-is.
+    if (field.type === 'image' && field.cropAspect) {
+      this.cropState.set({ file, key: field.key, aspect: field.cropAspect });
+      return;
+    }
+    this.uploadBlob(file, field.key, field.type === 'images');
+  }
+
+  protected onCropped(blob: Blob): void {
+    const state = this.cropState();
+    this.cropState.set(null);
+    if (!state) {
+      return;
+    }
+    const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
+    this.uploadBlob(file, state.key, false);
+  }
+
+  private uploadBlob(file: File, key: string, append: boolean): void {
     this.uploading.set(true);
     this.adminApi.upload(file).subscribe({
       next: (res) => {
         this.uploading.set(false);
-        this.form.get(key)?.setValue(res.url);
+        if (append) {
+          const current = (this.form.get(key)?.value as string[] | null) ?? [];
+          this.form.get(key)?.setValue([...current, res.url]);
+        } else {
+          this.form.get(key)?.setValue(res.url);
+        }
         this.toast.success('Image uploaded.');
       },
       error: (err) => {
@@ -355,6 +416,15 @@ export class ResourcePage implements OnInit {
         this.toast.error(err?.error?.message ?? 'Upload failed.');
       },
     });
+  }
+
+  protected imageList(key: string): string[] {
+    return (this.form.get(key)?.value as string[] | null) ?? [];
+  }
+
+  protected removeImageAt(key: string, index: number): void {
+    const current = this.imageList(key);
+    this.form.get(key)?.setValue(current.filter((_, i) => i !== index));
   }
 
   protected format(row: Row, key: string): string {

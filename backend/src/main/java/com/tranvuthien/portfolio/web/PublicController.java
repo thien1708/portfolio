@@ -89,6 +89,7 @@ public class PublicController {
         return certificationService.list();
     }
 
+
     @PostMapping("/contact")
     @ResponseStatus(HttpStatus.CREATED)
     public void contact(@Valid @RequestBody ContactRequest request) {

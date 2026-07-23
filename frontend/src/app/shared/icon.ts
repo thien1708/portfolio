@@ -98,6 +98,9 @@ const ICONS: Record<string, IconDef> = {
   'arrow-right': {
     body: '<path d="M5 12h14M12 5l7 7-7 7"/>',
   },
+  'arrow-left': {
+    body: '<path d="M19 12H5M12 19l-7-7 7-7"/>',
+  },
   copy: {
     body: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
   },

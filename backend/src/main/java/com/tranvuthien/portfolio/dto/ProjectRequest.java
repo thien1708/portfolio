@@ -11,6 +11,8 @@ public record ProjectRequest(
         @Size(max = 5000) String description,
         List<@Size(max = 80) String> techStack,
         @Size(max = 500) String imageUrl,
+        List<@Size(max = 500) String> galleryUrls,
+        List<@Size(max = 300) String> highlights,
         @Size(max = 300) String demoUrl,
         @Size(max = 300) String repoUrl,
         boolean featured

@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { inject, ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { Experience, Profile, Project, Skill } from '../../core/models';
+import { I18nService } from '../../core/i18n.service';
 import { CountUpDirective } from '../../shared/count-up.directive';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { Icon } from '../../shared/icon';
@@ -21,8 +22,8 @@ import { SkillRadar } from '../../shared/skill-radar';
   template: `
     <section id="about" class="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
       <div appReveal class="mb-14 text-center">
-        <p class="font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-500">Get to know me</p>
-        <h2 class="section-title mt-2">About <span class="gradient-text">Me</span></h2>
+        <p class="font-display text-sm font-semibold uppercase tracking-[0.3em] text-lav-500">{{ i18n.t('about.kicker') }}</p>
+        <h2 class="section-title mt-2">{{ i18n.t('about.title1') }} <span class="gradient-text">{{ i18n.t('about.title2') }}</span></h2>
       </div>
 
       <div appReveal class="grid gap-5 md:auto-rows-fr md:grid-cols-4 md:grid-rows-3">
@@ -63,13 +64,13 @@ import { SkillRadar } from '../../shared/skill-radar';
         <!-- Stat: years -->
         <div appSpotlight [appTilt]="6" class="card grid place-content-center p-6 text-center md:col-start-3 md:row-start-1">
           <p class="font-display text-4xl font-extrabold gradient-text" [appCountUp]="profile()?.yearsExperience ?? 0" suffix="+"></p>
-          <p class="mt-2 text-sm text-ink/60 dark:text-lav-100/60">Years of Experience</p>
+          <p class="mt-2 text-sm text-ink/60 dark:text-lav-100/60">{{ i18n.t('about.years') }}</p>
         </div>
 
         <!-- Stat: projects -->
         <div appSpotlight [appTilt]="6" class="card grid place-content-center p-6 text-center md:col-start-4 md:row-start-1">
           <p class="font-display text-4xl font-extrabold gradient-text" [appCountUp]="projects().length"></p>
-          <p class="mt-2 text-sm text-ink/60 dark:text-lav-100/60">Projects Delivered</p>
+          <p class="mt-2 text-sm text-ink/60 dark:text-lav-100/60">{{ i18n.t('about.projects') }}</p>
         </div>
 
         <!-- Radar -->
@@ -88,19 +89,21 @@ import { SkillRadar } from '../../shared/skill-radar';
         <!-- Stat: technologies -->
         <div appSpotlight [appTilt]="6" class="card grid place-content-center p-6 text-center md:col-start-1 md:row-start-3">
           <p class="font-display text-4xl font-extrabold gradient-text" [appCountUp]="skills().length"></p>
-          <p class="mt-2 text-sm text-ink/60 dark:text-lav-100/60">Technologies</p>
+          <p class="mt-2 text-sm text-ink/60 dark:text-lav-100/60">{{ i18n.t('about.technologies') }}</p>
         </div>
 
         <!-- Stat: companies -->
         <div appSpotlight [appTilt]="6" class="card grid place-content-center p-6 text-center md:col-start-2 md:row-start-3">
           <p class="font-display text-4xl font-extrabold gradient-text" [appCountUp]="companies()"></p>
-          <p class="mt-2 text-sm text-ink/60 dark:text-lav-100/60">Companies</p>
+          <p class="mt-2 text-sm text-ink/60 dark:text-lav-100/60">{{ i18n.t('about.companies') }}</p>
         </div>
       </div>
     </section>
   `,
 })
 export class About {
+  protected readonly i18n = inject(I18nService);
+
   readonly profile = input<Profile | null>(null);
   readonly skills = input<Skill[]>([]);
   readonly projects = input<Project[]>([]);

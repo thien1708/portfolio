@@ -13,12 +13,14 @@ import {
   Object3D,
   PerspectiveCamera,
   Points,
+  Raycaster,
   RingGeometry,
   Scene,
   ShaderMaterial,
   SphereGeometry,
   Sprite,
   SpriteMaterial,
+  Vector2,
   Vector3,
   WebGLRenderer,
 } from 'three';
@@ -81,12 +83,12 @@ const DARK: ThemePalette = {
 
 /** Pastel planets: orbit radius, body size, angular speed, start angle, tilt, band frequency. */
 const PLANETS = [
-  { color: '#a6b1e1', radius: 1.25, size: 0.1, speed: 0.5, phase: 0.8, incl: 0.07, bands: 9.0 },
-  { color: '#7fc3de', radius: 1.75, size: 0.14, speed: 0.37, phase: 2.4, incl: -0.06, bands: 6.0 },
-  { color: '#9d8df1', radius: 2.35, size: 0.18, speed: 0.27, phase: 4.4, incl: 0.1, bands: 5.0, moon: true },
-  { color: '#e8a7c8', radius: 3.0, size: 0.13, speed: 0.2, phase: 1.6, incl: -0.09, bands: 8.0 },
-  { color: '#cfc5ff', radius: 3.8, size: 0.24, speed: 0.14, phase: 5.3, incl: 0.06, bands: 4.0, ring: true },
-  { color: '#9fe0cb', radius: 4.6, size: 0.15, speed: 0.1, phase: 3.1, incl: -0.05, bands: 7.0 },
+  { label: 'Java', color: '#a6b1e1', radius: 1.25, size: 0.1, speed: 0.5, phase: 0.8, incl: 0.07, bands: 9.0 },
+  { label: 'Spring Boot', color: '#7fc3de', radius: 1.75, size: 0.14, speed: 0.37, phase: 2.4, incl: -0.06, bands: 6.0 },
+  { label: 'Angular', color: '#9d8df1', radius: 2.35, size: 0.18, speed: 0.27, phase: 4.4, incl: 0.1, bands: 5.0, moon: true },
+  { label: 'TypeScript', color: '#e8a7c8', radius: 3.0, size: 0.13, speed: 0.2, phase: 1.6, incl: -0.09, bands: 8.0 },
+  { label: 'PostgreSQL', color: '#cfc5ff', radius: 3.8, size: 0.24, speed: 0.14, phase: 5.3, incl: 0.06, bands: 4.0, ring: true },
+  { label: 'Docker', color: '#9fe0cb', radius: 4.6, size: 0.15, speed: 0.1, phase: 3.1, incl: -0.05, bands: 7.0 },
 ];
 
 interface PlanetRuntime {
@@ -128,6 +130,17 @@ export class HeroSceneEngine {
   private readonly disposables: { dispose(): void }[] = [];
   private readonly resizeObserver: ResizeObserver;
   private readonly intersection: IntersectionObserver;
+
+  /** Hover callback: label + client coords, or null when nothing is hovered. */
+  onPlanetHover?: (label: string | null, x: number, y: number) => void;
+  /** Fired when the user clicks while a planet is hovered. */
+  onPlanetSelect?: (label: string) => void;
+
+  private readonly raycaster = new Raycaster();
+  private readonly ndc = new Vector2();
+  private hoveredLabel: string | null = null;
+  private pointerClientX = -1;
+  private pointerClientY = -1;
 
   private raf = 0;
   private time = 0;
@@ -186,6 +199,7 @@ export class HeroSceneEngine {
       this.renderOnce();
     } else {
       window.addEventListener('pointermove', this.onPointer, { passive: true });
+      window.addEventListener('click', this.onClick);
       this.running = true;
       this.syncLoop();
     }
@@ -229,7 +243,9 @@ export class HeroSceneEngine {
     this.resizeObserver.disconnect();
     this.intersection.disconnect();
     window.removeEventListener('pointermove', this.onPointer);
+    window.removeEventListener('click', this.onClick);
     document.removeEventListener('visibilitychange', this.onVisibility);
+    document.body.style.cursor = '';
     for (const d of this.disposables) d.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
@@ -422,6 +438,7 @@ export class HeroSceneEngine {
       const mesh = new Mesh(sphere, material);
       mesh.scale.setScalar(def.size);
       mesh.position.set(Math.cos(def.phase) * def.radius, 0, Math.sin(def.phase) * def.radius);
+      mesh.userData['label'] = def.label;
       plane.add(mesh);
       this.disposables.push(material);
 
@@ -502,7 +519,51 @@ export class HeroSceneEngine {
   private readonly onPointer = (e: PointerEvent): void => {
     this.pointerX = (e.clientX / window.innerWidth) * 2 - 1;
     this.pointerY = (e.clientY / window.innerHeight) * 2 - 1;
+    this.pointerClientX = e.clientX;
+    this.pointerClientY = e.clientY;
   };
+
+  private readonly onClick = (e: MouseEvent): void => {
+    // Navigate only when a planet is hovered and the click didn't land on a
+    // real control (links, buttons, form fields keep their own behavior).
+    if (!this.hoveredLabel || !this.onPlanetSelect) return;
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('a, button, input, textarea, select, [role="button"]')) return;
+    this.onPlanetSelect(this.hoveredLabel);
+  };
+
+  /** Raycast against planet bodies (their atmosphere shells pad the hit area). */
+  private pickPlanet(): void {
+    if (!this.onPlanetHover) return;
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const inside =
+      this.pointerClientX >= rect.left &&
+      this.pointerClientX <= rect.right &&
+      this.pointerClientY >= rect.top &&
+      this.pointerClientY <= rect.bottom;
+
+    let label: string | null = null;
+    if (inside && rect.width > 0 && rect.height > 0) {
+      this.ndc.set(
+        ((this.pointerClientX - rect.left) / rect.width) * 2 - 1,
+        -((this.pointerClientY - rect.top) / rect.height) * 2 + 1,
+      );
+      this.raycaster.setFromCamera(this.ndc, this.camera);
+      const meshes = this.planets.map((p) => p.mesh);
+      const hit = this.raycaster.intersectObjects(meshes, true)[0];
+      let node: Object3D | null = hit?.object ?? null;
+      while (node && !node.userData['label']) node = node.parent;
+      label = (node?.userData['label'] as string | undefined) ?? null;
+    }
+
+    if (label !== this.hoveredLabel) {
+      this.hoveredLabel = label;
+      document.body.style.cursor = label ? 'pointer' : '';
+    }
+    // Emit every frame; the component dedups nulls and tracks the pointer
+    // while a planet stays hovered.
+    this.onPlanetHover(label, this.pointerClientX, this.pointerClientY);
+  }
 
   private readonly onVisibility = (): void => {
     this.syncLoop();
@@ -558,6 +619,8 @@ export class HeroSceneEngine {
     }
     // The whole system breathes very slowly.
     this.solar.rotation.y = Math.sin(this.time * 0.05) * 0.08;
+
+    this.pickPlanet();
 
     // Mouse parallax + a slow idle drift so the scene never feels frozen.
     const targetX = this.pointerX * 0.7 + Math.sin(this.time * 0.1) * 0.25;

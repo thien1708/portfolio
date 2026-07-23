@@ -6,6 +6,7 @@ import {
   HostListener,
   OnDestroy,
   OnInit,
+  computed,
   effect,
   inject,
   input,
@@ -13,6 +14,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { ThemeService } from '../../core/theme.service';
+import { I18nService } from '../../core/i18n.service';
 import { Icon } from '../../shared/icon';
 import { MagneticDirective } from '../../shared/magnetic.directive';
 
@@ -52,7 +54,7 @@ interface NavLink {
             [style.transform]="'translateX(' + pill().x + 'px)'"
             [style.width.px]="pill().width"
           ></span>
-          @for (link of links; track link.id) {
+          @for (link of links(); track link.id) {
             <li class="relative z-10">
               <button
                 type="button"
@@ -70,6 +72,14 @@ interface NavLink {
         </ul>
 
         <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="grid h-10 min-w-10 place-items-center rounded-xl px-2 font-display text-xs font-bold uppercase tracking-wider text-lav-600 transition-all duration-300 hover:bg-lav-100/70 dark:text-lav-300 dark:hover:bg-lav-800/40"
+            (click)="i18n.toggle()"
+            [attr.aria-label]="i18n.lang() === 'en' ? 'Chuyển sang tiếng Việt' : 'Switch to English'"
+          >
+            {{ i18n.lang() === 'en' ? 'VI' : 'EN' }}
+          </button>
           <button
             type="button"
             appMagnetic
@@ -101,7 +111,7 @@ interface NavLink {
       @if (menuOpen()) {
         <div class="glass mx-4 mt-2 overflow-hidden rounded-2xl md:hidden">
           <ul class="flex flex-col p-2">
-            @for (link of links; track link.id) {
+            @for (link of links(); track link.id) {
               <li>
                 <button
                   type="button"
@@ -124,6 +134,7 @@ export class Navbar implements OnInit, AfterViewInit, OnDestroy {
   readonly brand = input('TVT');
 
   protected readonly theme = inject(ThemeService);
+  protected readonly i18n = inject(I18nService);
   protected readonly scrolled = signal(false);
   protected readonly menuOpen = signal(false);
   protected readonly active = signal('hero');
@@ -133,22 +144,27 @@ export class Navbar implements OnInit, AfterViewInit, OnDestroy {
     visible: false,
   });
 
-  protected readonly links: NavLink[] = [
-    { id: 'about', label: 'About' },
-    { id: 'skills', label: 'Skills' },
-    { id: 'experience', label: 'Experience' },
-    { id: 'projects', label: 'Projects' },
-    { id: 'education', label: 'Education' },
-    { id: 'contact', label: 'Contact' },
-  ];
+  protected readonly links = computed<NavLink[]>(() => {
+    this.i18n.lang();
+    return [
+      { id: 'about', label: this.i18n.t('nav.about') },
+      { id: 'skills', label: this.i18n.t('nav.skills') },
+      { id: 'experience', label: this.i18n.t('nav.experience') },
+      { id: 'projects', label: this.i18n.t('nav.projects') },
+      { id: 'education', label: this.i18n.t('nav.education') },
+      { id: 'contact', label: this.i18n.t('nav.contact') },
+    ];
+  });
 
   private readonly linkList = viewChild<ElementRef<HTMLElement>>('linkList');
   private observer?: IntersectionObserver;
 
   constructor() {
-    // Reposition the sliding pill whenever the active section changes.
+    // Reposition the sliding pill whenever the active section or the
+    // language (label widths) changes.
     effect(() => {
       this.active();
+      this.links();
       requestAnimationFrame(() => this.updatePill());
     });
   }
@@ -172,7 +188,7 @@ export class Navbar implements OnInit, AfterViewInit, OnDestroy {
       { rootMargin: '-35% 0px -55% 0px' },
     );
     setTimeout(() => {
-      for (const id of ['hero', ...this.links.map((l) => l.id)]) {
+      for (const id of ['hero', ...this.links().map((l) => l.id)]) {
         const section = document.getElementById(id);
         if (section) {
           this.observer?.observe(section);

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2d2b55"/>
+      <stop offset="1" stop-color="#181630"/>
+    </linearGradient>
+    <linearGradient id="planet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b8b5ff"/>
+      <stop offset="0.55" stop-color="#9d8df1"/>
+      <stop offset="1" stop-color="#7fc3de"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a8d8ea"/>
+      <stop offset="1" stop-color="#cfc5ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <circle cx="14" cy="13" r="1.4" fill="#cfc5ff" opacity="0.9"/>
+  <circle cx="52" cy="48" r="1.1" fill="#a8d8ea" opacity="0.8"/>
+  <circle cx="47" cy="12" r="0.9" fill="#e8ecfb" opacity="0.7"/>
+  <!-- ring behind the planet -->
+  <path d="M 8.5 40.5 A 26 9.5 -22 0 1 43 19.5" fill="none" stroke="url(#ring)" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+  <circle cx="32" cy="32" r="14.5" fill="url(#planet)"/>
+  <!-- ring in front of the planet -->
+  <path d="M 55.5 23.5 A 26 9.5 -22 0 1 21 44.5" fill="none" stroke="url(#ring)" stroke-width="3" stroke-linecap="round"/>
+  <!-- soft highlight -->
+  <circle cx="27" cy="27" r="5.5" fill="#ffffff" opacity="0.22"/>
+</svg>
