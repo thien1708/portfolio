@@ -1,6 +1,8 @@
 package com.tranvuthien.portfolio.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.tranvuthien.portfolio.dto.ApiError;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
@@ -13,13 +15,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * In-memory, per-client-IP rate limiting. Strict buckets protect the login
  * endpoint (brute force) and the public contact endpoint (spam); a generous
  * general bucket covers the rest of the API.
+ *
+ * <p>The client IP is {@link HttpServletRequest#getRemoteAddr()} only. Behind a
+ * reverse proxy this relies on {@code server.forward-headers-strategy: native},
+ * where Tomcat's RemoteIpValve resolves X-Forwarded-For from trusted proxies —
+ * a client-supplied X-Forwarded-For must never be trusted directly, or every
+ * request could claim a fresh IP and bypass the limits.
  */
 public class RateLimitFilter extends OncePerRequestFilter {
 
@@ -31,7 +37,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final Limit GENERAL = new Limit("general", 120, Duration.ofMinutes(1));
     private static final int MAX_TRACKED_CLIENTS = 10_000;
 
-    private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
+    // Per-entry LRU + time eviction: a flood of new clients evicts the coldest
+    // buckets only, it can never reset every client's limit at once.
+    private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
+            .maximumSize(MAX_TRACKED_CLIENTS)
+            .expireAfterAccess(Duration.ofMinutes(10))
+            .build();
     private final ObjectMapper objectMapper;
 
     public RateLimitFilter(ObjectMapper objectMapper) {
@@ -46,11 +57,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        if (buckets.size() > MAX_TRACKED_CLIENTS) {
-            buckets.clear();
-        }
-        String key = limit.name() + "|" + clientIp(request);
-        Bucket bucket = buckets.computeIfAbsent(key, k -> newBucket(limit));
+        String key = limit.name() + "|" + request.getRemoteAddr();
+        Bucket bucket = buckets.get(key, k -> newBucket(limit));
         if (bucket.tryConsume(1)) {
             filterChain.doFilter(request, response);
         } else {
@@ -83,13 +91,5 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 .refillGreedy(limit.capacity(), limit.period())
                 .build();
         return Bucket.builder().addLimit(bandwidth).build();
-    }
-
-    private String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 }

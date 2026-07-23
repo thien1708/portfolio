@@ -56,7 +56,9 @@ public class AuthService {
         this.dummyHash = passwordEncoder.encode("dummy-" + UUID.randomUUID());
     }
 
-    @Transactional
+    // noRollbackFor: the failed-attempt counter (and lock) written just before the
+    // throw must survive the exception, otherwise lockout never takes effect.
+    @Transactional(noRollbackFor = BadCredentialsException.class)
     public AuthResponse login(LoginRequest request, HttpServletResponse response) {
         User user = userRepository.findByEmailIgnoreCase(request.email()).orElse(null);
         if (user == null) {
@@ -83,7 +85,9 @@ public class AuthService {
         return issueTokens(user, response);
     }
 
-    @Transactional
+    // noRollbackFor: revoking the token family on reuse detection must commit
+    // even though the request itself fails with 401.
+    @Transactional(noRollbackFor = UnauthorizedException.class)
     public AuthResponse refresh(HttpServletRequest request, HttpServletResponse response) {
         String raw = readRefreshCookie(request);
         if (raw == null) {

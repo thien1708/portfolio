@@ -4,8 +4,11 @@ import com.tranvuthien.portfolio.domain.Experience;
 import com.tranvuthien.portfolio.dto.ExperienceRequest;
 import com.tranvuthien.portfolio.dto.ExperienceResponse;
 import com.tranvuthien.portfolio.exception.NotFoundException;
+import com.tranvuthien.portfolio.config.CacheConfig;
 import com.tranvuthien.portfolio.repository.ExperienceRepository;
 import com.tranvuthien.portfolio.util.Csv;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +26,13 @@ public class ExperienceService {
         this.repository = repository;
     }
 
+    @Cacheable(CacheConfig.EXPERIENCES)
     @Transactional(readOnly = true)
     public List<ExperienceResponse> list() {
         return repository.findAllByOrderBySortOrderAscIdAsc().stream().map(this::toResponse).toList();
     }
 
+    @CacheEvict(cacheNames = CacheConfig.EXPERIENCES, allEntries = true)
     @Transactional
     public ExperienceResponse create(ExperienceRequest request) {
         Experience experience = new Experience();
@@ -36,6 +41,7 @@ public class ExperienceService {
         return toResponse(repository.save(experience));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.EXPERIENCES, allEntries = true)
     @Transactional
     public ExperienceResponse update(Long id, ExperienceRequest request) {
         Experience experience = repository.findById(id)
@@ -44,6 +50,7 @@ public class ExperienceService {
         return toResponse(repository.save(experience));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.EXPERIENCES, allEntries = true)
     @Transactional
     public void delete(Long id) {
         if (!repository.existsById(id)) {
@@ -52,6 +59,7 @@ public class ExperienceService {
         repository.deleteById(id);
     }
 
+    @CacheEvict(cacheNames = CacheConfig.EXPERIENCES, allEntries = true)
     @Transactional
     public void reorder(List<Long> ids) {
         Map<Long, Experience> byId = repository.findAllById(ids).stream()

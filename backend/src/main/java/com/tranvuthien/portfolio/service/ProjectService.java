@@ -4,9 +4,12 @@ import com.tranvuthien.portfolio.domain.Project;
 import com.tranvuthien.portfolio.dto.ProjectRequest;
 import com.tranvuthien.portfolio.dto.ProjectResponse;
 import com.tranvuthien.portfolio.exception.NotFoundException;
+import com.tranvuthien.portfolio.config.CacheConfig;
 import com.tranvuthien.portfolio.repository.ProjectRepository;
 import com.tranvuthien.portfolio.util.Csv;
 import com.tranvuthien.portfolio.util.Lines;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,11 +27,13 @@ public class ProjectService {
         this.repository = repository;
     }
 
+    @Cacheable(CacheConfig.PROJECTS)
     @Transactional(readOnly = true)
     public List<ProjectResponse> list() {
         return repository.findAllByOrderBySortOrderAscIdAsc().stream().map(this::toResponse).toList();
     }
 
+    @CacheEvict(cacheNames = CacheConfig.PROJECTS, allEntries = true)
     @Transactional
     public ProjectResponse create(ProjectRequest request) {
         Project project = new Project();
@@ -37,6 +42,7 @@ public class ProjectService {
         return toResponse(repository.save(project));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.PROJECTS, allEntries = true)
     @Transactional
     public ProjectResponse update(Long id, ProjectRequest request) {
         Project project = repository.findById(id).orElseThrow(() -> NotFoundException.of("Project", id));
@@ -44,6 +50,7 @@ public class ProjectService {
         return toResponse(repository.save(project));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.PROJECTS, allEntries = true)
     @Transactional
     public void delete(Long id) {
         if (!repository.existsById(id)) {
@@ -52,6 +59,7 @@ public class ProjectService {
         repository.deleteById(id);
     }
 
+    @CacheEvict(cacheNames = CacheConfig.PROJECTS, allEntries = true)
     @Transactional
     public void reorder(List<Long> ids) {
         Map<Long, Project> byId = repository.findAllById(ids).stream()

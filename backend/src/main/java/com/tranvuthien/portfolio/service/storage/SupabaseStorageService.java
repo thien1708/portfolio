@@ -4,12 +4,14 @@ import com.tranvuthien.portfolio.config.AppProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -21,10 +23,24 @@ import java.util.UUID;
 @ConditionalOnProperty(name = "app.storage.provider", havingValue = "supabase", matchIfMissing = true)
 public class SupabaseStorageService implements StorageService {
 
-    private final AppProperties.Storage.Supabase supabase;
+    // Content type derived from the whitelisted extension — the client-supplied
+    // Content-Type header is not trusted beyond the image/* check in validation.
+    private static final Map<String, MediaType> MEDIA_TYPES = Map.of(
+            "png", MediaType.IMAGE_PNG,
+            "jpg", MediaType.IMAGE_JPEG,
+            "jpeg", MediaType.IMAGE_JPEG,
+            "webp", MediaType.parseMediaType("image/webp"),
+            "gif", MediaType.IMAGE_GIF);
 
-    public SupabaseStorageService(AppProperties props) {
+    private final AppProperties.Storage.Supabase supabase;
+    private final RestClient restClient;
+
+    public SupabaseStorageService(AppProperties props, RestClient.Builder restClientBuilder) {
         this.supabase = props.storage().supabase();
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(5_000);
+        requestFactory.setReadTimeout(30_000);
+        this.restClient = restClientBuilder.requestFactory(requestFactory).build();
     }
 
     @Override
@@ -42,12 +58,11 @@ public class SupabaseStorageService implements StorageService {
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to read upload", e);
         }
-        RestClient.create(supabase.url())
-                .post()
-                .uri("/storage/v1/object/{bucket}/{name}", supabase.bucket(), objectName)
+        restClient.post()
+                .uri(supabase.url() + "/storage/v1/object/{bucket}/{name}", supabase.bucket(), objectName)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + supabase.serviceKey())
                 .header("x-upsert", "true")
-                .contentType(MediaType.parseMediaType(file.getContentType()))
+                .contentType(MEDIA_TYPES.get(extension))
                 .body(content)
                 .retrieve()
                 .toBodilessEntity();

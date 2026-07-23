@@ -4,7 +4,10 @@ import com.tranvuthien.portfolio.domain.Certification;
 import com.tranvuthien.portfolio.dto.CertificationRequest;
 import com.tranvuthien.portfolio.dto.CertificationResponse;
 import com.tranvuthien.portfolio.exception.NotFoundException;
+import com.tranvuthien.portfolio.config.CacheConfig;
 import com.tranvuthien.portfolio.repository.CertificationRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,11 +25,13 @@ public class CertificationService {
         this.repository = repository;
     }
 
+    @Cacheable(CacheConfig.CERTIFICATIONS)
     @Transactional(readOnly = true)
     public List<CertificationResponse> list() {
         return repository.findAllByOrderBySortOrderAscIdAsc().stream().map(this::toResponse).toList();
     }
 
+    @CacheEvict(cacheNames = CacheConfig.CERTIFICATIONS, allEntries = true)
     @Transactional
     public CertificationResponse create(CertificationRequest request) {
         Certification certification = new Certification();
@@ -35,6 +40,7 @@ public class CertificationService {
         return toResponse(repository.save(certification));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.CERTIFICATIONS, allEntries = true)
     @Transactional
     public CertificationResponse update(Long id, CertificationRequest request) {
         Certification certification = repository.findById(id)
@@ -43,6 +49,7 @@ public class CertificationService {
         return toResponse(repository.save(certification));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.CERTIFICATIONS, allEntries = true)
     @Transactional
     public void delete(Long id) {
         if (!repository.existsById(id)) {
@@ -51,6 +58,7 @@ public class CertificationService {
         repository.deleteById(id);
     }
 
+    @CacheEvict(cacheNames = CacheConfig.CERTIFICATIONS, allEntries = true)
     @Transactional
     public void reorder(List<Long> ids) {
         Map<Long, Certification> byId = repository.findAllById(ids).stream()

@@ -8,6 +8,15 @@ spring:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/portfolio}
     username: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
+    hikari:
+      # Supabase free-tier session pooler allows few client connections; keep
+      # the pool small and recycle connections before the pooler's idle cutoff.
+      maximum-pool-size: ${DB_POOL_SIZE:5}
+      minimum-idle: ${DB_POOL_MIN_IDLE:1}
+      connection-timeout: 10000
+      idle-timeout: 300000
+      max-lifetime: 600000
+      keepalive-time: 240000
   jpa:
     hibernate:
       ddl-auto: none
@@ -36,6 +45,15 @@ spring:
 server:
   # Render injects PORT; SERVER_PORT kept for other hosts; 8080 for local dev
   port: ${PORT:${SERVER_PORT:8080}}
+  # Tomcat RemoteIpValve: resolve client IP/scheme from X-Forwarded-* only when
+  # the direct peer is a trusted (private-range) proxy. RateLimitFilter depends
+  # on this — it reads getRemoteAddr() and must not see spoofable values.
+  forward-headers-strategy: native
+  shutdown: graceful
+  compression:
+    enabled: true
+    mime-types: application/json
+    min-response-size: 1024
   error:
     include-stacktrace: never
     include-message: never
@@ -44,6 +62,21 @@ server:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Health only: it includes a real DB ping, unlike the static /api/v1/health
+        include: health
+  endpoint:
+    health:
+      show-details: never
+  health:
+    mail:
+      # Contact-form email is optional (blank MAIL_USERNAME disables it);
+      # an unconfigured SMTP account must not mark the whole app DOWN.
+      enabled: false
 
 app:
   jwt:

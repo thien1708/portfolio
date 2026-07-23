@@ -4,7 +4,10 @@ import com.tranvuthien.portfolio.domain.Education;
 import com.tranvuthien.portfolio.dto.EducationRequest;
 import com.tranvuthien.portfolio.dto.EducationResponse;
 import com.tranvuthien.portfolio.exception.NotFoundException;
+import com.tranvuthien.portfolio.config.CacheConfig;
 import com.tranvuthien.portfolio.repository.EducationRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,11 +25,13 @@ public class EducationService {
         this.repository = repository;
     }
 
+    @Cacheable(CacheConfig.EDUCATION)
     @Transactional(readOnly = true)
     public List<EducationResponse> list() {
         return repository.findAllByOrderBySortOrderAscIdAsc().stream().map(this::toResponse).toList();
     }
 
+    @CacheEvict(cacheNames = CacheConfig.EDUCATION, allEntries = true)
     @Transactional
     public EducationResponse create(EducationRequest request) {
         Education education = new Education();
@@ -35,6 +40,7 @@ public class EducationService {
         return toResponse(repository.save(education));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.EDUCATION, allEntries = true)
     @Transactional
     public EducationResponse update(Long id, EducationRequest request) {
         Education education = repository.findById(id)
@@ -43,6 +49,7 @@ public class EducationService {
         return toResponse(repository.save(education));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.EDUCATION, allEntries = true)
     @Transactional
     public void delete(Long id) {
         if (!repository.existsById(id)) {
@@ -51,6 +58,7 @@ public class EducationService {
         repository.deleteById(id);
     }
 
+    @CacheEvict(cacheNames = CacheConfig.EDUCATION, allEntries = true)
     @Transactional
     public void reorder(List<Long> ids) {
         Map<Long, Education> byId = repository.findAllById(ids).stream()

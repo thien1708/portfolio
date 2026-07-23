@@ -4,7 +4,10 @@ import com.tranvuthien.portfolio.domain.Skill;
 import com.tranvuthien.portfolio.dto.SkillRequest;
 import com.tranvuthien.portfolio.dto.SkillResponse;
 import com.tranvuthien.portfolio.exception.NotFoundException;
+import com.tranvuthien.portfolio.config.CacheConfig;
 import com.tranvuthien.portfolio.repository.SkillRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,11 +25,13 @@ public class SkillService {
         this.repository = repository;
     }
 
+    @Cacheable(CacheConfig.SKILLS)
     @Transactional(readOnly = true)
     public List<SkillResponse> list() {
         return repository.findAllByOrderBySortOrderAscIdAsc().stream().map(this::toResponse).toList();
     }
 
+    @CacheEvict(cacheNames = CacheConfig.SKILLS, allEntries = true)
     @Transactional
     public SkillResponse create(SkillRequest request) {
         Skill skill = new Skill();
@@ -35,6 +40,7 @@ public class SkillService {
         return toResponse(repository.save(skill));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.SKILLS, allEntries = true)
     @Transactional
     public SkillResponse update(Long id, SkillRequest request) {
         Skill skill = repository.findById(id).orElseThrow(() -> NotFoundException.of("Skill", id));
@@ -42,6 +48,7 @@ public class SkillService {
         return toResponse(repository.save(skill));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.SKILLS, allEntries = true)
     @Transactional
     public void delete(Long id) {
         if (!repository.existsById(id)) {
@@ -50,6 +57,7 @@ public class SkillService {
         repository.deleteById(id);
     }
 
+    @CacheEvict(cacheNames = CacheConfig.SKILLS, allEntries = true)
     @Transactional
     public void reorder(List<Long> ids) {
         Map<Long, Skill> byId = repository.findAllById(ids).stream()
