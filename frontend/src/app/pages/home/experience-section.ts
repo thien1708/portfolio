@@ -4,6 +4,7 @@ import { I18nService } from '../../core/i18n.service';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { Icon } from '../../shared/icon';
 import { SpotlightDirective } from '../../shared/spotlight.directive';
+import { splitBullets } from '../../shared/text-utils';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -80,10 +81,5 @@ export class ExperienceSection {
 
   readonly experiences = input<Experience[]>([]);
 
-  protected bullets(description: string): string[] {
-    return description
-      .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
-  }
+  protected readonly bullets = splitBullets;
 }

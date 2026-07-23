@@ -113,6 +113,7 @@ import { HeroScene } from '../../three/hero-scene';
               <img
                 [src]="profile()!.avatarUrl"
                 [alt]="profile()!.fullName"
+                fetchpriority="high"
                 class="relative h-56 w-56 rounded-full object-cover sm:h-72 sm:w-72"
               />
             } @else {
@@ -151,7 +152,12 @@ export class Hero implements OnDestroy {
       const roles = this.profile()?.typingRoles ?? [];
       if (roles.length > 0 && !this.started) {
         this.started = true;
-        this.typeLoop(roles, 0);
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          // No typewriter for reduced-motion users — show the first role.
+          this.typed.set(roles[0]);
+        } else {
+          this.typeLoop(roles, 0);
+        }
       }
     });
   }

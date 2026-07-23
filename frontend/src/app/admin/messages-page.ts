@@ -1,12 +1,14 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { AdminApiService } from '../core/admin-api.service';
 import { ContactMessage, Page } from '../core/models';
 import { ToastService } from '../core/toast.service';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-admin-messages-page',
-  imports: [DatePipe],
+  imports: [DatePipe, CdkTrapFocus],
   template: `
     <div class="mx-auto max-w-4xl">
       <div class="mb-8">
@@ -32,13 +34,9 @@ import { ToastService } from '../core/toast.service';
         <div class="space-y-3">
           @for (msg of page()!.content; track msg.id) {
             <article
-              class="card cursor-pointer !rounded-2xl p-5 transition-all duration-200 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400"
+              class="card relative cursor-pointer !rounded-2xl p-5 transition-all duration-200 hover:shadow-glow"
               [class.border-l-4]="!msg.read"
               [class.border-l-lav-500]="!msg.read"
-              tabindex="0"
-              role="button"
-              (click)="toggleExpand(msg)"
-              (keydown.enter)="toggleExpand(msg)"
             >
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-3">
@@ -46,8 +44,18 @@ import { ToastService } from '../core/toast.service';
                     {{ msg.name.charAt(0).toUpperCase() }}
                   </span>
                   <div>
-                    <p class="font-semibold" [class.font-extrabold]="!msg.read">
-                      {{ msg.name }}
+                    <p>
+                      <!-- Stretched over the whole card via ::after — one
+                           real interactive element, click-anywhere UX. -->
+                      <button
+                        type="button"
+                        class="rounded-md font-semibold after:absolute after:inset-0 after:content-[''] focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400"
+                        [class.font-extrabold]="!msg.read"
+                        [attr.aria-expanded]="expandedId() === msg.id"
+                        (click)="toggleExpand(msg)"
+                      >
+                        {{ msg.name }}
+                      </button>
                       @if (!msg.read) {
                         <span class="ml-2 inline-block h-2 w-2 rounded-full bg-lav-500 align-middle"></span>
                       }
@@ -59,16 +67,16 @@ import { ToastService } from '../core/toast.service';
                   <span>{{ msg.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
                   <button
                     type="button"
-                    class="rounded-lg px-2 py-1 transition-colors hover:bg-lav-100 dark:hover:bg-lav-800/50"
-                    (click)="toggleRead(msg); $event.stopPropagation()"
+                    class="relative z-10 rounded-lg px-2 py-1 transition-colors hover:bg-lav-100 dark:hover:bg-lav-800/50"
+                    (click)="toggleRead(msg)"
                     [attr.aria-label]="msg.read ? 'Mark unread' : 'Mark read'"
                   >
                     {{ msg.read ? '📖' : '✉️' }}
                   </button>
                   <button
                     type="button"
-                    class="rounded-lg px-2 py-1 transition-colors hover:bg-rose-50 dark:hover:bg-rose-500/10"
-                    (click)="confirmDeleteId.set(msg.id); $event.stopPropagation()"
+                    class="relative z-10 rounded-lg px-2 py-1 transition-colors hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                    (click)="confirmDeleteId.set(msg.id)"
                     aria-label="Delete"
                   >
                     🗑️
@@ -105,7 +113,14 @@ import { ToastService } from '../core/toast.service';
           tabindex="-1"
           (click)="confirmDeleteId.set(null)"
         ></button>
-        <div class="card relative w-full max-w-sm p-8 text-center">
+        <div
+          class="card relative w-full max-w-sm p-8 text-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Confirm delete"
+          cdkTrapFocus
+          cdkTrapFocusAutoCapture
+        >
           <p class="text-4xl">🗑️</p>
           <h3 class="mt-3 font-display text-lg font-extrabold">Delete this message?</h3>
           <div class="mt-6 flex gap-3">

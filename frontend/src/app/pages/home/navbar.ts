@@ -41,7 +41,7 @@ interface NavLink {
       >
         <a
           href="#hero"
-          class="cursor-pointer font-display text-lg font-extrabold tracking-tight"
+          class="cursor-pointer rounded-lg font-display text-lg font-extrabold tracking-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400"
           (click)="scrollToBrand($event)"
         >
           <span class="gradient-text">{{ brand() }}</span>
@@ -59,7 +59,7 @@ interface NavLink {
               <button
                 type="button"
                 [attr.data-nav]="link.id"
-                class="rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-200 hover:text-lav-600 dark:hover:text-lav-300"
+                class="rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-200 hover:text-lav-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 dark:hover:text-lav-300"
                 [class.text-lav-600]="active() === link.id"
                 [class.dark:text-lav-300]="active() === link.id"
                 [class.font-semibold]="active() === link.id"
@@ -74,7 +74,7 @@ interface NavLink {
         <div class="flex items-center gap-2">
           <button
             type="button"
-            class="grid h-10 min-w-10 place-items-center rounded-xl px-2 font-display text-xs font-bold uppercase tracking-wider text-lav-600 transition-all duration-300 hover:bg-lav-100/70 dark:text-lav-300 dark:hover:bg-lav-800/40"
+            class="grid h-10 min-w-10 place-items-center rounded-xl px-2 font-display text-xs font-bold uppercase tracking-wider text-lav-600 transition-all duration-300 hover:bg-lav-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 dark:text-lav-300 dark:hover:bg-lav-800/40"
             (click)="i18n.toggle()"
             [attr.aria-label]="i18n.lang() === 'en' ? 'Chuyển sang tiếng Việt' : 'Switch to English'"
           >
@@ -83,7 +83,7 @@ interface NavLink {
           <button
             type="button"
             appMagnetic
-            class="grid h-10 w-10 place-items-center rounded-xl text-lg text-lav-600 transition-all duration-300 hover:bg-lav-100/70 dark:text-lav-300 dark:hover:bg-lav-800/40"
+            class="grid h-10 w-10 place-items-center rounded-xl text-lg text-lav-600 transition-all duration-300 hover:bg-lav-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 dark:text-lav-300 dark:hover:bg-lav-800/40"
             (click)="toggleTheme($event)"
             [attr.aria-label]="theme.dark() ? 'Switch to light mode' : 'Switch to dark mode'"
           >
@@ -95,7 +95,7 @@ interface NavLink {
           </button>
           <button
             type="button"
-            class="grid h-10 w-10 place-items-center rounded-xl text-xl text-lav-600 dark:text-lav-300 md:hidden"
+            class="grid h-10 w-10 place-items-center rounded-xl text-xl text-lav-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 dark:text-lav-300 md:hidden"
             (click)="menuOpen.set(!menuOpen())"
             aria-label="Toggle menu"
           >
@@ -115,7 +115,7 @@ interface NavLink {
               <li>
                 <button
                   type="button"
-                  class="w-full rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-lav-100/70 dark:hover:bg-lav-800/40"
+                  class="w-full rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-lav-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 dark:hover:bg-lav-800/40"
                   [class.text-lav-600]="active() === link.id"
                   [class.dark:text-lav-300]="active() === link.id"
                   (click)="scrollTo(link.id); menuOpen.set(false)"
@@ -160,12 +160,15 @@ export class Navbar implements OnInit, AfterViewInit, OnDestroy {
   private observer?: IntersectionObserver;
 
   constructor() {
-    // Reposition the sliding pill whenever the active section or the
-    // language (label widths) changes.
+    // Reposition the sliding pill whenever the active section, the language
+    // (label widths) or the scrolled state (header padding) changes. The
+    // second, delayed measurement lands after the 300ms padding transition.
     effect(() => {
       this.active();
       this.links();
+      this.scrolled();
       requestAnimationFrame(() => this.updatePill());
+      setTimeout(() => this.updatePill(), 350);
     });
   }
 
@@ -225,7 +228,6 @@ export class Navbar implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('window:scroll')
   onScroll(): void {
     this.scrolled.set(window.scrollY > 24);
-    this.updatePill();
   }
 
   @HostListener('window:resize')

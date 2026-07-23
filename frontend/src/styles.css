@@ -240,12 +240,6 @@
   z-index: 0;
 }
 
-/* ---------- Kinetic gradient text (animated shimmer) ---------- */
-.gradient-animate {
-  background-size: 200% auto;
-  animation: gradient-x 6s ease infinite;
-}
-
 /* ---------- Conic-gradient rotating border (featured cards) ---------- */
 @property --cbrdr {
   syntax: '<angle>';
@@ -326,21 +320,11 @@
     animation: parallax-rise linear both;
     animation-timeline: scroll(root);
   }
-  .parallax-fast {
-    animation: parallax-rise-fast linear both;
-    animation-timeline: scroll(root);
-  }
 }
 
 @keyframes parallax-rise {
   to {
     transform: translateY(-120px);
-  }
-}
-
-@keyframes parallax-rise-fast {
-  to {
-    transform: translateY(-260px);
   }
 }
 
@@ -445,15 +429,6 @@
   transform: none;
 }
 
-/* ---------- Skill bars: fill only after the card is revealed ---------- */
-.bar-fill {
-  transition: width 1.1s cubic-bezier(0.22, 0.61, 0.36, 1) 0.15s;
-}
-
-.reveal:not(.reveal-visible) .bar-fill {
-  width: 0 !important;
-}
-
 /* ---------- Skeleton loaders ---------- */
 .skeleton {
   position: relative;
@@ -529,8 +504,7 @@
     display: none;
   }
 
-  .parallax-slow,
-  .parallax-fast {
+  .parallax-slow {
     animation: none !important;
     transform: none !important;
   }

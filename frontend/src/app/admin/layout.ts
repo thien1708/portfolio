@@ -1,4 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { AdminApiService } from '../core/admin-api.service';
@@ -12,6 +20,7 @@ interface SideLink {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-admin-layout',
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `
@@ -94,6 +103,7 @@ export class AdminLayout implements OnInit {
   protected readonly theme = inject(ThemeService);
   private readonly adminApi = inject(AdminApiService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly sidebarOpen = signal(false);
   protected readonly unread = signal(0);
@@ -112,7 +122,10 @@ export class AdminLayout implements OnInit {
   ngOnInit(): void {
     this.refreshUnread();
     this.router.events
-      .pipe(filter((e) => e instanceof NavigationEnd))
+      .pipe(
+        filter((e) => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe(() => this.refreshUnread());
   }
 

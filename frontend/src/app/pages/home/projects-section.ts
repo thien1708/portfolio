@@ -10,16 +10,18 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { Project } from '../../core/models';
 import { I18nService } from '../../core/i18n.service';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { Icon } from '../../shared/icon';
 import { SpotlightDirective } from '../../shared/spotlight.directive';
+import { initialsOf, splitBullets } from '../../shared/text-utils';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-projects-section',
-  imports: [RevealDirective, Icon, SpotlightDirective],
+  imports: [RevealDirective, Icon, SpotlightDirective, CdkTrapFocus],
   template: `
     <section id="projects" class="relative scroll-mt-24 overflow-hidden py-24">
       <div class="pointer-events-none absolute inset-0 -z-10">
@@ -72,12 +74,7 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                 appSpotlight
                 [style.animation-delay]="(i % 3) * 70 + 'ms'"
                 [class.conic-border]="project.featured"
-                class="card-enter card group flex cursor-pointer flex-col overflow-hidden !rounded-3xl transition-all duration-300 hover:-translate-y-2 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400"
-                tabindex="0"
-                role="button"
-                [attr.aria-label]="'View details of ' + project.name"
-                (click)="openLightbox(project, $event)"
-                (keydown.enter)="openLightbox(project, $event)"
+                class="card-enter card group relative flex cursor-pointer flex-col overflow-hidden !rounded-3xl transition-all duration-300 hover:-translate-y-2 hover:shadow-glow"
               >
                 <!-- Cover -->
                 <div class="relative h-44 overflow-hidden">
@@ -99,7 +96,7 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                   <div class="absolute inset-0 bg-gradient-to-t from-ink/60 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
                   <!-- Quick actions on hover -->
                   @if (project.demoUrl || project.repoUrl) {
-                    <div class="absolute inset-x-0 bottom-0 flex translate-y-3 gap-2 p-3 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                    <div class="absolute inset-x-0 bottom-0 z-10 flex translate-y-3 gap-2 p-3 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                       @if (project.demoUrl) {
                         <a [href]="project.demoUrl" target="_blank" rel="noopener" aria-label="Live demo"
                            class="flex items-center gap-1.5 rounded-xl bg-white/90 px-3 py-1.5 text-xs font-semibold text-lav-700 shadow backdrop-blur transition-transform hover:scale-105 dark:bg-ink/80 dark:text-lav-100">
@@ -123,8 +120,17 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                   @if (project.period) {
                     <span class="mb-2 flex items-center gap-1.5 text-xs font-medium text-lav-500 dark:text-lav-300"><app-icon name="calendar" class="text-[0.7rem]" /> {{ project.period }}</span>
                   }
-                  <h3 class="font-display text-lg font-bold leading-snug transition-colors duration-200 group-hover:text-lav-600 dark:group-hover:text-lav-300">
-                    {{ project.name }}
+                  <h3 class="font-display text-lg font-bold leading-snug">
+                    <!-- Stretched over the whole card via ::after — one real
+                         interactive element, click-anywhere UX preserved. -->
+                    <button
+                      type="button"
+                      class="rounded-md text-left transition-colors duration-200 after:absolute after:inset-0 after:content-[''] focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 group-hover:text-lav-600 dark:group-hover:text-lav-300"
+                      [attr.aria-label]="'View details of ' + project.name"
+                      (click)="openLightbox(project, $event)"
+                    >
+                      {{ project.name }}
+                    </button>
                   </h3>
                   @if (project.description) {
                     <ul class="mt-3 flex-1 space-y-1.5 text-sm leading-relaxed text-ink/70 dark:text-lav-100/70">
@@ -144,7 +150,7 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                     </div>
                   }
                   @if (project.demoUrl || project.repoUrl) {
-                    <div class="mt-5 flex gap-4">
+                    <div class="relative z-10 mt-5 flex gap-4">
                       @if (project.demoUrl) {
                         <a [href]="project.demoUrl" target="_blank" rel="noopener"
                            class="flex items-center gap-1.5 text-sm font-semibold text-lav-600 transition-colors hover:text-lav-800 dark:text-lav-300 dark:hover:text-lav-100">
@@ -186,16 +192,17 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
             role="dialog"
             aria-modal="true"
             [attr.aria-label]="p.name"
+            cdkTrapFocus
             class="lightbox-panel glass relative flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl shadow-soft-lg"
           >
             <div class="relative h-56 shrink-0 overflow-hidden">
-              @if (images(p).length > 0) {
-                <img [src]="images(p)[galleryIndex()]" [alt]="p.name" class="h-full w-full object-cover" />
-                @if (images(p).length > 1) {
+              @if (selectedImages().length > 0) {
+                <img [src]="selectedImages()[galleryIndex()]" [alt]="p.name" class="h-full w-full object-cover" />
+                @if (selectedImages().length > 1) {
                   <button
                     type="button"
                     class="absolute left-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/85 text-lav-700 shadow backdrop-blur transition-transform hover:scale-110 dark:bg-ink/70 dark:text-lav-200"
-                    (click)="prevImage(p)"
+                    (click)="prevImage()"
                     aria-label="Previous image"
                   >
                     <app-icon name="arrow-left" />
@@ -203,13 +210,13 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                   <button
                     type="button"
                     class="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/85 text-lav-700 shadow backdrop-blur transition-transform hover:scale-110 dark:bg-ink/70 dark:text-lav-200"
-                    (click)="nextImage(p)"
+                    (click)="nextImage()"
                     aria-label="Next image"
                   >
                     <app-icon name="arrow-right" />
                   </button>
                   <div class="absolute inset-x-0 bottom-2 flex justify-center gap-1.5">
-                    @for (img of images(p); track $index) {
+                    @for (img of selectedImages(); track $index) {
                       <button
                         type="button"
                         class="h-1.5 rounded-full transition-all duration-200"
@@ -297,19 +304,23 @@ export class ProjectsSection {
   protected readonly selected = signal<Project | null>(null);
   protected readonly galleryIndex = signal(0);
 
-  /** Cover + gallery, deduped — everything the case-study slider can show. */
-  protected images(p: Project): string[] {
+  /** Cover + gallery of the open project, deduped — computed once per open. */
+  protected readonly selectedImages = computed<string[]>(() => {
+    const p = this.selected();
+    if (!p) {
+      return [];
+    }
     const all = [p.imageUrl, ...p.galleryUrls].filter((u): u is string => !!u);
     return [...new Set(all)];
-  }
+  });
 
-  protected prevImage(p: Project): void {
-    const count = this.images(p).length;
+  protected prevImage(): void {
+    const count = this.selectedImages().length;
     this.galleryIndex.update((i) => (i - 1 + count) % count);
   }
 
-  protected nextImage(p: Project): void {
-    const count = this.images(p).length;
+  protected nextImage(): void {
+    const count = this.selectedImages().length;
     this.galleryIndex.update((i) => (i + 1) % count);
   }
 
@@ -371,21 +382,8 @@ export class ProjectsSection {
     return this.gradients[index % this.gradients.length];
   }
 
-  protected initials(name: string): string {
-    return name
-      .split(/\s+/)
-      .filter((w) => /^[A-Za-z0-9]/.test(w))
-      .slice(0, 2)
-      .map((w) => w[0]?.toUpperCase())
-      .join('');
-  }
-
-  protected bullets(description: string): string[] {
-    return description
-      .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
-  }
+  protected readonly initials = initialsOf;
+  protected readonly bullets = splitBullets;
 
   protected openLightbox(project: Project, event: Event): void {
     // Ignore clicks that landed on the quick-action links.

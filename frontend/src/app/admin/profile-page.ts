@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminApiService } from '../core/admin-api.service';
 import { ApiService } from '../core/api.service';
@@ -6,6 +6,7 @@ import { ToastService } from '../core/toast.service';
 import { ChipsInput } from '../shared/chips-input';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-admin-profile-page',
   imports: [ReactiveFormsModule, ChipsInput],
   template: `

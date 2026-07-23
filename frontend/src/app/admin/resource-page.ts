@@ -1,6 +1,7 @@
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { CdkDrag, CdkDragHandle, CdkDropList, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdminApiService } from '../core/admin-api.service';
@@ -12,8 +13,17 @@ import { FieldDef, RESOURCE_CONFIGS, ResourceConfig } from './resource-configs';
 type Row = Record<string, unknown> & { id: number };
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-resource-page',
-  imports: [ReactiveFormsModule, ChipsInput, ImageCropper, CdkDropList, CdkDrag, CdkDragHandle],
+  imports: [
+    ReactiveFormsModule,
+    ChipsInput,
+    ImageCropper,
+    CdkDropList,
+    CdkDrag,
+    CdkDragHandle,
+    CdkTrapFocus,
+  ],
   template: `
     @if (config(); as cfg) {
       <div class="mx-auto max-w-5xl">
@@ -80,7 +90,14 @@ type Row = Record<string, unknown> & { id: number };
             tabindex="-1"
             (click)="closeDrawer()"
           ></button>
-          <div class="relative flex h-full w-full max-w-lg flex-col overflow-y-auto border-l border-lav-200/70 bg-white p-8 shadow-soft-lg dark:border-lav-700/40 dark:bg-[#1d1a3a]">
+          <div
+            class="relative flex h-full w-full max-w-lg flex-col overflow-y-auto border-l border-lav-200/70 bg-white p-8 shadow-soft-lg dark:border-lav-700/40 dark:bg-[#1d1a3a]"
+            role="dialog"
+            aria-modal="true"
+            [attr.aria-label]="(drawerMode() === 'create' ? 'Add ' : 'Edit ') + cfg.singular"
+            cdkTrapFocus
+            cdkTrapFocusAutoCapture
+          >
             <div class="mb-6 flex items-center justify-between">
               <h3 class="font-display text-xl font-extrabold">
                 {{ drawerMode() === 'create' ? 'Add' : 'Edit' }} {{ cfg.singular }}
@@ -187,7 +204,14 @@ type Row = Record<string, unknown> & { id: number };
             tabindex="-1"
             (click)="confirmDeleteId.set(null)"
           ></button>
-          <div class="card relative w-full max-w-sm p-8 text-center">
+          <div
+            class="card relative w-full max-w-sm p-8 text-center"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Confirm delete"
+            cdkTrapFocus
+            cdkTrapFocusAutoCapture
+          >
             <p class="text-4xl">🗑️</p>
             <h3 class="mt-3 font-display text-lg font-extrabold">Delete this {{ cfg.singular }}?</h3>
             <p class="mt-1 text-sm text-ink/60 dark:text-lav-100/60">This cannot be undone.</p>

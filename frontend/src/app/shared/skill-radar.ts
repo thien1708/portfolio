@@ -16,6 +16,8 @@ interface Axis {
   value: number;
   x: number;
   y: number;
+  ex: number;
+  ey: number;
   lx: number;
   ly: number;
   anchor: string;
@@ -32,9 +34,9 @@ const R = 72;
     @if (axes().length >= 3) {
       <svg viewBox="0 0 250 210" class="mx-auto h-full w-full max-w-sm">
         <!-- grid rings -->
-        @for (ring of rings; track ring) {
+        @for (ring of ringPolygons(); track $index) {
           <polygon
-            [attr.points]="ringPoints(ring)"
+            [attr.points]="ring"
             fill="none"
             class="stroke-lav-300/50 dark:stroke-lav-600/40"
             stroke-width="1"
@@ -45,8 +47,8 @@ const R = 72;
           <line
             [attr.x1]="cx"
             [attr.y1]="cy"
-            [attr.x2]="edgeX(a)"
-            [attr.y2]="edgeY(a)"
+            [attr.x2]="a.ex"
+            [attr.y2]="a.ey"
             class="stroke-lav-300/50 dark:stroke-lav-600/40"
             stroke-width="1"
           />
@@ -117,14 +119,16 @@ export class SkillRadar implements AfterViewInit, OnDestroy {
       const angle = (-90 + (i * 360) / count) * (Math.PI / 180);
       const r = (c.value / 100) * R;
       const lr = R + 14;
-      const lx = CX + Math.cos(angle) * lr;
       const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
       return {
         ...c,
-        x: CX + Math.cos(angle) * r,
-        y: CY + Math.sin(angle) * r,
-        lx,
-        ly: CY + Math.sin(angle) * lr,
+        x: CX + cos * r,
+        y: CY + sin * r,
+        ex: CX + cos * R,
+        ey: CY + sin * R,
+        lx: CX + cos * lr,
+        ly: CY + sin * lr,
         anchor: cos > 0.3 ? 'start' : cos < -0.3 ? 'end' : 'middle',
       };
     });
@@ -136,25 +140,16 @@ export class SkillRadar implements AfterViewInit, OnDestroy {
       .join(' '),
   );
 
-  protected ringPoints(scale: number): string {
-    const axes = this.axes();
-    const count = axes.length;
-    return Array.from({ length: count }, (_, i) => {
-      const angle = (-90 + (i * 360) / count) * (Math.PI / 180);
-      const r = R * scale;
-      return `${(CX + Math.cos(angle) * r).toFixed(1)},${(CY + Math.sin(angle) * r).toFixed(1)}`;
-    }).join(' ');
-  }
-
-  protected edgeX(a: Axis): number {
-    const angle = Math.atan2(a.y - CY, a.x - CX);
-    return CX + Math.cos(angle) * R;
-  }
-
-  protected edgeY(a: Axis): number {
-    const angle = Math.atan2(a.y - CY, a.x - CX);
-    return CY + Math.sin(angle) * R;
-  }
+  protected readonly ringPolygons = computed<string[]>(() => {
+    const count = this.axes().length;
+    return this.rings.map((scale) =>
+      Array.from({ length: count }, (_, i) => {
+        const angle = (-90 + (i * 360) / count) * (Math.PI / 180);
+        const r = R * scale;
+        return `${(CX + Math.cos(angle) * r).toFixed(1)},${(CY + Math.sin(angle) * r).toFixed(1)}`;
+      }).join(' '),
+    );
+  });
 
   ngAfterViewInit(): void {
     if (typeof IntersectionObserver === 'undefined') {

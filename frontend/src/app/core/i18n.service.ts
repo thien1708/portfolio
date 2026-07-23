@@ -162,6 +162,13 @@ export class I18nService {
 
   private readonly dict = computed<Record<string, string>>(() => TRANSLATIONS[this.lang()]);
 
+  constructor() {
+    // Keep the document language correct from first paint, not only after
+    // the first toggle — screen readers announce with the wrong voice
+    // otherwise for returning Vietnamese visitors.
+    document.documentElement.lang = this.lang();
+  }
+
   /** Translate a key; falls back to the key itself so gaps stay visible. */
   t(key: I18nKey): string {
     return this.dict()[key] ?? key;

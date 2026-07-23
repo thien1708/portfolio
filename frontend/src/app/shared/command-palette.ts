@@ -7,6 +7,7 @@ import {
   input,
   signal,
 } from '@angular/core';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { Profile } from '../core/models';
 import { Icon } from './icon';
 
@@ -25,7 +26,7 @@ interface Command {
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-command-palette',
-  imports: [Icon],
+  imports: [Icon, CdkTrapFocus],
   template: `
     @if (open()) {
       <div class="cmdk-backdrop">
@@ -38,6 +39,10 @@ interface Command {
         ></button>
         <div
           class="cmdk-panel glass relative w-full max-w-lg overflow-hidden rounded-2xl shadow-soft-lg"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Command palette"
+          cdkTrapFocus
         >
           <div class="flex items-center gap-3 border-b border-lav-200/50 px-4 py-3 dark:border-lav-700/40">
             <span class="text-lav-500"><app-icon name="sparkles" /></span>
@@ -45,6 +50,7 @@ interface Command {
               #search
               type="text"
               class="w-full bg-transparent text-sm text-ink outline-none placeholder:text-lav-500/50 dark:text-lav-100"
+              aria-label="Search commands"
               placeholder="Jump to a section or link…"
               [value]="query()"
               (input)="onInput($event)"

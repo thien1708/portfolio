@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { Profile } from '../../core/models';
@@ -115,7 +122,7 @@ import { burstConfetti } from '../../shared/confetti';
     </section>
   `,
 })
-export class ContactSection {
+export class ContactSection implements OnDestroy {
   readonly profile = input<Profile | null>(null);
 
   private readonly api = inject(ApiService);
@@ -133,6 +140,10 @@ export class ContactSection {
       clearTimeout(this.copyTimer);
       this.copyTimer = setTimeout(() => this.copied.set(false), 2000);
     });
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.copyTimer);
   }
 
   protected readonly form = this.fb.nonNullable.group({

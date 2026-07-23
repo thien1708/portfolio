@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
-type IconDef = { fill?: boolean; body: string };
+interface IconDef {
+  fill?: boolean;
+  body: string;
+}
 
 // Stroke icons follow the Lucide outline style; brand icons are filled
 // (Simple Icons). Everything is a single self-contained SVG string so it
@@ -115,6 +118,7 @@ const ICONS: Record<string, IconDef> = {
   template: `<span [innerHTML]="svg()"></span>`,
   host: {
     class: 'inline-block leading-none',
+    'aria-hidden': 'true',
     '[style.width]': '"1em"',
     '[style.height]': '"1em"',
   },
@@ -126,7 +130,6 @@ const ICONS: Record<string, IconDef> = {
 })
 export class Icon {
   readonly name = input.required<string>();
-  readonly strokeWidth = input(2);
 
   private readonly sanitizer = inject(DomSanitizer);
 
@@ -134,7 +137,7 @@ export class Icon {
     const def = ICONS[this.name()] ?? ICONS['sparkles'];
     const paint = def.fill
       ? 'fill="currentColor"'
-      : `fill="none" stroke="currentColor" stroke-width="${this.strokeWidth()}" stroke-linecap="round" stroke-linejoin="round"`;
+      : 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
     const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" ${paint}>${def.body}</svg>`;
     return this.sanitizer.bypassSecurityTrustHtml(markup);
   });
