@@ -33,6 +33,14 @@ module.exports = {
           400: '#7FC3DE',
           500: '#57AACB',
         },
+        // Warm accent — used sparingly for focal points (CTAs, featured, cursor)
+        coral: {
+          200: '#FFD9C7',
+          300: '#FFC2A8',
+          400: '#FF9E7A',
+          500: '#FA7F55',
+          600: '#EC6640',
+        },
         ink: '#2D2B55',
       },
       fontFamily: {

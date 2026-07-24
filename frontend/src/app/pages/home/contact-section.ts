@@ -24,6 +24,7 @@ import { burstConfetti } from '../../shared/confetti';
   template: `
     <section id="contact" class="relative scroll-mt-24 overflow-hidden py-24">
       <div class="pointer-events-none absolute inset-0 -z-10">
+        <div class="absolute inset-0 bg-lav-100/40 dark:bg-white/[0.015]"></div>
         <div class="absolute left-0 top-1/3 h-96 w-96 rounded-full bg-lav-300/30 blur-3xl dark:bg-lav-700/20"></div>
         <div class="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-sky2-300/30 blur-3xl dark:bg-sky2-500/10"></div>
       </div>

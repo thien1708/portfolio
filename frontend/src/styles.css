@@ -27,6 +27,11 @@
   ::selection {
     @apply bg-lav-400/60 text-ink;
   }
+
+  /* Nicer paragraph wrapping — avoids orphans/ragged last lines. */
+  p {
+    text-wrap: pretty;
+  }
 }
 
 @layer components {
@@ -44,7 +49,7 @@
 
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 font-display font-semibold
-           text-white bg-gradient-to-r from-lav-500 to-peri-500 shadow-soft
+           text-white bg-gradient-to-r from-lav-500 to-coral-400 shadow-soft
            transition-all duration-300 hover:shadow-glow hover:-translate-y-0.5 active:translate-y-0
            focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 disabled:opacity-50 disabled:pointer-events-none;
   }
@@ -63,8 +68,19 @@
   }
 
   .section-title {
-    @apply font-display text-3xl sm:text-4xl font-extrabold tracking-tight;
+    @apply font-display font-extrabold tracking-tight;
+    font-size: clamp(2rem, 1.3rem + 3vw, 3.25rem);
+    line-height: 1.06;
+    text-wrap: balance;
   }
+
+  /* Fluid hero headline — scales smoothly instead of jumping at breakpoints. */
+  .hero-title {
+    font-size: clamp(2.5rem, 1.2rem + 5.5vw, 4.75rem);
+    line-height: 1.02;
+    text-wrap: balance;
+  }
+
 
   .input {
     @apply w-full rounded-xl border border-lav-200 bg-white/80 px-4 py-2.5 text-sm text-ink
@@ -80,6 +96,19 @@
   .card {
     @apply glass rounded-3xl;
   }
+}
+
+/* ---------- Premium glass depth (specular top highlight + layered shadow) ---------- */
+.glass {
+  box-shadow:
+    0 10px 40px -12px rgba(125, 107, 217, 0.25),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.55);
+}
+
+.dark .glass {
+  box-shadow:
+    0 16px 48px -16px rgba(8, 6, 26, 0.6),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ---------- Grain / noise texture overlay ---------- */
@@ -104,6 +133,54 @@
   border-radius: 9999px;
   filter: blur(64px);
   will-change: transform;
+}
+
+/* Hero mesh gradient — one soft layer replaces four blurred blobs (cheaper
+   to composite) and folds in a warm coral note for depth. Drifts slowly. */
+.hero-mesh {
+  background-image:
+    radial-gradient(42% 52% at 16% 20%, rgba(157, 141, 241, 0.5), transparent 70%),
+    radial-gradient(38% 46% at 84% 26%, rgba(127, 195, 222, 0.45), transparent 72%),
+    radial-gradient(48% 56% at 42% 90%, rgba(139, 152, 212, 0.42), transparent 72%),
+    radial-gradient(30% 38% at 80% 80%, rgba(255, 158, 122, 0.26), transparent 70%);
+  filter: blur(18px);
+  animation: hero-mesh-drift 28s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.dark .hero-mesh {
+  background-image:
+    radial-gradient(42% 52% at 16% 20%, rgba(157, 141, 241, 0.32), transparent 70%),
+    radial-gradient(38% 46% at 84% 26%, rgba(87, 170, 203, 0.24), transparent 72%),
+    radial-gradient(48% 56% at 42% 90%, rgba(111, 126, 192, 0.26), transparent 72%),
+    radial-gradient(30% 38% at 80% 80%, rgba(255, 158, 122, 0.15), transparent 70%);
+}
+
+@keyframes hero-mesh-drift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(2%, 2%, 0) scale(1.14);
+  }
+}
+
+/* Avatar blur-in on first paint (hero is above the fold). */
+.hero-avatar {
+  animation: avatar-in 1s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes avatar-in {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
 }
 
 /* ---------- Cursor glow (desktop, follows pointer) ---------- */

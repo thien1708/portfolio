@@ -33,7 +33,7 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                   <p class="mt-1 font-medium text-lav-600 dark:text-lav-300">{{ item.degree }}</p>
                 }
                 @if (item.description) {
-                  <p class="mt-3 text-sm leading-relaxed text-ink/70 dark:text-lav-100/70">{{ item.description }}</p>
+                  <p class="mt-3 text-sm leading-relaxed text-ink/80 dark:text-lav-100/80">{{ item.description }}</p>
                 }
               </div>
             }
@@ -57,7 +57,7 @@ import { SpotlightDirective } from '../../shared/spotlight.directive';
                     <p class="text-sm text-lav-600 dark:text-lav-300">{{ cert.issuer }}</p>
                   }
                   @if (cert.issued) {
-                    <p class="mt-0.5 text-xs text-ink/70 dark:text-lav-100/70">{{ cert.issued }}</p>
+                    <p class="mt-0.5 text-xs text-ink/80 dark:text-lav-100/80">{{ cert.issued }}</p>
                   }
                   @if (cert.url) {
                     <a [href]="cert.url" target="_blank" rel="noopener"
