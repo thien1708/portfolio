@@ -44,6 +44,7 @@ function toLevel(proficiency: number): SkillLevel {
   template: `
     <section id="skills" class="relative scroll-mt-24 overflow-hidden py-24">
       <div class="pointer-events-none absolute inset-0 -z-10">
+        <div class="absolute inset-0 bg-lav-100/40 dark:bg-white/[0.015]"></div>
         <div class="absolute left-1/4 top-10 h-72 w-72 rounded-full bg-lav-300/30 blur-3xl dark:bg-lav-700/20"></div>
         <div class="absolute bottom-10 right-1/4 h-72 w-72 rounded-full bg-sky2-300/30 blur-3xl dark:bg-sky2-500/10"></div>
       </div>
@@ -56,7 +57,7 @@ function toLevel(proficiency: number): SkillLevel {
 
         @if (skills().length > 0) {
           <!-- Level legend -->
-          <div appReveal [revealDelay]="80" class="mb-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-ink/70 dark:text-lav-100/70">
+          <div appReveal [revealDelay]="80" class="mb-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-ink/80 dark:text-lav-100/80">
             <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-lav-500 to-peri-500"></span>{{ i18n.t('skills.daily') }}</span>
             <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-sky2-400"></span>{{ i18n.t('skills.proficient') }}</span>
             <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full border border-lav-400 bg-lav-200/60 dark:bg-lav-700/40"></span>{{ i18n.t('skills.familiar') }}</span>

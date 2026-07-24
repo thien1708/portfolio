@@ -25,6 +25,7 @@ import { initialsOf, splitBullets } from '../../shared/text-utils';
   template: `
     <section id="projects" class="relative scroll-mt-24 overflow-hidden py-24">
       <div class="pointer-events-none absolute inset-0 -z-10">
+        <div class="absolute inset-0 bg-lav-100/40 dark:bg-white/[0.015]"></div>
         <div class="absolute right-10 top-16 h-80 w-80 rounded-full bg-peri-300/30 blur-3xl dark:bg-peri-600/15"></div>
         <div class="absolute bottom-16 left-10 h-80 w-80 rounded-full bg-lav-300/30 blur-3xl dark:bg-lav-700/20"></div>
       </div>
@@ -74,10 +75,18 @@ import { initialsOf, splitBullets } from '../../shared/text-utils';
                 appSpotlight
                 [style.animation-delay]="(i % 3) * 70 + 'ms'"
                 [class.conic-border]="project.featured"
+                [class.lg:col-span-2]="project.featured"
+                [class.lg:flex-row]="project.featured"
                 class="card-enter card group relative flex cursor-pointer flex-col overflow-hidden !rounded-3xl transition-all duration-300 hover:-translate-y-2 hover:shadow-glow"
               >
                 <!-- Cover -->
-                <div class="relative h-44 overflow-hidden">
+                <div
+                  class="relative h-44 overflow-hidden"
+                  [class.lg:h-auto]="project.featured"
+                  [class.lg:min-h-80]="project.featured"
+                  [class.lg:w-1/2]="project.featured"
+                  [class.lg:shrink-0]="project.featured"
+                >
                   @if (project.imageUrl) {
                     <img
                       [src]="project.imageUrl"
@@ -112,7 +121,7 @@ import { initialsOf, splitBullets } from '../../shared/text-utils';
                     </div>
                   }
                   @if (project.featured) {
-                    <span class="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white/85 px-3 py-1 text-xs font-bold text-lav-700 shadow backdrop-blur dark:bg-ink/70 dark:text-lav-200"><app-icon name="star" class="text-[0.7rem]" /> {{ i18n.t('projects.featured') }}</span>
+                    <span class="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-coral-400 to-coral-500 px-3 py-1 text-xs font-bold text-white shadow-soft backdrop-blur"><app-icon name="star" class="text-[0.7rem]" /> {{ i18n.t('projects.featured') }}</span>
                   }
                 </div>
 
@@ -120,7 +129,7 @@ import { initialsOf, splitBullets } from '../../shared/text-utils';
                   @if (project.period) {
                     <span class="mb-2 flex items-center gap-1.5 text-xs font-medium text-lav-500 dark:text-lav-300"><app-icon name="calendar" class="text-[0.7rem]" /> {{ project.period }}</span>
                   }
-                  <h3 class="font-display text-lg font-bold leading-snug">
+                  <h3 class="font-display text-lg font-bold leading-snug" [class.lg:text-2xl]="project.featured">
                     <!-- Stretched over the whole card via ::after — one real
                          interactive element, click-anywhere UX preserved. -->
                     <button
@@ -133,7 +142,7 @@ import { initialsOf, splitBullets } from '../../shared/text-utils';
                     </button>
                   </h3>
                   @if (project.description) {
-                    <ul class="mt-3 flex-1 space-y-1.5 text-sm leading-relaxed text-ink/70 dark:text-lav-100/70">
+                    <ul class="mt-3 flex-1 space-y-1.5 text-sm leading-relaxed text-ink/80 dark:text-lav-100/80">
                       @for (line of bullets(project.description).slice(0, 3); track $index) {
                         <li class="flex gap-2">
                           <span class="mt-0.5 text-lav-500">▸</span>

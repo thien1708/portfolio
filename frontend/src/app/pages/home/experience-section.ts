@@ -45,7 +45,7 @@ import { splitBullets } from '../../shared/text-utils';
                   <h3 class="font-display text-xl font-bold">{{ exp.role }}</h3>
                   <p class="mt-0.5 font-medium text-lav-600 dark:text-lav-300">{{ exp.company }}</p>
                   @if (exp.description) {
-                    <ul class="mt-4 space-y-2 text-sm leading-relaxed text-ink/70 dark:text-lav-100/70">
+                    <ul class="mt-4 space-y-2 text-sm leading-relaxed text-ink/80 dark:text-lav-100/80">
                       @for (line of bullets(exp.description); track $index) {
                         <li class="flex gap-2">
                           <span class="mt-1 text-lav-500">▸</span>
