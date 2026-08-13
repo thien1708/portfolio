@@ -1,5 +1,7 @@
 # Secrets — never commit real credentials
 .env
+.env.*
+!.env.example
 
 # Backend runtime artifacts
 backend/target/
@@ -11,9 +13,16 @@ frontend/node_modules/
 frontend/dist/
 frontend/.angular/
 
+# Archives / bundles
+backend.zip
+*.zip
+
 # OS / editor
 .DS_Store
 Thumbs.db
 *.log
 .idea/
 *.iml
+.vscode/
+*~
+*.swp
