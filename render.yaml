@@ -31,14 +31,28 @@ services:
       # contact form and admin panel to work through the Netlify proxy.
       - key: CORS_ALLOWED_ORIGINS
         sync: false # e.g. https://your-site.netlify.app
-      # --- Contact-form email notifications (Gmail SMTP, optional) ---
-      # MAIL_PASSWORD is a Gmail App Password (Google Account -> Security
-      # -> 2-Step Verification -> App passwords). Leave MAIL_USERNAME
-      # empty to disable notifications.
+      # --- Contact-form email notifications (optional) ---
+      # Two channels are supported; pick ONE of the two blocks below.
+      #
+      # 1) Resend HTTPS API (RECOMMENDED on the free plan): the free tier of
+      #    Render blocks outbound SMTP, but HTTPS (port 443) always works.
+      #    - MAIL_PROVIDER=resend
+      #    - RESEND_API_KEY from https://resend.com (Dashboard -> API Keys)
+      #    - MAIL_USERNAME/MAIL_PASSWORD are left EMPTY when using Resend.
+      #
+      # 2) Gmail SMTP (works after upgrading Render or for local/docker dev):
+      #    - MAIL_PROVIDER=smtp (the default when unset)
+      #    - MAIL_PASSWORD is a Gmail App Password (Google Account -> Security
+      #      -> 2-Step Verification -> App passwords). Leave MAIL_USERNAME
+      #      empty to disable notifications.
+      - key: MAIL_PROVIDER
+        value: smtp          # "smtp" (Gmail) or "resend" (HTTPS API)
+      - key: RESEND_API_KEY
+        sync: false          # re_xxx from resend.com — only used when MAIL_PROVIDER=resend
       - key: MAIL_USERNAME
-        sync: false # your-gmail@gmail.com
+        sync: false          # your-gmail@gmail.com (SMTP only)
       - key: MAIL_PASSWORD
-        sync: false # 16-char app password
+        sync: false          # 16-char app password (SMTP only)
       # --- Supabase Storage (image uploads from the admin panel) ---
       - key: STORAGE_PROVIDER
         value: supabase

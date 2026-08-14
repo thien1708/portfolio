@@ -104,6 +104,13 @@ app:
     email: ${ADMIN_EMAIL:tranvuthien1708@gmail.com}
     password: ${ADMIN_PASSWORD:}
   mail:
+    # Distribution channel for contact notifications. "smtp" uses the Gmail
+    # SMTP config above; "resend" uses the Resend HTTPS API (port 443, works on
+    # hosts like Render's free tier that block outbound SMTP). Set RESEND_API_KEY
+    # and MAIL_PROVIDER=resend to switch; the SMTP config is preserved so you can
+    # switch back later just by clearing these (e.g. after upgrading the plan).
+    provider: ${MAIL_PROVIDER:smtp}
     # Blank MAIL_USERNAME disables contact-form email notifications entirely.
     from: ${MAIL_USERNAME:}
     to: ${CONTACT_NOTIFY_TO:${ADMIN_EMAIL:tranvuthien1708@gmail.com}}
+    api-key: ${RESEND_API_KEY:}

@@ -23,10 +23,15 @@ public record AppProperties(Jwt jwt, Cors cors, Security security, Storage stora
     public record Admin(String email, String password) {
     }
 
-    public record Mail(String from, String to) {
+    public record Mail(String provider, String from, String to, String apiKey) {
 
         public boolean enabled() {
             return from != null && !from.isBlank();
+        }
+
+        /** True when an HTTPS mail API is configured (works from hosts that block SMTP). */
+        public boolean apiEnabled() {
+            return "resend".equalsIgnoreCase(provider) && apiKey != null && !apiKey.isBlank();
         }
     }
 }

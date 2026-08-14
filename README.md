@@ -232,8 +232,10 @@ clone/fork sang repo khác thì:
    | `CORS_ALLOWED_ORIGINS` | điền tạm `https://placeholder.netlify.app`, sửa lại ở Bước 4 |
    | `SUPABASE_URL` | `https://<project-ref>.supabase.co` |
    | `SUPABASE_SERVICE_ROLE_KEY` | key service_role |
-   | `MAIL_USERNAME` | Gmail dùng để gửi thông báo khi có người liên hệ — để trống nếu không cần |
-   | `MAIL_PASSWORD` | **App Password** 16 ký tự của Gmail (Google Account → Security → 2-Step Verification → App passwords), *không phải* mật khẩu Gmail thường |
+   | `MAIL_PROVIDER` | `smtp` (mặc định) hoặc `resend` — xem hướng dẫn Resend bên dưới |
+   | `MAIL_USERNAME` | Kênh **SMTP**: Gmail gửi thông báo. Kênh **Resend**: địa chỉ From (để trống nếu dùng `onboarding@resend.dev`) |
+   | `MAIL_PASSWORD` | **App Password** 16 ký tự của Gmail (chỉ kênh SMTP), *không phải* mật khẩu Gmail thường — để trống nếu dùng Resend |
+   | `RESEND_API_KEY` | API key `re_xxx` từ resend.com (chỉ dùng khi `MAIL_PROVIDER=resend`) |
 
 3. **Apply / Deploy** và mở tab **Logs**. Lần build đầu mất ~5–10 phút (Docker
    build Maven). Deploy thành công khi log có:
@@ -251,6 +253,54 @@ clone/fork sang repo khác thì:
    `https://portfolio-backend-xxxx.onrender.com`. Kiểm tra nhanh:
    mở `https://portfolio-backend-xxxx.onrender.com/api/v1/health` → `{"status":"UP"}`
    và `/api/v1/profile` → JSON dữ liệu CV.
+
+### Bước 2b — Email thông báo liên hệ (bắt buộc hiểu trước khi deploy)
+
+Hệ thống có 2 kênh gửi email thông báo khi khách gửi form contact tới bạn.
+**Trên free tier, Render chặn outbound SMTP** → khuyến nghị dùng **Resend**
+(HTTPS API, chạy qua port 443 - không bị chặn).
+
+#### 🅰 Kênh 1 — Resend API (khuyến nghị cho Render free)
+
+1. Tạo tài khoản miễn phí tại <https://resend.com>.
+2. **Verify domain** (khuyến nghị) hoặc dùng địa chỉ mặc định
+   `onboarding@resend.dev` để test (chỉ gửi được tới email bạn đăng ký lúc tạo tài
+   khoản). Để gửi tới email bất kỳ, phải **verify domain** tại
+   *Domains → Add Domain* và thêm DNS record (CNAME/MX) vào nhà cung cấp domain.
+3. Lấy API key: **API Keys → Create API Key** → copy chuỗi bắt đầu bằng `re_`.
+4. Trên Render (Dashboard → service → Environment), đặt:
+   - `MAIL_PROVIDER = resend`
+   - `RESEND_API_KEY = re_...`
+   - `MAIL_PASSWORD` **để trống** (không dùng SMTP).
+   - Với `MAIL_USERNAME`: để trống khi test với `onboarding@resend.dev`. Nếu bạn đã
+     **verify domain** ở Resend, đặt `MAIL_USERNAME` = địa chỉ muốn gửi thư, vd
+     `MAIL_USERNAME = Portfolio <contact@your-domain.com>`. (Biến này đồng thời là
+     `From` address; backend tự fallback `Portfolio <onboarding@resend.dev>` khi trống.)
+5. Save → Render restart. Mở **Logs**, ban đầu sẽ thấy:
+   `Contact notifications will use the Resend HTTPS API (provider=resend)`.
+6. Gửi thử 1 form contact trên site → sau vài giây bạn nhận email thông báo tại
+   `CONTACT_NOTIFY_TO` (mặc định = `ADMIN_EMAIL`).
+
+> ⚠️ **Khi dùng Resend**: `MAIL_USERNAME` đóng vai trò **From address** (nếu bạn đã
+> verify domain, đặt nó là địa chỉ verify của bạn; nếu chưa verify, để trống để dùng
+> `onboarding@resend.dev`). `MAIL_PASSWORD` phải **để trống** khi dùng Resend — nó chỉ
+> phục vụ kênh Gmail SMTP.
+
+#### 🅱 Kênh 2 — Gmail SMTP (mặc định khi không đặt `MAIL_PROVIDER`)
+
+Dùng khi chạy local, Docker, hoặc sau khi nâng Render lên plan không chặn SMTP:
+
+- `MAIL_PROVIDER = smtp` (mặc định khi không đặt)
+- `MAIL_USERNAME` = Gmail gửi thông báo (vd `yourmail@gmail.com`)
+- `MAIL_PASSWORD` = **App Password** 16 ký tự, tạo tại
+  Google Account → Security → 2-Step Verification → **App passwords**
+  (*không phải* mật khẩu Gmail thường).
+- Email đi ra từ Gmail của bạn tới `CONTACT_NOTIFY_TO`.
+
+> 💡 **Chuyển đổi**: Chỉ cần đổi `MAIL_PROVIDER` và bộ biến tương ứng. Code giữ
+> nguyên cả 2 sender (SMTP + Resend), `MailSenderConfig` tự chọn channel đang
+> cấu hình khi service start — không cần deploy lại code, chỉ restart sau khi
+> đổi biến môi trường.
 
 ### Bước 3 — Trỏ Netlify proxy về Render rồi deploy frontend
 
@@ -325,6 +375,11 @@ trên [Google Search Console](https://search.google.com/search-console).
 | Upload xong ảnh không hiển thị | Bucket `portfolio` chưa bật **Public**. Vào Supabase → Storage → bucket → Edit → Public. |
 | Netlify build fail vì Node version | `netlify.toml` đã ghim `NODE_VERSION=22`; đừng override trong UI Netlify. |
 | Đổi mật khẩu admin | Đổi `ADMIN_PASSWORD` trên Render chỉ áp dụng khi user **chưa tồn tại**. Cách nhanh: xoá dòng trong bảng `users` (Supabase → Table Editor) rồi restart service để tạo lại từ env. |
+| Log: `Contact notification skipped: no mail channel is configured` | Không có kênh mail nào được cấu hình. Set `MAIL_PROVIDER=resend` + `RESEND_API_KEY`, hoặc `MAIL_PROVIDER=smtp` + `MAIL_USERNAME`/`MAIL_PASSWORD`. |
+| Log: `Contact notifications will use SMTP` trên Render free | Dùng kênh SMTP nhưng free tier chặn SMTP. Đổi sang `MAIL_PROVIDER=resend` + `RESEND_API_KEY`. |
+| Resend báo lỗi 403 `Missing required field: "from"` | `MAIL_USERNAME`/From trống và tài khoản chưa verify domain. Verify domain trên Resend rồi set `MAIL_USERNAME` = địa chỉ verify, hoặc test tạm với email đăng ký. |
+| Resend báo `Domain not verified` | Chưa hoàn tất verify domain (thêm DNS record CNAME/MX tại nhà cung cấp) và chờ Resend xác nhận. |
+| Gửi contact thành công nhưng không nhận email | Kiểm tra log Render: nếu `Contact notification skipped` → chưa cấu hình channel; nếu `failed (attempt 1/3)` → sai App Password / API key / From chưa verify. |
 
 ## Tests & lint
 

@@ -58,7 +58,7 @@ class AuthServiceTest {
                 new AppProperties.Storage("local", "uploads",
                         new AppProperties.Storage.Supabase("", "", "portfolio")),
                 new AppProperties.Admin("admin@test.local", ""),
-                new AppProperties.Mail("", "admin@test.local"));
+                new AppProperties.Mail("smtp", "", "admin@test.local", ""));
         authService = new AuthService(userRepository, refreshTokenRepository, passwordEncoder,
                 new JwtService(props), props);
 
