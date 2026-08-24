@@ -6,6 +6,7 @@ import {
   ContactPayload,
   EducationItem,
   Experience,
+  PortfolioData,
   Profile,
   Project,
   Skill,
@@ -16,6 +17,15 @@ import {
 export class ApiService {
   private readonly http = inject(HttpClient);
   private readonly base = '/api/v1';
+
+  /**
+   * Single endpoint returning all public portfolio data.
+   * Preferred over individual calls — backed by a 10-minute in-memory cache
+   * so the DB is hit only once per cache window.
+   */
+  getPortfolio(): Observable<PortfolioData> {
+    return this.http.get<PortfolioData>(`${this.base}/portfolio`);
+  }
 
   getProfile(): Observable<Profile> {
     return this.http.get<Profile>(`${this.base}/profile`);

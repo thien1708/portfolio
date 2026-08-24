@@ -1,5 +1,6 @@
 package com.tranvuthien.portfolio.web;
 
+import com.tranvuthien.portfolio.config.CacheConfig;
 import com.tranvuthien.portfolio.dto.CertificationResponse;
 import com.tranvuthien.portfolio.dto.ContactRequest;
 import com.tranvuthien.portfolio.dto.EducationResponse;
@@ -16,7 +17,9 @@ import com.tranvuthien.portfolio.service.ProjectService;
 import com.tranvuthien.portfolio.service.SkillService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -89,6 +93,24 @@ public class PublicController {
         return certificationService.list();
     }
 
+    /**
+     * Single endpoint that returns all public portfolio data in one response.
+     * Cacheable, so after the first call subsequent requests are served from the
+     * Caffeine in-memory cache with no DB round-trip.
+     */
+    @GetMapping("/portfolio")
+    public ResponseEntity<Map<String, Object>> portfolio() {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(Duration.ofMinutes(10)))
+                .body(Map.of(
+                        CacheConfig.PROFILE, profileService.get(),
+                        CacheConfig.SKILLS, skillService.list(),
+                        CacheConfig.EXPERIENCES, experienceService.list(),
+                        CacheConfig.PROJECTS, projectService.list(),
+                        CacheConfig.EDUCATION, educationService.list(),
+                        CacheConfig.CERTIFICATIONS, certificationService.list()
+                ));
+    }
 
     @PostMapping("/contact")
     @ResponseStatus(HttpStatus.CREATED)

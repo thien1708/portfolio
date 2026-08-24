@@ -121,15 +121,17 @@ export class Home implements OnInit {
   }
 
   ngOnInit(): void {
-    this.api.getProfile().subscribe({
-      next: (p) => this.profile.set(p),
+    this.api.getPortfolio().subscribe({
+      next: (data) => {
+        this.profile.set(data.profile);
+        this.skills.set(data.skills);
+        this.experiences.set(data.experiences);
+        this.projects.set(data.projects);
+        this.education.set(data.education);
+        this.certifications.set(data.certifications);
+      },
       error: () => this.toast.error(this.i18n.t('misc.loadFail')),
     });
-    this.api.getSkills().subscribe((s) => this.skills.set(s));
-    this.api.getExperiences().subscribe((e) => this.experiences.set(e));
-    this.api.getProjects().subscribe((p) => this.projects.set(p));
-    this.api.getEducation().subscribe((e) => this.education.set(e));
-    this.api.getCertifications().subscribe((c) => this.certifications.set(c));
   }
 
   @HostListener('window:scroll')

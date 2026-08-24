@@ -97,3 +97,12 @@ export interface ContactPayload {
   subject: string;
   message: string;
 }
+
+export interface PortfolioData {
+  profile: Profile;
+  skills: Skill[];
+  experiences: Experience[];
+  projects: Project[];
+  education: EducationItem[];
+  certifications: Certification[];
+}
