@@ -1,20 +1,17 @@
 # Portfolio — Trần Vũ Thiện
 
-Personal portfolio web application: a public one-page site with a pastel blue–purple design,
-scroll animations and dark mode, plus a secured admin panel where every piece of content
-(profile, skills, experience, projects, education, certifications, contact messages) is
-managed in the database — no mock data anywhere.
+Ứng dụng web portfolio cá nhân: giao diện public hiện đại với tông màu xanh - tím pastel, hiệu ứng cuộn mượt mà, dark mode, hoạt cảnh 3D ba chiều lazy-loaded, cùng trang quản trị (Admin Panel) bảo mật cao cho phép quản trị toàn bộ dữ liệu (thông tin cá nhân, kỹ năng, kinh nghiệm, dự án, học vấn, chứng chỉ, bài viết blog, tin nhắn liên hệ, thống kê truy cập) trực tiếp từ database — không dùng dữ liệu giả lập (mock data).
 
-| Layer    | Tech                                                                     |
+| Tầng | Công nghệ sử dụng |
 | -------- | ------------------------------------------------------------------------ |
 | Backend  | Java 21 · Spring Boot 3.5 · Spring Security 6 (JWT) · JPA · Flyway       |
 | Frontend | Angular 20 (standalone, signals) · TailwindCSS 3 · Angular CDK · three.js (hero 3D, lazy chunk) |
-| Database | Supabase (PostgreSQL) — H2 file DB for the zero-setup local profile      |
-| Storage  | Supabase Storage (images) — local `./uploads` folder in the local profile |
+| Database | Supabase (PostgreSQL) — H2 file DB cho profile local tiện lợi            |
+| Storage  | Supabase Storage (ảnh tải lên) — thư mục local `./uploads` khi chạy local |
 
 ---
 
-## 🚀 Quick start (không cần Docker / Supabase)
+## 🚀 Khởi động nhanh (không cần Docker / Supabase)
 
 Chạy ngay trên máy chỉ cần **JDK 21+** và **Node 20+**:
 
@@ -29,14 +26,14 @@ npm install
 npx ng serve
 ```
 
-- Public site: <http://localhost:4200>
-- Admin panel: <http://localhost:4200/admin> — đăng nhập `tranvuthien1708@gmail.com` / `Admin@123`
-  (mật khẩu dev mặc định của profile local — **đổi ngay khi deploy**)
-- Swagger UI: <http://localhost:8080/swagger-ui.html>
+- Giao diện người dùng: <http://localhost:4200>
+- Trang quản trị: <http://localhost:4200/admin> — đăng nhập `tranvuthien1708@gmail.com` / `Admin@123`
+  (mật khẩu dev mặc định của profile local — **hãy đổi ngay khi triển khai**)
+- Tài liệu Swagger UI: <http://localhost:8080/swagger-ui.html>
 
-> **Port 8080 bị chiếm?** (thường do một app khác đang chạy) Chạy backend trên port
-> khác và trỏ proxy của frontend theo: copy `frontend/proxy.conf.json` ra một file
-> mới, đổi `8080` → port mới, rồi:
+> **Cổng 8080 bị chiếm?** (thường do ứng dụng khác đang chạy) Bạn có thể chạy backend trên cổng
+> khác và chuyển hướng proxy của frontend theo: copy `frontend/proxy.conf.json` ra một file
+> mới, đổi `8080` → cổng mới, rồi chạy:
 >
 > ```bash
 > ./mvnw spring-boot:run -Dspring-boot.run.profiles=local "-Dspring-boot.run.arguments=--server.port=8890"
@@ -45,92 +42,84 @@ npx ng serve
 
 ---
 
-## Connecting to Supabase (production setup)
+## Kết nối Supabase (Cấu hình Production)
 
-1. **Create a project** at <https://supabase.com> (free tier is enough).
-2. **Database credentials** — Dashboard → *Project Settings* → *Database* → *Connection string*.
-   Use the **Session pooler** URI (port `5432`, IPv4-friendly) and convert it to JDBC form:
+1. **Tạo project** tại <https://supabase.com> (gói miễn phí Free tier là đủ dùng).
+2. **Thông tin đăng nhập database** — Dashboard → *Project Settings* → *Database* → *Connection string*.
+   Chọn tab **Session pooler** (cổng `5432`, hỗ trợ IPv4) và chuyển sang định dạng JDBC:
 
    ```
    DATABASE_URL=jdbc:postgresql://aws-0-<region>.pooler.supabase.com:5432/postgres
    DATABASE_USERNAME=postgres.<project-ref>
-   DATABASE_PASSWORD=<your-db-password>
+   DATABASE_PASSWORD=<mat-khau-db-cua-ban>
    ```
 
-3. **Storage bucket** — Dashboard → *Storage* → *New bucket* → name `portfolio`, tick **Public**.
-   Then grab from *Project Settings* → *API*:
+3. **Tạo Storage bucket** — Dashboard → *Storage* → *New bucket* → đặt tên `portfolio`, tích chọn **Public bucket**.
+   Sau đó lấy thông tin từ *Project Settings* → *API*:
 
    ```
    SUPABASE_URL=https://<project-ref>.supabase.co
-   SUPABASE_SERVICE_ROLE_KEY=<service_role key>   # server-side only, never expose
+   SUPABASE_SERVICE_ROLE_KEY=<service_role key>   # Chỉ dùng phía server, không bao giờ để lộ ra ngoài
    SUPABASE_STORAGE_BUCKET=portfolio
    ```
 
-4. Copy `.env.example` → `.env`, fill everything in (including a strong `JWT_SECRET`
-   and `ADMIN_PASSWORD`), then run the backend **without** the local profile:
+4. Sao chép `.env.example` → `.env`, điền đầy đủ các thông tin (bao gồm chuỗi bí mật `JWT_SECRET` mạnh
+   và `ADMIN_PASSWORD`), sau đó khởi chạy backend **không dùng** profile local:
 
    ```bash
    cd backend
-   ./mvnw spring-boot:run          # reads env vars; Flyway creates + seeds the schema
+   ./mvnw spring-boot:run          # Đọc các biến môi trường; Flyway tự động tạo bảng & nạp dữ liệu seed
    ```
 
-   On Windows PowerShell, load the `.env` first or set the variables via
-   *System Environment Variables*. With Docker, `docker compose` reads `.env` automatically.
+   Trên Windows PowerShell, hãy load file `.env` trước hoặc thiết lập biến qua *System Environment Variables*. Với Docker, `docker compose` sẽ tự động đọc file `.env`.
 
-5. Flyway runs `V1__schema.sql` + `V2__seed.sql` against Supabase on first start —
-   the site is immediately live with the CV data, and the admin account is created
-   from `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+5. Flyway sẽ tự động chạy `V1__schema.sql` và `V2__seed.sql` trên Supabase ngay lần khởi động đầu tiên —
+   website sẽ có đầy đủ dữ liệu CV và tài khoản admin được tạo tự động từ `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 
-## Docker (optional)
+## Khởi chạy với Docker (tùy chọn)
 
 ```bash
-cp .env.example .env   # edit values, or keep defaults for a fully local stack
+cp .env.example .env   # Điền các giá trị, hoặc giữ nguyên mặc định cho môi trường local
 docker compose up --build
-# → http://localhost:8081  (public)   http://localhost:8081/admin  (admin)
+# → http://localhost:8081  (giao diện public)   http://localhost:8081/admin  (trang quản trị)
 ```
 
-The compose file bundles PostgreSQL; point `DATABASE_URL` at Supabase in `.env`
-to use the managed database instead.
+File docker-compose đã tích hợp sẵn container PostgreSQL; bạn có thể trỏ `DATABASE_URL` về Supabase trong file `.env` nếu muốn dùng trực tiếp database đám mây.
 
 ---
 
-## API overview (`/api/v1`, Swagger at `/swagger-ui.html`)
+## Tổng quan API (`/api/v1`, Swagger UI tại `/swagger-ui.html`)
 
-| Method | Path | Auth | Description |
+| Phương thức | Đường dẫn | Quyền hạn | Mô tả |
 | ------ | ---- | ---- | ----------- |
-| GET | `/portfolio` | public | Bulk cached portfolio payload (10-min cache) |
-| GET | `/profile`, `/skills`, `/experiences`, `/projects`, `/education`, `/certifications` | public | Portfolio content |
-| GET | `/posts`, `/posts/{slug}` | public | Blog posts list (published) and detail |
-| POST | `/contact` | public (rate-limited 3/min/IP) | Save a contact message & send notification |
-| POST | `/analytics/track` | public (rate-limited 60/min/IP) | Record visitor analytics events |
-| POST | `/auth/login` | public (rate-limited 5/min/IP) | Returns access token + sets refresh cookie |
-| POST | `/auth/refresh` | refresh cookie | Rotates the refresh token |
-| POST | `/auth/logout` | refresh cookie | Revokes the refresh token |
-| PUT | `/admin/profile` | ADMIN | Update profile |
-| POST/PUT/DELETE | `/admin/{skills\|experiences\|projects\|education\|certifications\|posts}[/{id}]` | ADMIN | CRUD resources & blog posts |
-| PUT | `/admin/{resource}/reorder` | ADMIN | Persist drag-and-drop order |
-| GET/PATCH/DELETE | `/admin/messages…` | ADMIN | Inbox: list, mark read, delete |
-| GET | `/admin/analytics/summary` | ADMIN | Visitor analytics & event breakdown |
-| POST | `/admin/upload` | ADMIN | Image upload → Supabase Storage / local disk |
+| GET | `/portfolio` | Công khai | Dữ liệu portfolio tổng hợp có cache (10 phút) |
+| GET | `/profile`, `/skills`, `/experiences`, `/projects`, `/education`, `/certifications` | Công khai | Dữ liệu từng phần của portfolio |
+| GET | `/posts`, `/posts/{slug}` | Công khai | Danh sách bài viết blog (đã xuất bản) và chi tiết bài viết |
+| POST | `/contact` | Công khai (giới hạn 3 req/phút/IP) | Gửi tin nhắn liên hệ & gửi email thông báo |
+| POST | `/analytics/track` | Công khai (giới hạn 60 req/phút/IP) | Ghi nhận sự kiện truy cập (Analytics) |
+| POST | `/auth/login` | Công khai (giới hạn 5 req/phút/IP) | Đăng nhập: trả về access token + set refresh cookie |
+| POST | `/auth/refresh` | Cookie refresh | Xoay vòng (rotate) refresh token |
+| POST | `/auth/logout` | Cookie refresh | Thu hồi (revoke) refresh token |
+| PUT | `/admin/profile` | ADMIN | Cập nhật thông tin cá nhân |
+| POST/PUT/DELETE | `/admin/{skills\|experiences\|projects\|education\|certifications\|posts}[/{id}]` | ADMIN | Thêm / Sửa / Xóa danh mục và bài viết blog |
+| PUT | `/admin/{resource}/reorder` | ADMIN | Lưu thứ tự kéo thả hiển thị |
+| GET/PATCH/DELETE | `/admin/messages…` | ADMIN | Hộp thư liên hệ: xem danh sách, đánh dấu đã đọc, xóa |
+| GET | `/admin/analytics/summary` | ADMIN | Thống kê số lượt xem, người dùng và phân tích sự kiện |
+| POST | `/admin/upload` | ADMIN | Tải ảnh lên → Supabase Storage / thư mục local |
 
-## Security model
+## Mô hình bảo mật
 
-- **Stateless JWT** access tokens (15 min) signed with `JWT_SECRET` (HS384, ≥32 chars).
-- **Refresh token rotation**: 7-day opaque tokens stored **hashed (SHA-256)** in the DB and
-  delivered as an `httpOnly` + `Secure` + `SameSite=Strict` cookie scoped to `/api/v1/auth`.
-  Reusing a rotated token revokes the whole token family (theft detection).
-- **BCrypt (cost 12)** password hashing; account **lockout 15 min after 5 failed logins**;
-  identical error messages and dummy-hash timing to prevent user enumeration.
-- **Role-based access**: everything under `/api/v1/admin/**` requires `ROLE_ADMIN`;
-  all other routes are explicitly whitelisted, `anyRequest().denyAll()`.
-- **Rate limiting** (Bucket4j, per IP): login 5/min, contact 3/min, general API 120/min.
-- **Bean Validation** on every request DTO; JPA parameterized queries only.
-- **Headers**: HSTS, `X-Frame-Options: DENY`, CSP, no stack traces in responses.
-- **CORS** locked to `CORS_ALLOWED_ORIGINS`; secrets only via environment variables.
-- **Uploads**: images only (whitelist + content-type check), ≤2 MB, randomized filenames;
-  the Supabase `service_role` key never leaves the backend.
+- **Stateless JWT**: Access token ngắn hạn (15 phút) được ký bằng `JWT_SECRET` (HS384, độ dài ≥ 32 ký tự).
+- **Refresh Token Rotation**: Token 7 ngày dạng chuỗi ngẫu nhiên không thể giải mã, được lưu trữ dưới dạng **băm SHA-256** trong database và gửi qua cookie an toàn với các cờ `httpOnly` + `Secure` + `SameSite=Strict` giới hạn trong đường dẫn `/api/v1/auth`. Việc tái sử dụng token đã xoay vòng sẽ kích hoạt cơ chế phát hiện đánh cắp và lập tức thu hồi toàn bộ chuỗi token liên quan.
+- **Mã hóa mật khẩu BCrypt (cost 12)**: Tự động **khóa tài khoản 15 phút sau 5 lần đăng nhập thất bại** liên tiếp; phản hồi lỗi đồng nhất và thời gian xử lý dummy hash để chống lại tấn công dò tìm tài khoản (user enumeration).
+- **Phân quyền truy cập (RBAC)**: Mọi endpoint dưới `/api/v1/admin/**` đều yêu cầu quyền `ROLE_ADMIN`; các endpoint khác được whitelist cụ thể, toàn bộ route còn lại bị từ chối mặc định (`anyRequest().denyAll()`).
+- **Rate limiting** (Bucket4j, dựa theo IP): Đăng nhập tối đa 5 lần/phút, form liên hệ tối đa 3 lần/phút, API chung tối đa 120 lần/phút.
+- **Kiểm thực dữ liệu Bean Validation** trên mọi Request DTO; sử dụng truy vấn tham số hóa JPA/Hibernate an toàn tuyệt đối trước SQL Injection.
+- **Tiêu đề bảo mật HTTP (Security Headers)**: HSTS, `X-Frame-Options: DENY`, Content Security Policy (CSP), ẩn hoàn toàn stack trace lỗi trong response.
+- **CORS** kiểm soát chặt chẽ thông qua biến `CORS_ALLOWED_ORIGINS`; bí mật hệ thống chỉ lưu qua biến môi trường.
+- **Quản lý tải file**: Chỉ cho phép định dạng ảnh (kiểm tra whitelist phần mở rộng + MIME type), dung lượng tối đa ≤ 2 MB, tên file ngẫu nhiên hóa; key bí mật `service_role` của Supabase luôn nằm ở backend, không bao giờ lộ ra frontend.
 
-## Project structure
+## Cấu trúc dự án
 
 ```
 ├── backend/                  Spring Boot API
@@ -388,10 +377,10 @@ rồi submit sitemap trên [Google Search Console](https://search.google.com/sea
 | Resend báo `Domain not verified` | Chưa hoàn tất verify domain (thêm DNS record CNAME/MX tại nhà cung cấp) và chờ Resend xác nhận. |
 | Gửi contact thành công nhưng không nhận email | Kiểm tra log Render: nếu `Contact notification skipped` → chưa cấu hình channel; nếu `failed (attempt 1/3)` → sai App Password / API key / From chưa verify. |
 
-## Tests & lint
+## Kiểm thử & Chuẩn mã nguồn (Tests & Lint)
 
 ```bash
-cd backend && ./mvnw test        # auth (lockout, rotation, reuse detection) + CRUD service
-cd frontend && npx ng test       # component smoke tests (needs Chrome)
-cd frontend && npx ng lint       # ESLint (angular-eslint, incl. template a11y rules)
+cd backend && ./mvnw test        # Kiểm thử backend: xác thực (khóa tài khoản, xoay vòng token, chống tấn công), dịch vụ CRUD, lưu trữ, email, blog, analytics
+cd frontend && npx ng test       # Kiểm thử frontend: unit test các component (cần Chrome)
+cd frontend && npx ng lint       # Kiểm tra chuẩn mã nguồn ESLint (angular-eslint, bao gồm cả quy tắc trợ năng accessibility)
 ```

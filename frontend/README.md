@@ -1,59 +1,79 @@
-# Frontend
+# Frontend — Portfolio Trần Vũ Thiện
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.31.
+Dự án Frontend được xây dựng bằng **Angular 20** (kiến trúc Standalone Components, Signal state management), **TailwindCSS 3**, **Angular CDK** và hoạt cảnh 3D **Three.js** (lazy-loaded hero).
 
-## Development server
+---
 
-To start a local development server, run:
+## Máy chủ phát triển (Development Server)
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Để khởi động dev server trên máy cục bộ kèm proxy chuyển tiếp API sang backend:
 
 ```bash
-ng generate component component-name
+# Cài đặt dependencies (lần đầu tiên)
+npm install
+
+# Chạy dev server (mặc định cổng 4200, proxy sang backend tại 8080)
+npm start
+# hoặc: npx ng serve
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Sau khi server khởi động xong, mở trình duyệt và truy cập: `http://localhost:4200/`. Ứng dụng sẽ tự động tải lại (hot reload) mỗi khi bạn chỉnh sửa và lưu bất kỳ tệp mã nguồn nào.
+
+> **Lưu ý về Proxy**: Tệp cấu hình `proxy.conf.json` sẽ tự động chuyển tiếp tất cả các yêu cầu bắt đầu bằng `/api` và `/uploads` sang backend Spring Boot tại `http://localhost:8080`.
+
+---
+
+## Tạo mới thành phần mã (Code Scaffolding)
+
+Angular CLI cung cấp bộ sinh mã rất mạnh mẽ. Để tạo một component mới, chạy lệnh:
 
 ```bash
-ng generate --help
+npx ng generate component path/ten-component
 ```
 
-## Building
-
-To build the project run:
+Để xem danh sách đầy đủ các schematics hỗ trợ (như `component`, `directive`, `pipe`, `service`...):
 
 ```bash
-ng build
+npx ng generate --help
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+---
 
-## Running unit tests
+## Đóng gói ứng dụng (Build)
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Để đóng gói ứng dụng cho môi trường production:
 
 ```bash
-ng test
+npm run build
+# hoặc: npx ng build
 ```
 
-## Running end-to-end tests
+Các tệp tĩnh đã được tối ưu hóa (tree-shaking, minification, bundle optimization) sẽ được xuất ra tại thư mục `dist/frontend/browser/`.
 
-For end-to-end (e2e) testing, run:
+---
+
+## Kiểm thử tự động (Testing & Linting)
+
+### Kiểm thử Unit Test
+
+Để chạy các unit test với Karma test runner:
 
 ```bash
-ng e2e
+npm test
+# hoặc: npx ng test
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+### Kiểm tra chuẩn mã nguồn (Linting)
 
-## Additional Resources
+Để kiểm tra quy tắc mã nguồn và trợ năng (accessibility) với ESLint:
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```bash
+npm run lint
+# hoặc: npx ng lint
+```
+
+---
+
+## Tài nguyên tham khảo
+
+Để biết thêm chi tiết về Angular CLI và các lệnh nâng cao, tham khảo tài liệu chính thức tại: [Angular CLI Overview & Command Reference](https://angular.dev/tools/cli).
