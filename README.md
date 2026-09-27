@@ -98,15 +98,19 @@ to use the managed database instead.
 
 | Method | Path | Auth | Description |
 | ------ | ---- | ---- | ----------- |
+| GET | `/portfolio` | public | Bulk cached portfolio payload (10-min cache) |
 | GET | `/profile`, `/skills`, `/experiences`, `/projects`, `/education`, `/certifications` | public | Portfolio content |
-| POST | `/contact` | public (rate-limited 3/min/IP) | Save a contact message |
+| GET | `/posts`, `/posts/{slug}` | public | Blog posts list (published) and detail |
+| POST | `/contact` | public (rate-limited 3/min/IP) | Save a contact message & send notification |
+| POST | `/analytics/track` | public (rate-limited 60/min/IP) | Record visitor analytics events |
 | POST | `/auth/login` | public (rate-limited 5/min/IP) | Returns access token + sets refresh cookie |
 | POST | `/auth/refresh` | refresh cookie | Rotates the refresh token |
 | POST | `/auth/logout` | refresh cookie | Revokes the refresh token |
 | PUT | `/admin/profile` | ADMIN | Update profile |
-| POST/PUT/DELETE | `/admin/{skills\|experiences\|projects\|education\|certifications}[/{id}]` | ADMIN | CRUD |
+| POST/PUT/DELETE | `/admin/{skills\|experiences\|projects\|education\|certifications\|posts}[/{id}]` | ADMIN | CRUD resources & blog posts |
 | PUT | `/admin/{resource}/reorder` | ADMIN | Persist drag-and-drop order |
 | GET/PATCH/DELETE | `/admin/messages…` | ADMIN | Inbox: list, mark read, delete |
+| GET | `/admin/analytics/summary` | ADMIN | Visitor analytics & event breakdown |
 | POST | `/admin/upload` | ADMIN | Image upload → Supabase Storage / local disk |
 
 ## Security model
@@ -132,22 +136,24 @@ to use the managed database instead.
 ├── backend/                  Spring Boot API
 │   └── src/main/
 │       ├── java/com/tranvuthien/portfolio/
-│       │   ├── config/       Security, CORS, OpenAPI, admin bootstrap, static files
+│       │   ├── config/       Security, CORS, OpenAPI, admin bootstrap, cache, static files
 │       │   ├── security/     JwtService, JWT filter, rate-limit filter
-│       │   ├── domain/       JPA entities
+│       │   ├── domain/       JPA entities (Profile, Skill, Experience, Project, Post, AnalyticsEvent...)
 │       │   ├── repository/   Spring Data repositories
 │       │   ├── dto/          Request/response records (+ validation)
-│       │   ├── service/      Business logic, storage (Supabase / local)
+│       │   ├── service/      Business logic, storage (Supabase / local), mail (SMTP / Resend), analytics
 │       │   ├── util/         Csv & Lines helpers (delimited text columns)
-│       │   └── web/          Public, auth and admin controllers + error handler
-│       └── resources/db/migration/   V1__schema.sql … V4 (schema + CV seed + project gallery)
+│       │   └── web/          Public, auth, blog, analytics and admin controllers + error handler
+│       └── resources/db/migration/   V1__schema.sql, V2__seed.sql (consolidated schema + seed)
 ├── frontend/                 Angular 20 + Tailwind
 │   └── src/app/
-│       ├── core/             API services, auth, interceptor, theme, i18n (EN/VI), toasts
-│       ├── shared/           Reveal/count-up/tilt directives, chips input, command palette, toast outlet
+│       ├── core/             API services, auth, interceptor, theme, i18n (EN/VI), toasts, analytics, sound, seo
+│       ├── shared/           Reveal directives, command palette, terminal modal, CV modal, github stats
 │       ├── three/            Lazy-loaded three.js solar-system hero (engine + shaders)
-│       ├── pages/home/       Public site (hero, skills, timeline, projects, …)
-│       └── admin/            Login, layout, dashboard, generic CRUD, image cropper, messages
+│       ├── pages/
+│       │   ├── home/         Public site (hero, skills, timeline, projects, contact, …)
+│       │   └── blog/         Blog list & dynamic markdown post view
+│       └── admin/            Login, layout, dashboard (analytics charts), generic CRUD, profile, messages
 ├── docker-compose.yml        Postgres + backend + frontend (nginx)
 └── .env.example              All required environment variables
 ```
@@ -183,10 +189,8 @@ clone/fork sang repo khác thì:
    git push -u origin main
    ```
 
-> **Về nhánh deploy**: Render và Netlify mặc định build **nhánh mặc định của repo**
-> (`main`). Quy trình của repo này: phát triển trên `develop` → merge vào `main`
-> khi ổn định. Nếu bạn cấu hình Render/Netlify theo dõi nhánh khác (vd `deploy`)
-> thì nhớ merge vào đúng nhánh đó mỗi lần muốn deploy.
+> **Về quy trình git & deploy**: Repo sử dụng mô hình 2 nhánh: phát triển trên `develop`
+> và merge vào `main` khi ổn định. Render và Netlify mặc định build từ nhánh `main`.
 
 ### Bước 1 — Tạo project Supabase (database + storage)
 
@@ -241,7 +245,7 @@ clone/fork sang repo khác thì:
    build Maven). Deploy thành công khi log có:
 
    ```
-   Successfully applied 4 migrations ...   ← Flyway đã tạo schema + seed dữ liệu CV lên Supabase
+   Successfully applied 2 migrations ...   ← Flyway đã tạo schema + seed dữ liệu CV lên Supabase
    Admin user 'tranvuthien1708@gmail.com' created.
    Started PortfolioBackendApplication
    ```
@@ -334,10 +338,13 @@ Quay lại Render → service `portfolio-backend` → **Environment** → sửa
 ### Bước 5 — Kiểm tra sau deploy
 
 - [ ] Mở site Netlify: hero hiện tên + hiệu ứng gõ chữ, skills/projects load từ Supabase
-- [ ] Gửi thử form **Contact** → báo thành công
+- [ ] Mở trang Blog (`/blog`), click đọc bài viết (`/blog/:slug`)
+- [ ] Phím tắt: `Ctrl + ~` mở Interactive Terminal modal, click nút CV để xem/tải CV (`/cv-vi.pdf`, `/cv-en.pdf`)
+- [ ] Gửi thử form **Contact** → báo thành công và nhận email thông báo
 - [ ] Vào `/admin`, đăng nhập bằng `ADMIN_EMAIL` / `ADMIN_PASSWORD` đã đặt trên Render
 - [ ] Thấy tin nhắn contact vừa gửi trong mục **Messages**
-- [ ] Sửa một skill / upload avatar → refresh trang public thấy thay đổi ngay
+- [ ] Dashboard admin: xem biểu đồ thống kê truy cập (Analytics)
+- [ ] Quản lý CRUD: sửa một skill / thêm bài viết Blog / upload avatar → refresh trang public thấy thay đổi ngay
 - [ ] Ảnh upload có URL dạng `https://<project-ref>.supabase.co/storage/v1/object/public/portfolio/...`
 
 ### Bước 6 — Hoàn thiện SEO khi đã có URL chính thức
@@ -345,12 +352,13 @@ Quay lại Render → service `portfolio-backend` → **Environment** → sửa
 `frontend/src/index.html` đã có sẵn meta description, Open Graph (kèm `og:image`),
 Twitter card (`summary_large_image` + `twitter:image`) và JSON-LD; ảnh preview
 1200×630 nằm tại `frontend/public/og-image.png`; `frontend/public/robots.txt` đã
-chặn `/admin`. Còn vài thứ **phải chờ có URL thật** mới điền được — sau khi chốt
+chặn `/admin` và khai báo `sitemap.xml`; `frontend/public/sitemap.xml` đã bao gồm các trang chính và bài viết.
+Còn vài thứ **phải chờ có URL thật** mới điền được — sau khi chốt
 tên miền (vd `https://tranvuthien.netlify.app` hoặc domain riêng), sửa
 `frontend/src/index.html` (vị trí đã đánh dấu bằng comment trong `<head>`):
 
 ```html
-<!-- thêm 2 dòng này -->
+<!-- cập nhật link canonical và og:url -->
 <link rel="canonical" href="https://<URL-cua-ban>/">
 <meta property="og:url" content="https://<URL-cua-ban>/">
 <!-- và đổi og:image / twitter:image từ đường dẫn tương đối sang tuyệt đối -->
@@ -358,9 +366,8 @@ tên miền (vd `https://tranvuthien.netlify.app` hoặc domain riêng), sửa
 <meta name="twitter:image" content="https://<URL-cua-ban>/og-image.png">
 ```
 
-Tuỳ chọn: tạo `frontend/public/sitemap.xml` (site một trang chỉ cần URL gốc) và thêm
-dòng `Sitemap: https://<URL-cua-ban>/sitemap.xml` vào cuối `robots.txt`, rồi submit
-trên [Google Search Console](https://search.google.com/search-console).
+Sau khi có URL chính thức, cập nhật URL trong `frontend/public/sitemap.xml` và `frontend/public/robots.txt`,
+rồi submit sitemap trên [Google Search Console](https://search.google.com/search-console).
 
 ### Sự cố thường gặp
 

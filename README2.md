@@ -39,8 +39,8 @@ cd portfolio
 
 # Kiểm tra nhánh
 git branch -a
-# Nên làm việc trên nhánh `deploy` cho production
-git checkout deploy
+# Sử dụng nhánh `main` cho production
+git checkout main
 ```
 
 ---
@@ -518,7 +518,7 @@ Mỗi lần push code mới:
 ```bash
 # Trên Oracle instance (SSH)
 cd ~/portfolio/backend
-git pull origin deploy
+git pull origin main
 ./mvnw -DskipTests clean package -q
 sudo systemctl restart portfolio-backend
 ```
