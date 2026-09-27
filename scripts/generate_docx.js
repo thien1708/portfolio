@@ -341,6 +341,7 @@ for (let i = 0; i < allLines.length; i++) {
         ]
       })
     );
+    // Headings level 2 (###)
   } else if (trimmed.startsWith('### ')) {
     const text = trimmed.replace(/^###\s+/, '');
     children.push(
@@ -359,16 +360,12 @@ for (let i = 0; i < allLines.length; i++) {
       })
     );
 
-    // If entering Section 2.2, insert the 3 clear architecture diagram images
-    if (text.includes('2.2')) {
-      children.push(...createImageParagraph('diagram_architecture_overview.png', 570, 579, 'Sơ đồ 2.1: Kiến trúc phân tầng 4 lớp tổng thể hệ thống'));
-      children.push(...createImageParagraph('diagram_public_web.png', 570, 390, 'Sơ đồ 2.2: Luồng chức năng & Tương tác Phân hệ Public Web'));
-      children.push(...createImageParagraph('diagram_admin_cms.png', 570, 398, 'Sơ đồ 2.3: Luồng bảo mật & Điều hành Phân hệ Admin CMS'));
-    }
-
   } else if (trimmed.startsWith('#### ')) {
     const text = trimmed.replace(/^####\s+/, '');
-    if (text.includes('Sơ đồ 2.1') || text.includes('Sơ đồ 2.2') || text.includes('Sơ đồ 2.3') || text.includes('Sơ đồ 2.4')) {
+
+    // Contextual Diagram Placements
+    if (text.includes('Sơ đồ 2.1')) {
+      children.push(...createImageParagraph('diagram_architecture_overview.png', 570, 579, 'Sơ đồ 2.1: Kiến trúc phân tầng 4 lớp tổng thể hệ thống'));
       continue;
     }
     if (text.includes('Sơ đồ 5.1')) {
@@ -382,6 +379,15 @@ for (let i = 0; i < allLines.length; i++) {
     if (text.includes('Sơ đồ 5.3')) {
       children.push(...createImageParagraph('diagram_erd_blog.png', 570, 273, 'Sơ đồ 5.3: ERD Phân hệ Blog, Tương tác & Giám sát (posts, contact, analytics)'));
       continue;
+    }
+
+    // Insert subsystem specific diagrams after their intro
+    if (text.includes('2.2.2')) {
+      // Before starting Admin CMS, append Public Web diagram
+      children.push(...createImageParagraph('diagram_public_web.png', 570, 390, 'Sơ đồ 2.2: Luồng chức năng & Tương tác Phân hệ Public Web'));
+    } else if (text.includes('2.2.3')) {
+      // Before starting Backend, append Admin CMS diagram
+      children.push(...createImageParagraph('diagram_admin_cms.png', 570, 398, 'Sơ đồ 2.3: Luồng bảo mật & Điều hành Phân hệ Admin CMS'));
     }
 
     children.push(

@@ -126,71 +126,83 @@ Hệ thống được định vị là một **Modern Full-Stack Personal Platfo
 - Đem đến trải nghiệm trực quan ấn tượng (WOW Effect) với ngôn ngữ thiết kế pastel blue-purple, hiệu ứng glassmorphism, tương tác không gian ba chiều (3D Three.js Lazy-loaded), và hoạt cảnh mượt mà 60fps.
 - Cung cấp nền tảng quản trị nội dung độc lập (Headless CMS) giúp việc biên tập hồ sơ, kỹ năng, dự án, bài viết blog diễn ra theo thời gian thực mà không bao giờ cần phải chỉnh sửa hay rebuild lại mã nguồn giao diện.
 
-### 2.2 Các phân hệ chức năng chính (Major System Modules)
+### 2.2 Kiến trúc phân tầng & Các phân hệ chức năng chính (System Architecture & Major Modules)
 
-#### Sơ đồ 2.1: Kiến trúc phân tầng 3 phân hệ cốt lõi
+Hệ thống được thiết kế theo mô hình kiến trúc phân tầng 4 lớp hiện đại (4-Tier Enterprise Architecture), phân định rõ ràng ranh giới trách nhiệm giữa các tầng giao diện người dùng, cổng bảo mật & điều phối, tầng dịch vụ lõi và tầng lưu trữ đám mây.
+
+#### Sơ đồ 2.1: Sơ đồ kiến trúc phân tầng 4 lớp tổng thể
 ```mermaid
 graph TD
-    ROOT["HỆ THỐNG FULL-STACK PORTFOLIO & CMS"]
-    ROOT --> M1["Phân hệ 1: Public Web (SPA)"]
-    ROOT --> M2["Phân hệ 2: Admin CMS (Quản trị)"]
-    ROOT --> M3["Phân hệ 3: Hệ thống & Backend API"]
-```
-
-#### Sơ đồ 2.2: Luồng tương tác & Chức năng Phân hệ Public Web
-```mermaid
-graph LR
-    subgraph PUBLIC["PHÂN HỆ PUBLIC WEB (ANGULAR 20 SPA)"]
-        direction TB
-        P1["Trang chủ tương tác, Hero 3D (Three.js) & GitHub Stats"]
-        P2["Kỹ năng với thanh %, Timeline trượt & Lưới dự án"]
-        P3["Technical Blog & Trình đọc Markdown chuyên sâu"]
-        P4["Form liên hệ trực tuyến Rate-limited (3 req/phút)"]
-        P5["Terminal CLI giả lập (Ctrl + ~) & Modal xem/tải CV"]
+    subgraph TIER1["TẦNG 1: CLIENT TIER (ANGULAR 20 SPA)"]
+        PUB["Phân hệ Public Web: Hero 3D, Blog, Portfolio & Contact"]
+        ADM["Phân hệ Admin CMS: Dashboard Analytics, Dynamic CRUD & Storage"]
     end
-```
 
-#### Sơ đồ 2.3: Luồng bảo mật & Chức năng Phân hệ Admin CMS
-```mermaid
-graph LR
-    subgraph ADMIN["PHÂN HỆ ADMIN CMS (BẢO MẬT CAO)"]
-        direction TB
-        A1["Xác thực bảo mật JWT (15p) + Refresh Token (7 ngày)"]
-        A2["Khóa tài khoản tự động sau 5 lần đăng nhập thất bại"]
-        A3["Dashboard Analytics: Thống kê lượt xem, Thiết bị & Top bài"]
-        A4["Dynamic CRUD 6 module & Kéo thả sắp xếp thứ tự"]
-        A5["Hộp thư liên hệ & Upload ảnh Supabase Storage (≤ 2MB)"]
+    subgraph TIER2["TẦNG 2: SECURITY & GATEWAY TIER"]
+        SEC["Reverse Proxy Netlify / Caddy HTTPS SSL"]
+        FILT["Bucket4j Rate Limit (IP) | CORS Allowed Origins | CSP Security Headers"]
     end
-```
 
-#### Sơ đồ 2.4: Phân hệ Backend API & Dịch vụ đám mây
-```mermaid
-graph LR
-    subgraph BACKEND["PHÂN HỆ BACKEND & DỊCH VỤ NỀN TẢNG"]
-        direction TB
-        B1["Spring Boot 3.5 RESTful API & In-memory Cache 10 phút"]
-        B2["Bảo mật mạng: Bucket4j Rate-limiting, CORS, HSTS, CSP"]
-        B3["Dịch vụ gửi Email bất đồng bộ: Resend HTTPS & Gmail SMTP"]
-        B4["Supabase PostgreSQL (11 Bảng) & Flyway Migrations"]
+    subgraph TIER3["TẦNG 3: APPLICATION CORE TIER (SPRING BOOT 3.5)"]
+        REST["RESTful API Controllers (/api/v1/**)"]
+        SERV["Dịch vụ nghiệp vụ: Portfolio Cache 10m, Blog Service, Dual Mail Sender"]
+        AUTH["Xác thực Spring Security 6: JWT 15m + Refresh Token 7d"]
     end
+
+    subgraph TIER4["TẦNG 4: DATA & INFRASTRUCTURE TIER"]
+        DB[(Supabase PostgreSQL 11 Bảng & Flyway Migrations)]
+        OSS[(Supabase Storage Cloud Bucket)]
+    end
+
+    PUB -->|HTTPS / JSON REST Calls| SEC
+    ADM -->|Bearer JWT + HttpOnly Cookie| SEC
+    SEC --> FILT
+    FILT --> REST
+    REST --> SERV
+    SERV --> AUTH
+    SERV -->|HikariCP Connection Pool| DB
+    SERV -->|Storage REST API| OSS
 ```
 
-#### Bảng 2.2: Bảng phân rã chi tiết các phân hệ chức năng
+#### 2.2.1 Phân hệ 1: Public Web SPA (Giao diện người dùng công khai)
+Phân hệ Public Web hướng đến các đối tượng người dùng bên ngoài như nhà tuyển dụng, đối tác và cộng đồng lập trình viên. Phân hệ được xây dựng bằng **Angular 20 Standalone Components** kết hợp **TailwindCSS 3** và đồ họa không gian 3 chiều **Three.js**:
+- **Trải nghiệm thị giác trực quan:** Áp dụng bảng màu Pastel Blue-Purple, hiệu ứng Glassmorphism bán trong suốt, hoạt cảnh 60fps mượt mà và chuyển đổi giao diện Sáng/Tối (Light/Dark Mode).
+- **Hồ sơ năng lực động:** Toàn bộ thông tin tiểu sử, kỹ năng, kinh nghiệm và dự án được nạp động từ API tổng hợp `/api/v1/portfolio` với cơ chế cache in-memory 10 phút, đảm bảo tốc độ phản hồi dưới 100ms.
+- **Nền tảng chia sẻ kiến thức:** Chuyên mục Technical Blog tích hợp trình đọc Markdown, hỗ trợ hiển thị đoạn mã đa ngôn ngữ có syntax highlighting và bộ đếm lượt xem bài viết.
+- **Kênh tương tác trực tiếp:** Form liên hệ trực tuyến có kiểm thực chặt chẽ, kiểm soát tốc độ gửi tối đa 3 lần/phút/IP để ngăn chặn thư rác, đồng thời kích hoạt quy trình gửi email thông báo ngầm cho quản trị viên.
+- **Tiện ích mở rộng tương tác:** Terminal giả lập (phím tắt `Ctrl + ~`), cửa sổ xem trước và tải CV đa ngôn ngữ trực tiếp (tiếng Việt và tiếng Anh) và bộ đếm thống kê GitHub thời gian thực.
+
+#### 2.2.2 Phân hệ 2: Admin CMS (Nền tảng quản trị nội dung an toàn)
+Phân hệ Admin CMS là không gian làm việc bảo mật cao dành riêng cho chủ nhân hồ sơ để điều hành toàn bộ dữ liệu hệ thống mà không cần can thiệp vào mã nguồn:
+- **Bảo mật xác thực đa tầng:** Sử dụng Spring Security 6 với kiến trúc mã hóa BCrypt cost 12, Dummy-hash Timing chống rà quét tài khoản, và cơ chế khóa tài khoản tự động trong 15 phút nếu nhập sai mật khẩu 5 lần liên tiếp.
+- **Quản lý phiên làm việc tiên tiến:** Cấp phát cặp token bao gồm Access Token JWT thời hạn ngắn (15 phút) lưu trên bộ nhớ RAM và Refresh Token thời hạn dài (7 ngày) lưu trong cookie an toàn `HttpOnly; Secure; SameSite=Strict`, hỗ trợ cơ chế xoay vòng token (RTR) và phát hiện đánh cắp phiên.
+- **Trung tâm điều hành Analytics Dashboard:** Biểu đồ giám sát thời gian thực về tổng lượt xem, số lượng người dùng duy nhất, tỷ lệ thiết bị truy cập và các bài viết được quan tâm nhiều nhất.
+- **Quản lý toàn diện tài nguyên (Dynamic CRUD):** Biên tập 6 thực thể dữ liệu (Kỹ năng, Kinh nghiệm, Dự án, Học vấn, Chứng chỉ, Bài viết Blog) kèm tính năng kéo thả (Drag-and-Drop) sắp xếp lại vị trí hiển thị tức thì.
+- **Hộp thư liên hệ & Quản lý tệp đám mây:** Tiếp nhận và duyệt tin nhắn từ khách truy cập, tải lên trực tiếp các tệp ảnh đại diện hoặc ảnh dự án lên Supabase Storage với kiểm tra định dạng và giới hạn dung lượng ≤ 2MB.
+
+#### 2.2.3 Phân hệ 3: Backend API & Dịch vụ nền tảng (Core Services & Infrastructure)
+Tầng dịch vụ nền tảng đóng vai trò trung tâm xử lý dữ liệu và tích hợp hạ tầng:
+- **Chuẩn hóa RESTful Services:** Cung cấp hệ thống API theo chuẩn RESTful tại tiền tố `/api/v1`, chuẩn hóa định dạng phản hồi toàn cục (Global Response Envelope) và cơ chế xử lý ngoại lệ tập trung.
+- **Bảo vệ mạng đa tầng:** Tích hợp Bucket4j để giới hạn tốc độ truy cập per IP, cấu hình CORS nghiêm ngặt chỉ chấp nhận các tên miền được chỉ định, cùng bộ tiêu đề an ninh HTTP (HSTS, CSP, X-Frame-Options).
+- **Kiến trúc gửi thư Dual Mail Sender:** Tự động phát hiện và chuyển đổi linh hoạt giữa giao thức SMTP truyền thống và Resend HTTPS API (cổng 443 không bao giờ bị chặn bởi tường lửa đám mây), đảm bảo độ tin cậy thông báo đạt 99.9%.
+- **Quản trị CSDL và Migration tự động:** Quản lý 11 bảng dữ liệu trên Supabase PostgreSQL thông qua Flyway Migrations, bảo đảm tính nhất quán cấu trúc cơ sở dữ liệu trên mọi môi trường triển khai.
+
+#### Bảng 2.2: Bảng phân rã chi tiết kiến trúc & trách nhiệm chức năng
 
 | Phân hệ chính | Thành phần / Chức năng con | Công nghệ chủ đạo | Trách nhiệm & Mô tả hoạt động |
 | :--- | :--- | :--- | :--- |
-| **1. Public Web**<br>*(Frontend SPA)* | **Trang chủ tương tác** | Angular 20, TailwindCSS, three.js | Hiển thị Hero 3D, About, kỹ năng với thanh đo %, timeline kinh nghiệm trượt 2 bên, lưới dự án kèm bộ lọc công nghệ. |
-| | **Technical Blog** | Angular, Markdown Renderer | Danh sách bài viết `/blog`, đọc chi tiết bài viết `/blog/:slug`, syntax highlight cho code block, bộ đếm lượt xem. |
-| | **Kênh liên hệ trực tuyến** | Reactive Forms, Rate Limit | Form nhập thông điệp liên hệ, xác thực dữ liệu tức thì, rate-limit 3 req/phút/IP, kích hoạt gửi mail thông báo ngầm. |
-| | **Tiện ích tương tác** | Angular Signals, CDK | Terminal giả lập (`Ctrl + ~`), Modal xem/tải CV đa ngôn ngữ (`/cv-vi.pdf`, `/cv-en.pdf`), GitHub live stats counter. |
-| **2. Admin CMS**<br>*(Bảo mật cao)* | **Xác thực & Quản lý phiên** | Spring Security 6, JWT, BCrypt | Đăng nhập tài khoản quản trị, cấp JWT 15m + Refresh Token 7 ngày qua HttpOnly Cookie, khóa tài khoản khi sai 5 lần. |
-| | **Dashboard Analytics** | Chart / Signal state | Biểu đồ theo dõi tổng lượt xem, người dùng duy nhất, tỷ lệ thiết bị (desktop/mobile) và danh sách bài viết xem nhiều nhất. |
-| | **Quản lý tài nguyên CMS** | Angular Dynamic CRUD | Toàn diện Create/Read/Update/Delete 6 thực thể (kỹ năng, kinh nghiệm, dự án, học vấn, chứng chỉ, bài viết); kéo thả sắp xếp thứ tự. |
-| | **Hộp thư & Lưu trữ tệp** | Supabase Storage REST API | Xem và quản lý tin nhắn liên hệ gửi đến, tải ảnh avatar/dự án lên bucket đám mây với kiểm tra định dạng và dung lượng ≤2MB. |
-| **3. Backend & Hạ tầng**<br>*(Core Services)* | **REST API & Caching** | Spring Boot 3.5, Cacheable | Cung cấp chuẩn REST API `/api/v1`, endpoint tổng hợp `/portfolio` cache 10 phút, Global Exception Envelope chuẩn hóa. |
-| | **Bảo mật mạng đa tầng** | Bucket4j, CORS, HSTS, CSP | Giới hạn tốc độ request per IP, kiểm soát chặt domain gọi API qua CORS allowed origins, tiêu đề an ninh HTTP chống XSS/Clickjacking. |
-| | **Gửi Email bất đồng bộ** | JavaMail, Resend HTTPS API | Kiến trúc Dual Mail Sender: tự động chuyển đổi giữa Gmail SMTP và Resend API (cổng 443 không bị chặn bởi đám mây). |
-| | **Cơ sở dữ liệu & DevOps** | Supabase PostgreSQL, Flyway | Quản lý 11 bảng CSDL, tự động nạp dữ liệu và kiểm soát phiên bản qua Flyway migrations (`V1__schema.sql`, `V2__seed.sql`). |
+| **1. Public Web** | Trang chủ tương tác | Angular 20, TailwindCSS, three.js | Hiển thị Hero 3D, About, kỹ năng với thanh đo %, timeline kinh nghiệm trượt 2 bên, lưới dự án kèm bộ lọc công nghệ. |
+| | Technical Blog | Angular, Markdown Renderer | Danh sách bài viết `/blog`, đọc chi tiết bài viết `/blog/:slug`, syntax highlight cho code block, bộ đếm lượt xem. |
+| | Kênh liên hệ trực tuyến | Reactive Forms, Rate Limit | Form nhập thông điệp liên hệ, xác thực dữ liệu tức thì, rate-limit 3 req/phút/IP, kích hoạt gửi mail thông báo ngầm. |
+| | Tiện ích tương tác | Angular Signals, CDK | Terminal giả lập (`Ctrl + ~`), Modal xem/tải CV đa ngôn ngữ (`/cv-vi.pdf`, `/cv-en.pdf`), GitHub live stats counter. |
+| **2. Admin CMS** | Xác thực & Quản lý phiên | Spring Security 6, JWT, BCrypt | Đăng nhập tài khoản quản trị, cấp JWT 15m + Refresh Token 7 ngày qua HttpOnly Cookie, khóa tài khoản khi sai 5 lần. |
+| | Dashboard Analytics | Chart / Signal state | Biểu đồ theo dõi tổng lượt xem, người dùng duy nhất, tỷ lệ thiết bị (desktop/mobile) và danh sách bài viết xem nhiều nhất. |
+| | Quản lý tài nguyên CMS | Angular Dynamic CRUD | Toàn diện Create/Read/Update/Delete 6 thực thể (kỹ năng, kinh nghiệm, dự án, học vấn, chứng chỉ, bài viết); kéo thả sắp xếp thứ tự. |
+| | Hộp thư & Lưu trữ tệp | Supabase Storage REST API | Xem và quản lý tin nhắn liên hệ gửi đến, tải ảnh avatar/dự án lên bucket đám mây với kiểm tra định dạng và dung lượng ≤2MB. |
+| **3. Backend & Hạ tầng** | REST API & Caching | Spring Boot 3.5, Cacheable | Cung cấp chuẩn REST API `/api/v1`, endpoint tổng hợp `/portfolio` cache 10 phút, Global Exception Envelope chuẩn hóa. |
+| | Bảo mật mạng đa tầng | Bucket4j, CORS, HSTS, CSP | Giới hạn tốc độ request per IP, kiểm soát chặt domain gọi API qua CORS allowed origins, tiêu đề an ninh HTTP chống XSS/Clickjacking. |
+| | Gửi Email bất đồng bộ | JavaMail, Resend HTTPS API | Kiến trúc Dual Mail Sender: tự động chuyển đổi giữa Gmail SMTP và Resend API (cổng 443 không bị chặn bởi đám mây). |
+| | Cơ sở dữ liệu & DevOps | Supabase PostgreSQL, Flyway | Quản lý 11 bảng CSDL, tự động nạp dữ liệu và kiểm soát phiên bản qua Flyway migrations (`V1__schema.sql`, `V2__seed.sql`). |
 
 ### 2.3 Phân loại người dùng & Chân dung người dùng (User Classes & Personas)
 
@@ -280,106 +292,214 @@ Hệ thống giải quyết triệt để vấn đề các nhà cung cấp đám
 ## 4. ĐẶC TẢ YÊU CẦU CHỨC NĂNG CHI TIẾT (SYSTEM FUNCTIONAL REQUIREMENTS - FR)
 
 ### 4.1 Phân hệ hiển thị Portfolio công khai (FR-01: Public Portfolio Presentation)
-- **FR-01.1 (Hero Section):**
-  - Hiển thị tên chủ nhân hồ sơ kèm hiệu ứng gõ chữ (typing effect) tuần hoàn qua các chức danh chuyên môn: *"Software Development Engineer"*, *"Full-Stack Java Developer"*, *"Spring Boot & Angular Developer"*.
-  - Hiển thị ảnh đại diện với vòng sáng gradient động (glowing ring).
-  - Tích hợp 2 nút kêu gọi hành động (Call To Action - CTA): *"Xem Dự Án"* (cuộn mượt xuống mục Projects) và *"Tải CV"* (mở modal tương tác xem và tải CV).
-  - Nền đồ họa không gian ba chiều lazy-loaded với hiệu ứng di chuyển nhẹ theo vị trí con trỏ chuột.
-- **FR-01.2 (About Section):**
-  - Hiển thị đoạn tóm tắt năng lực nghề nghiệp, định hướng phát triển hệ thống phân tán.
-  - Bảng thống kê nhanh (Quick Stats) với hiệu ứng số đếm tăng dần (Count-up animation) khi cuộn vào khung nhìn (năm kinh nghiệm, số lượng dự án, công nghệ cốt lõi).
-  - Hiển thị sở thích cá nhân tạo sự gần gũi với nhà tuyển dụng.
-- **FR-01.3 (Skills Section):**
-  - Hiển thị danh sách kỹ năng kỹ thuật được phân nhóm theo 5 hạng mục: *Backend, Frontend, Database, Messaging & Integration, Tools & Others*.
-  - Mỗi kỹ năng thể hiện thanh tiến trình đo độ thành thạo (0 - 100%) tự động chạy đầy khi cuộn tới và hiệu ứng nghiêng 3D (tilt effect) khi rê chuột.
-- **FR-01.4 (Experience Timeline):**
-  - Trục thời gian dọc (vertical timeline) thể hiện quá trình làm việc tại các doanh nghiệp (Viettel Telecom, Migi Technology, HCLTech Vietnam).
-  - Thẻ thông tin kinh nghiệm trượt xen kẽ từ hai phía trái/phải với hiệu ứng điểm nối phát sáng (pulsing dots).
-  - Liệt kê chi tiết vai trò, công nghệ sử dụng dưới dạng các tag màu sắc (chips).
-- **FR-01.5 (Projects Showcase):**
-  - Lưới hiển thị danh sách dự án đáp ứng (Responsive Grid).
-  - Hỗ trợ thanh lọc nhanh dự án theo công nghệ (All, Java/Spring, Angular, Database, v.v.).
-  - Hiển thị ảnh bìa dự án kèm hiệu ứng zoom nhẹ và gradient overlay khi hover.
-  - Cung cấp liên kết trực tiếp tới Demo thực tế (nếu có) và Kho mã nguồn GitHub.
-- **FR-01.6 (Education & Certifications):**
-  - Trình bày thông tin bằng cấp đại học (Đại học Mở Hà Nội - Công nghệ Thông tin) và các chứng chỉ chuyên ngành với liên kết xác thực trực tuyến.
 
-### 4.2 Phân hệ Blog & Chia sẻ kiến thức (FR-02: Technical Blog System)
-- **FR-02.1 (Danh sách bài viết `/blog`):**
-  - Hiển thị danh sách các bài viết kỹ thuật đã được xuất bản (`published = true`), sắp xếp theo trường `sort_order` hoặc thời gian tạo mới nhất.
-  - Mỗi thẻ bài viết hiển thị ảnh bìa (cover image), tiêu đề, đoạn trích ngắn (summary), danh sách thẻ nhãn (tags), thời gian ước lượng đọc (reading time in minutes) và số lượt xem (views count).
-  - Hỗ trợ tìm kiếm bài viết theo từ khóa và lọc bài viết theo tag kỹ thuật.
-- **FR-02.2 (Trang chi tiết bài viết `/blog/:slug`):**
-  - Định tuyến dựa trên đường dẫn thân thiện SEO (Slug URL).
-  - Trình bày nội dung định dạng Markdown với bộ renderer hỗ trợ syntax highlighting cho các đoạn mã code (Java, TypeScript, SQL, Bash), bảng biểu, trích dẫn.
-  - Tự động kích hoạt tăng bộ đếm lượt xem bài viết (`views_count`) khi có người dùng truy cập.
-  - Cung cấp nút quay lại danh sách bài viết và điều hướng chia sẻ mạng xã hội.
+#### 4.1.1 Khối tương tác đầu trang (FR-01.1: Hero Section & 3D Interactive Canvas)
+- **Mô tả nghiệp vụ:** Khối giao diện đầu tiên tiếp cận người xem khi truy cập trang web. Thể hiện nhận diện thương hiệu cá nhân với ảnh đại diện có vòng sáng gradient động, tên kỹ sư, hiệu ứng gõ chữ tuần hoàn (Typing effect) qua các vai trò chuyên môn (*"Software Development Engineer"*, *"Full-Stack Java Developer"*, *"Spring Boot & Angular Specialist"*), 2 nút hành động chính (Call To Action - CTA): *"Xem Dự Án"* (cuộn mượt xuống section Projects) và *"Tải CV"* (mở cửa sổ tương tác xem và tải CV).
+- **Hạ tầng đồ họa 3D Three.js:** Khung vẽ Three.js tái hiện không gian vũ trụ được tải bất đồng bộ (lazy-loaded). Chuyển động của các thiên thể phản hồi vi mô theo vị trí con trỏ chuột của người dùng. Hệ thống tự động kiểm tra năng lực phần cứng và màn hình; trên thiết bị di động, hoạt cảnh Three.js được giảm tải xuống 30fps hoặc thay thế bằng CSS gradient động để tối ưu hóa thời lượng pin.
+- **Giao tiếp API:** Gọi `GET /api/v1/portfolio` tại thời điểm khởi tạo ứng dụng. Nhận đối tượng DTO chứa `full_name`, `title`, `typing_roles`, `avatar_url`, `cv_url`.
+- **Quy tắc nghiệp vụ & Xử lý ngoại lệ:** Dữ liệu được quản lý tập trung trong Signal `profileSignal`. Nếu API gặp sự cố, hệ thống tự động sử dụng Fallback Mock Data để đảm bảo trải nghiệm giao diện không bị gián đoạn.
 
-### 4.3 Phân hệ Liên hệ & Thông báo Email (FR-03: Contact & Multi-channel Notification)
-- **FR-03.1 (Form gửi liên hệ):**
-  - Cho phép người xem gửi thông điệp gồm: Họ tên (`name`), Địa chỉ email (`email`), Tiêu đề (`subject`), Nội dung tin nhắn (`message`).
-  - Kiểm thực trực tiếp (Client-side validation) định dạng email, độ dài ký tự và ngăn chặn spam bot qua rate limit (tối đa 3 request / phút / IP).
-- **FR-03.2 (Lưu trữ CSDL & Thông báo bất đồng bộ):**
-  - Ghi nhận thông điệp vào bảng `contact_messages` trong CSDL với trạng thái `is_read = false`.
-  - Tự động kích hoạt tiến trình chạy ngầm gửi email thông báo chi tiết đến hòm thư quản trị viên (`tranvuthien1708@gmail.com`).
-  - Tùy chọn gửi thư cảm ơn tự động (Confirmation Auto-Reply) đến người gửi tin nhắn để tạo ấn tượng chuyên nghiệp.
+#### 4.1.2 Khối giới thiệu hồ sơ cá nhân (FR-01.2: About Me & Career Highlights)
+- **Mô tả nghiệp vụ:** Trình bày định hướng chuyên môn sâu về kiến trúc hệ thống phân tán, xử lý backend hiệu năng cao và phát triển ứng dụng web hiện đại.
+- **Bộ đếm số liệu động (Quick Stats Count-Up):** Hiển thị các chỉ số ấn tượng: Số năm kinh nghiệm làm việc thực tế, số lượng dự án đã hoàn thành, số lượng công nghệ thành thạo. Chỉ số bắt đầu đếm số tăng dần từ 0 lên giá trị thực tế ngay khi phần tử cuộn vào khung nhìn (Intersection Observer API).
+- **Sở thích cá nhân & Liên kết mạng xã hội:** Các liên kết tới GitHub, LinkedIn, Facebook có thuộc tính an toàn `target="_blank" rel="noopener noreferrer"`.
 
-### 4.4 Phân hệ Trải nghiệm tương tác & Tiện ích (FR-04: Interactive UX & Modals)
-- **FR-04.1 (Interactive Terminal Modal):**
-  - Kích hoạt qua tổ hợp phím tắt toàn cục `Ctrl + ~` (hoặc click icon Terminal trên thanh điều hướng).
-  - Giả lập giao diện dòng lệnh Bash/Linux tương tác cao với các lệnh hỗ trợ:
-    - `help`: Hiển thị danh mục lệnh.
-    - `about`, `skills`, `exp`, `projects`, `contact`: Xuất dữ liệu tóm tắt tương ứng.
-    - `sudo`: Hiệu ứng hài hước từ chối quyền root.
-    - `clear`: Xóa màn hình terminal.
-    - `exit`: Đóng cửa sổ terminal.
-- **FR-04.2 (CV Viewer & Download Modal):**
-  - Mở cửa sổ popup chuyên nghiệp cho phép người dùng lựa chọn phiên bản CV:
-    - Tiếng Việt: Xem trực tiếp hoặc tải file `cv-vi.pdf`.
-    - Tiếng Anh: Xem trực tiếp hoặc tải file `cv-en.pdf`.
-  - Tích hợp trình đọc file PDF trực tiếp trên trình duyệt mà không cần chuyển trang.
-- **FR-04.3 (GitHub Live Stats Counter):**
-  - Tự động gọi API của GitHub để lấy số liệu thực tế về kho lưu trữ công khai (public repositories), số lượt sao (stars), số lượng người theo dõi (followers).
-- **FR-04.4 (Sound Effects & Command Palette):**
-  - Tùy chọn bật/tắt âm thanh tương tác vi mô (Sound FX: click, pop, switch).
-  - Thanh tìm kiếm nhanh Command Palette (`Ctrl + K`) cho phép điều hướng tức thì tới bất kỳ phân mục nào trong trang web.
+#### 4.1.3 Khối ma trận kỹ năng chuyên môn (FR-01.3: Technical Skills Matrix)
+- **Mô tả nghiệp vụ:** Phân loại toàn bộ năng lực kỹ thuật thành 5 nhóm chuyên biệt: *Backend & Frameworks*, *Frontend & UI/UX*, *Database & Caching*, *Messaging & Architecture*, *DevOps, Cloud & Tools*.
+- **Hiệu ứng trực quan:** Mỗi kỹ năng hiển thị tên, biểu tượng công nghệ và thanh đo độ thành thạo dạng phần trăm (0 - 100%). Thanh phần trăm tự động kích hoạt hiệu ứng chạy đầy (progress animation) khi người dùng cuộn đến. Khi rê chuột (hover), thẻ kỹ năng áp dụng hiệu ứng nghiêng không gian 3 chiều (3D Tilt Effect).
 
-### 4.5 Phân hệ Giám sát & Phân tích truy cập (FR-05: Real-time Visitor Analytics)
-- **FR-05.1 (Ghi nhận sự kiện Client):**
-  - Lắng nghe sự kiện chuyển trang hoặc tương tác của người dùng và gửi request âm thầm tới endpoint `POST /api/v1/analytics/track`.
-  - Thu thập các trường dữ liệu phi định danh: loại sự kiện (`event_type`), đường dẫn (`path`), nguồn giới thiệu (`referrer`), chuỗi băm IP (`ip_hash`), thiết bị (`device_type`: Desktop / Mobile / Tablet), thời điểm (`created_at`).
-  - Tuyệt đối tuân thủ chính sách quyền riêng tư: Địa chỉ IP thực được băm SHA-256 một chiều kèm salt, không lưu trữ địa chỉ IP thô.
-- **FR-05.2 (Thống kê & Tổng hợp Admin):**
-  - Cung cấp số liệu tổng quan: Tổng lượt xem trang (Total Views), Số lượng người truy cập duy nhất (Unique Visitors), Tỷ lệ thiết bị sử dụng, Các trang/bài viết được xem nhiều nhất.
+#### 4.1.4 Khối lộ trình kinh nghiệm làm việc (FR-01.4: Professional Experience Timeline)
+- **Mô tả nghiệp vụ:** Trục thời gian dọc (Vertical Timeline) mô tả quá trình công tác tại các tập đoàn và doanh nghiệp công nghệ (Viettel Telecom, Migi Technology, HCLTech Vietnam).
+- **Hiệu ứng trượt xen kẽ:** Các thẻ kinh nghiệm trượt mượt mà từ hai phía trái và phải vào tâm trục thời gian, đi kèm điểm nối phát sáng tuần hoàn (pulsing glowing dots).
+- **Nội dung thẻ:** Thời gian công tác, chức danh, tên công ty, mô tả thành tựu kỹ thuật cụ thể và danh sách các thẻ công nghệ (tech chips) nổi bật đã sử dụng.
 
-### 4.6 Phân hệ Xác thực & Bảo mật Admin (FR-06: Authentication & Security)
-- **FR-06.1 (Quy trình Đăng nhập):**
-  - Quản trị viên nhập Email và Mật khẩu tại `/admin`.
-  - Hệ thống kiểm tra thông tin đối chiếu với chuỗi mã hóa BCrypt (độ phức tạp cost 12).
-  - Áp dụng cơ chế Dummy-hash Timing: Khi email không tồn tại trong hệ thống, hàm kiểm tra mật khẩu giả vẫn được thực thi để thời gian phản hồi bằng đúng trường hợp sai mật khẩu, triệt tiêu nguy cơ rà quét tài khoản (User Enumeration).
-- **FR-06.2 (Cơ chế Khóa tài khoản tạm thời):**
-  - Tự động đếm số lần đăng nhập thất bại liên tiếp (`failed_attempts`).
-  - Đạt ngưỡng 5 lần thất bại → khóa tài khoản trong vòng 15 phút (`locked_until`). Mọi nỗ lực đăng nhập trong thời gian này đều bị từ chối với mã lỗi 423 Locked.
-- **FR-06.3 (Quản lý Phiên với JWT & Refresh Token Rotation):**
-  - Cấp phát Access Token định dạng JWT ngắn hạn (thời gian sống 15 phút) lưu trữ tại bộ nhớ RAM của Angular App.
-  - Cấp phát Refresh Token dài hạn (thời gian sống 7 ngày) được lưu trữ dưới dạng băm SHA-256 trong bảng `refresh_tokens`.
-  - Refresh Token được gửi về trình duyệt qua Cookie an toàn: `httpOnly`, `Secure`, `SameSite=Strict`, `Path=/api/v1/auth`.
-  - Cơ chế **Phát hiện đánh cắp token (Theft Detection):** Nếu một Refresh Token đã từng bị thay thế (rotated) được gửi lại để xin cấp access token mới, hệ thống ngay lập tức nhận diện nguy cơ rò rỉ và vô hiệu hóa (`revoked = true`) toàn bộ chuỗi token thuộc phiên làm việc đó.
+#### 4.1.5 Khối danh mục dự án tiêu biểu (FR-01.5: Projects Showcase & Tag Filtering)
+- **Mô tả nghiệp vụ:** Bố cục dạng lưới đáp ứng (Responsive Grid) trình diễn các sản phẩm phần mềm thực tế.
+- **Bộ lọc công nghệ tức thời (Instant Filter Engine):** Thanh lọc các tag công nghệ (All, Java, Spring Boot, Angular, Docker, Database...). Khi người dùng click chọn tag, lưới dự án tái cấu trúc mượt mà bằng hoạt cảnh layout animation không gây giật lag.
+- **Thẻ dự án:** Hiển thị ảnh bìa sắc nét, tiêu đề, tóm tắt bài toán kỹ thuật, tag công nghệ, huy hiệu "Featured" cho các dự án trọng điểm, cùng các nút liên kết trực tiếp tới Demo trực tuyến và Repository GitHub.
 
-### 4.7 Phân hệ Quản trị nội dung Admin Panel (FR-07: Admin CMS & Resource Management)
-- **FR-07.1 (Bảng điều khiển tổng quan - Dashboard):**
-  - Hiển thị các thẻ chỉ số (KPI Cards): Số lượng bài viết, dự án, kỹ năng, tin nhắn chưa đọc và biểu đồ tăng trưởng lượt xem truy cập theo thời gian.
-- **FR-07.2 (Quản lý Hồ sơ cá nhân - Profile):**
-  - Form chỉnh sửa thông tin cá nhân: Họ tên, chức danh, đoạn văn tóm tắt, số điện thoại, email, địa chỉ, mạng xã hội (GitHub, LinkedIn, Facebook).
-  - Tải lên ảnh đại diện mới với tính năng xem trước và tự động tải lên Supabase Storage.
-- **FR-07.3 (Quản lý Tài nguyên CRUD):**
-  - Cung cấp giao diện bảng dữ liệu thống nhất hỗ trợ tìm kiếm, phân trang cho các tài nguyên: Kỹ năng (`skills`), Kinh nghiệm (`experiences`), Dự án (`projects`), Học vấn (`education`), Chứng chỉ (`certifications`), Bài viết (`posts`).
-  - Thêm mới / Cập nhật dữ liệu qua hộp thoại Modal hoặc Drawer tiện lợi với Reactive Forms kiểm thực chặt chẽ.
-  - Sắp xếp thứ tự hiển thị: Hỗ trợ thao tác kéo thả (Drag-and-Drop) trực quan; thứ tự mới được gửi đồng loạt lên API `PUT /admin/{resource}/reorder` để cập nhật cột `sort_order`.
-- **FR-07.4 (Quản trị Hộp thư tin nhắn - Messages):**
-  - Hiển thị danh sách tin nhắn gửi từ form liên hệ ngoài trang chủ.
-  - Huy hiệu (badge) thông báo số lượng tin nhắn chưa đọc trên thanh menu bên.
-  - Xem chi tiết nội dung, đánh dấu đã đọc (`is_read = true`) hoặc xóa vĩnh viễn tin nhắn.
+#### 4.1.6 Khối học vấn & Chứng chỉ nghề nghiệp (FR-01.6: Education & Verified Certifications)
+- **Mô tả nghiệp vụ:** Bằng Cử nhân Công nghệ Thông tin tại Viện Đại học Mở Hà Nội (chuyên ngành Công nghệ Phần mềm) và danh mục chứng chỉ chuyên ngành quốc tế kèm mã số xác minh (Credential ID) và đường dẫn kiểm tra trực tiếp trên nền tảng cấp chứng chỉ.
+
+---
+
+### 4.2 Phân hệ Blog kỹ thuật & Chia sẻ kiến thức (FR-02: Technical Blog System)
+
+#### 4.2.1 Trang danh mục bài viết công khai (FR-02.1: Blog Hub `/blog`)
+- **Mô tả nghiệp vụ:** Cung cấp không gian chia sẻ các bài viết chuyên sâu về kiến trúc phần mềm, kinh nghiệm lập trình Java/Spring Boot, tối ưu hóa Angular và triển khai hạ tầng đám mây.
+- **Tiêu chí hiển thị:** Chỉ tải và hiển thị các bài viết có cờ trạng thái `published = true`, sắp xếp theo độ ưu tiên `sort_order` và ngày xuất bản mới nhất.
+- **Tìm kiếm & Phân trang:** Hỗ trợ tìm kiếm bài viết theo từ khóa tiêu đề hoặc tóm tắt, lọc bài viết theo nhãn kỹ thuật (tags). Tích hợp phân trang dữ liệu (Pagination) tối ưu hóa băng thông.
+- **API Hỗ trợ:** `GET /api/v1/posts?page=0&size=9&tag=...`
+
+#### 4.2.2 Trình đọc bài viết Markdown chuyên sâu (FR-02.2: Markdown Article Reader `/blog/:slug`)
+- **Mô tả nghiệp vụ:** Hiển thị chi tiết nội dung bài viết theo đường dẫn thân thiện SEO (Slug URL).
+- **Bộ xử lý Markdown:** Tích hợp bộ chuyển đổi Markdown sang HTML hỗ trợ đầy đủ các định dạng: Khối mã nguồn (Code Blocks) với tính năng Highlight cú pháp đa ngôn ngữ (Java, TypeScript, SQL, Bash, YAML) kèm nút Copy mã nguồn nhanh, bảng biểu số liệu, khối trích dẫn (Blockquotes), danh sách đánh số/gạch đầu dòng và hình ảnh có phóng to khi click.
+- **Tự động tính thời gian đọc:** Dựa trên thuật toán đếm số từ trong bài viết (trung bình 200 từ/phút) để xuất ra số phút ước lượng (`reading_time_minutes`).
+- **Tự động tăng bộ đếm lượt xem (Atomic View Counter):** Khi người xem truy cập bài viết, client gửi request ngầm `POST /api/v1/posts/{slug}/view`. Backend thực hiện câu lệnh SQL nguyên tử `UPDATE posts SET views_count = views_count + 1 WHERE id = ...` kèm cơ chế chống tăng ảo khi reload liên tục trong cùng 1 phiên.
+
+#### 4.2.3 Quản lý trạng thái xuất bản & Tối ưu hóa SEO (FR-02.3: SEO & Publishing Lifecycle)
+- **Mô tả nghiệp vụ:** Mỗi bài viết đều có đầy đủ Open Graph meta tags (og:title, og:description, og:image) để hiển thị thẻ xem trước đẹp mắt khi chia sẻ liên kết lên Facebook, LinkedIn, Twitter/X. Tích hợp nút chia sẻ mạng xã hội 1-click.
+
+---
+
+### 4.3 Phân hệ Kênh liên hệ & Dịch vụ gửi Email bất đồng bộ (FR-03: Contact & Multi-channel Notification)
+
+#### 4.3.1 Biểu mẫu liên hệ trực tuyến (FR-03.1: Contact Form & Validation)
+- **Mô tả nghiệp vụ:** Cung cấp kênh trao đổi trực tiếp giữa khách truy cập/nhà tuyển dụng và chủ nhân hồ sơ.
+- **Quy tắc kiểm thực dữ liệu (Validation Rules):**
+  - `name`: Bắt buộc, độ dài từ 2 đến 120 ký tự, không chứa mã độc HTML/Script.
+  - `email`: Bắt buộc, đúng định dạng email tiêu chuẩn RFC 5322, tối đa 160 ký tự.
+  - `subject`: Bắt buộc, độ dài từ 3 đến 200 ký tự.
+  - `message`: Bắt buộc, độ dài từ 10 đến 3000 ký tự.
+- **Cơ chế chống thư rác (Spam Mitigation):** Áp dụng Bucket4j Rate-limiting ở tầng API Gateway: mỗi địa chỉ IP chỉ được phép gửi tối đa 3 tin nhắn trong vòng 1 phút. Nếu vượt ngưỡng, hệ thống trả về mã lỗi HTTP 429 Too Many Requests kèm thông báo thời gian cần chờ.
+
+#### 4.3.2 Ghi nhận CSDL & Xử lý chạy ngầm (FR-03.2: Async Storage & Event Processing)
+- **Điểm cuối API:** `POST /api/v1/contact`
+- **Quy trình xử lý:**
+  1. Backend kiểm tra tính hợp lệ của DTO qua Jakarta Bean Validation (`@Valid`).
+  2. Lưu thông điệp vào bảng `contact_messages` với trạng thái `is_read = false`.
+  3. Kích hoạt phương thức gửi thư bất đồng bộ `@Async("taskExecutor")` của `ContactNotificationService`.
+  4. Trả về ngay lập tức phản hồi HTTP 200 OK với thông điệp cảm ơn, giúp người dùng không phải chờ đợi thời gian gửi email (thường mất từ 1-3 giây).
+
+#### 4.3.3 Kiến trúc Dual Mail Sender (FR-03.3: Intelligent Mail Fallback)
+- **Vấn đề giải quyết:** Các nền tảng điện toán đám mây serverless/container miễn phí thường khóa các cổng gửi thư SMTP truyền thống (cổng 25, 465, 587) để ngăn chặn thư rác.
+- **Giải pháp chuyển đổi tự động:**
+  - **Kênh Resend HTTPS API (`ResendContactMailSender`):** Gửi yêu cầu qua giao thức HTTPS cổng 443 tới endpoint `https://api.resend.com/emails`. Cổng 443 không bao giờ bị chặn bởi bất kỳ nhà cung cấp đám mây nào.
+  - **Kênh SMTP (`SmtpContactMailSender`):** Hoạt động qua JavaMail kết nối tới máy chủ Gmail SMTP khi chạy trên máy chủ ảo chuyên dụng (như Oracle Cloud OCI) hoặc môi trường phát triển cục bộ.
+  - **Điều khiển qua cấu hình:** Đọc biến môi trường `MAIL_PROVIDER` khi khởi động Spring Boot để nạp Bean phù hợp vào Application Context.
+
+---
+
+### 4.4 Phân hệ Tiện ích tương tác & Trải nghiệm người dùng cao cấp (FR-04: Advanced Interactive UX)
+
+#### 4.4.1 Cửa sổ dòng lệnh Terminal giả lập (FR-04.1: Interactive Terminal Modal)
+- **Mô tả nghiệp vụ:** Tiện ích độc đáo dành cho các kỹ sư công nghệ và nhà tuyển dụng muốn khám phá hồ sơ theo phong cách lập trình viên chuyên nghiệp.
+- **Kích hoạt:** Tổ hợp phím tắt toàn cục `Ctrl + ~` hoặc nhấn vào nút biểu tượng Terminal trên thanh điều hướng.
+- **Tập lệnh hỗ trợ:**
+  - `help`: Xuất bảng hướng dẫn danh mục tất cả các lệnh khả dụng.
+  - `about`: Hiển thị thông tin tóm tắt tiểu sử và định hướng chuyên môn.
+  - `skills`: Xuất danh mục kỹ năng cốt lõi theo từng phân nhóm.
+  - `exp`: Xuất lịch sử kinh nghiệm làm việc tóm tắt.
+  - `projects`: Liệt kê các dự án tiêu biểu kèm liên kết kho mã nguồn.
+  - `contact`: Hiển thị thông tin liên hệ trực tiếp (email, số điện thoại, mạng xã hội).
+  - `sudo`: Phản hồi dòng thông báo hài hước từ chối quyền root: *"User is not in the sudoers file. This incident will be reported."*
+  - `clear`: Xóa sạch nội dung cửa sổ dòng lệnh.
+  - `exit`: Đóng cửa sổ Terminal.
+
+#### 4.4.2 Bộ xem trước & Tải CV đa ngôn ngữ (FR-04.2: CV Viewer & Dual-language Download)
+- **Mô tả nghiệp vụ:** Hỗ trợ nhà tuyển dụng tiếp cận hồ sơ xin việc (Curriculum Vitae) một cách tức thì và chuyên nghiệp nhất.
+- **Cơ chế hoạt động:** Khi người dùng click nút *"Tải CV"*, cửa sổ popup hiển thị tùy chọn:
+  - Bản tiếng Việt: Xem trực tiếp qua trình đọc PDF nhúng (Embedded PDF viewer) hoặc tải tệp `cv-vi.pdf`.
+  - Bản tiếng Anh: Xem trực tiếp qua trình đọc PDF nhúng hoặc tải tệp `cv-en.pdf`.
+- **Tính tiện lợi:** Cho phép xem ngay nội dung CV trên trình duyệt máy tính và điện thoại mà không làm gián đoạn việc duyệt trang web.
+
+#### 4.4.3 Bộ đồng bộ dữ liệu thời gian thực GitHub Live Stats (FR-04.3: GitHub Live Stats)
+- **Mô tả nghiệp vụ:** Tự động gọi API công khai của GitHub (`https://api.github.com/users/thien1708`) để lấy số liệu thực tế về số lượng Public Repositories, tổng số Stars nhận được và số Followers.
+- **Cơ chế Cache Client:** Lưu trữ kết quả trong `sessionStorage` trong 30 phút để không vượt hạn mức giới hạn gọi API của GitHub (Rate limit 60 requests/giờ cho unauthenticated requests).
+
+#### 4.4.4 Theme Switcher Sáng/Tối & Âm thanh vi mô (FR-04.4: Theme & Sound Effects)
+- **Chuyển đổi giao diện (Light/Dark Mode):** Cho phép người dùng chuyển đổi linh hoạt giữa giao diện nền tối hiện đại (Dark Mode với tông Slate 900) và giao diện nền sáng tinh tế (Light Mode với tông trắng xám pastel). Lựa chọn của người dùng được lưu trong `localStorage` để duy trì cho các phiên tiếp theo.
+- **Hiệu ứng âm thanh vi mô (Micro-interactions Sound FX):** Tùy chọn bật/tắt các hiệu ứng âm thanh click, pop nhẹ nhàng khi bấm nút, mở modal hoặc gõ phím trên Terminal, mang lại trải nghiệm phần mềm sống động.
+
+---
+
+### 4.5 Phân hệ Giám sát, Nhật ký sự kiện & Phân tích truy cập (FR-05: Real-time Visitor Analytics)
+
+#### 4.5.1 Thu thập sự kiện Client-side (FR-05.1: Client Event Tracking)
+- **Mô tả nghiệp vụ:** Ghi nhận hành vi tương tác của người xem một cách tự động và không gây ảnh hưởng tới tốc độ tải trang.
+- **Điểm cuối API:** `POST /api/v1/analytics/track`
+- **Các sự kiện ghi nhận:** `page_view`, `view_project`, `download_cv`, `view_blog`, `submit_contact`.
+- **Tuân thủ quyền riêng tư (Privacy-by-Design):**
+  - Hệ thống không thu thập bất kỳ thông tin nhận dạng cá nhân nào (PII).
+  - Địa chỉ IP thực của người dùng được băm một chiều bằng thuật toán SHA-256 kèm chuỗi Salt bí mật nội bộ trước khi lưu vào cột `ip_hash`.
+  - Thu thập các thông tin phi định danh: `path` (đường dẫn trang), `referrer` (nguồn giới thiệu), `device_type` (Desktop, Mobile, Tablet phân tích từ User-Agent) và `created_at`.
+
+#### 4.5.2 Tổng hợp và Báo cáo quản trị (FR-05.2: Admin Analytics Aggregation)
+- **Điểm cuối API:** `GET /api/v1/admin/analytics/overview` (Yêu cầu xác thực `ROLE_ADMIN`).
+- **Số liệu cung cấp:**
+  - Tổng số lượt xem trang (Total Pageviews) theo các khung thời gian: 24 giờ qua, 7 ngày qua, 30 ngày qua và toàn thời gian.
+  - Số lượng người truy cập duy nhất (Unique Visitors) tính theo số lượng `ip_hash` không trùng lặp.
+  - Tỷ lệ phần trăm thiết bị sử dụng (Desktop vs Mobile vs Tablet).
+  - Danh sách Top 5 trang và bài viết blog có lượng xem cao nhất.
+
+---
+
+### 4.6 Phân hệ Xác thực, Phân quyền & Bảo vệ phiên làm việc (FR-06: Authentication & Security)
+
+#### 4.6.1 Cơ chế đăng nhập an toàn (FR-06.1: Secure Admin Login)
+- **Điểm cuối API:** `POST /api/v1/auth/login`
+- **Mô tả nghiệp vụ:** Xác thực danh tính quản trị viên với Email và Mật khẩu.
+- **Cơ chế băm mật khẩu:** Sử dụng thuật toán BCrypt với độ phức tạp Cost 12 (mỗi lần băm sinh chuỗi salt ngẫu nhiên khác nhau).
+- **Phòng chống tấn công rà quét tài khoản (Anti-User Enumeration):** Khi người dùng nhập một email không tồn tại trong CSDL, hệ thống vẫn cố tình thực hiện một phép tính kiểm tra mật khẩu giả (Dummy BCrypt Hash) có thời gian xử lý tương đương (~200ms) trước khi trả về thông báo lỗi chung *"Tài khoản hoặc mật khẩu không chính xác"*. Điều này triệt tiêu hoàn toàn khả năng kẻ tấn công suy đoán tài khoản dựa trên độ trễ thời gian phản hồi (Timing Attack).
+
+#### 4.6.2 Chính sách khóa tài khoản tự động (FR-06.2: Account Lockout Policy)
+- **Mô tả nghiệp vụ:** Ngăn chặn các cuộc tấn công dò mật khẩu tự động (Brute-Force Attacks).
+- **Cơ chế:**
+  - Bảng `users` duy trì cột `failed_attempts` (số lần đăng nhập sai) và `locked_until` (thời điểm hết hạn khóa).
+  - Mỗi lần nhập sai mật khẩu, `failed_attempts` tăng thêm 1.
+  - Khi `failed_attempts >= 5`: Hệ thống cập nhật `locked_until = NOW() + 15 phút` và đặt lại `failed_attempts = 0`.
+  - Trong suốt 15 phút bị khóa, mọi yêu cầu đăng nhập từ tài khoản này đều bị từ chối ngay lập tức với mã lỗi HTTP 423 Locked mà không thực hiện kiểm tra mật khẩu.
+  - Khi đăng nhập thành công: `failed_attempts` tự động đặt lại về 0 và `locked_until` đặt về NULL.
+
+#### 4.6.3 Quản lý phiên đa tầng với Refresh Token Rotation (FR-06.3: Dual-token Session & RTR)
+- **Access Token (JWT):**
+  - Thời gian sống ngắn: 15 phút.
+  - Chứa thông tin định danh: `sub` (email), `role` (`ROLE_ADMIN`), `iat` (issued at), `exp` (expiration).
+  - Được lưu trên bộ nhớ tạm (RAM) của ứng dụng Angular, đính kèm trong Header `Authorization: Bearer <token>` ở mỗi request gọi API bảo mật.
+- **Refresh Token (Opaque Token):**
+  - Thời gian sống dài: 7 ngày.
+  - Được lưu trong bảng `refresh_tokens` dưới dạng mã băm SHA-256 kèm `expires_at` và cờ `revoked`.
+  - Được truyền về trình duyệt qua Cookie an toàn với đầy đủ các cờ an ninh: `HttpOnly` (chống XSS), `Secure` (chỉ chạy qua HTTPS), `SameSite=Strict` (chống CSRF), `Path=/api/v1/auth`.
+- **Cơ chế xoay vòng (Refresh Token Rotation - RTR):** Khi gọi `POST /api/v1/auth/refresh`, Refresh Token hiện tại ngay lập tức bị thu hồi (`revoked = true`) và một cặp Access Token + Refresh Token mới được sinh ra để thay thế.
+
+#### 4.6.4 Thuật toán phát hiện chiếm dụng token (FR-06.4: Token Theft Detection)
+- **Kịch bản:** Nếu kẻ tấn công đánh cắp được một Refresh Token cũ và cố tình gửi lên máy chủ sau khi token đó đã được người dùng hợp lệ làm mới.
+- **Xử lý phòng thủ:** Máy chủ kiểm tra thấy token gửi lên đã có cờ `revoked = true`. Hệ thống lập tức nhận diện nguy cơ rò rỉ bảo mật nghiêm trọng và kích hoạt cơ chế thu hồi liên đới (Cascade Revocation): **Thu hồi và vô hiệu hóa toàn bộ các Refresh Token** thuộc về người dùng đó, đồng thời bắt buộc phiên làm việc phải đăng nhập lại từ đầu.
+
+---
+
+### 4.7 Phân hệ Quản trị nội dung Admin CMS (FR-07: Admin CMS & Resource Management)
+
+#### 4.7.1 Bảng điều khiển quản trị tổng thể (FR-07.1: CMS Executive Dashboard)
+- **Mô tả nghiệp vụ:** Trang chủ của phân hệ quản trị (`/admin/dashboard`) cung cấp bức tranh toàn cảnh về hoạt động của hệ thống.
+- **Thẻ chỉ số nhanh (KPI Summary Cards):** Tổng số kỹ năng, số mốc kinh nghiệm, số dự án, số bài viết blog đã xuất bản, và số tin nhắn liên hệ mới chưa đọc.
+- **Biểu đồ trực quan:** Biểu đồ đường/cột thể hiện lượng truy cập theo ngày và danh sách bài viết blog được đọc nhiều nhất.
+
+#### 4.7.2 Quản trị thông tin hồ sơ cá nhân (FR-07.2: Profile Management)
+- **Mô tả nghiệp vụ:** Cho phép chỉnh sửa toàn bộ các thông tin xuất hiện trên trang chủ: Họ tên, chức danh chuyên môn, tiểu sử tóm tắt, số điện thoại, email công việc, địa điểm sinh sống, các đường dẫn mạng xã hội (GitHub, LinkedIn, Facebook) và đường dẫn tệp CV.
+- **Điểm cuối API:** `GET /api/v1/admin/profile` và `PUT /api/v1/admin/profile`.
+- **Cập nhật ảnh đại diện:** Cho phép tải ảnh mới trực tiếp lên đám mây và cập nhật URL ảnh vào hồ sơ.
+
+#### 4.7.3 Quản lý vòng đời dữ liệu 6 danh mục tài nguyên (FR-07.3: Comprehensive Resource CRUD)
+- **Mô tả nghiệp vụ:** Cung cấp giao diện bảng dữ liệu thống nhất hỗ trợ Tìm kiếm, Lọc và thao tác Tạo mới / Xem / Cập nhật / Xóa (CRUD) cho 6 thực thể:
+  1. **Kỹ năng (`skills`):** Quản lý tên kỹ năng, danh mục (Backend, Frontend...), điểm phần trăm thành thạo (0 - 100%), tên icon hiển thị.
+  2. **Kinh nghiệm (`experiences`):** Quản lý tên công ty, chức danh, khoảng thời gian công tác, mô tả công việc, danh sách công nghệ sử dụng.
+  3. **Dự án (`projects`):** Quản lý tên dự án, thời gian thực hiện, mô tả bài toán, danh sách tech stack, ảnh chụp màn hình, liên kết demo, liên kết repo, cờ nổi bật (`featured`).
+  4. **Học vấn (`education`):** Quản lý cơ sở đào tạo, văn bằng, chuyên ngành, năm bắt đầu/kết thúc, điểm tổng kết GPA.
+  5. **Chứng chỉ (`certifications`):** Quản lý tên chứng chỉ, đơn vị cấp, ngày cấp, mã xác minh credential ID, đường dẫn xác minh.
+  6. **Bài viết Blog (`posts`):** Quản lý tiêu đề, slug URL thân thiện, tóm tắt, nội dung Markdown chi tiết, ảnh bìa, danh sách tags, cờ xuất bản (`published`).
+- **Giao diện thao tác:** Sử dụng hộp thoại Modal / Slide-over Drawer với Reactive Forms, xác thực dữ liệu tức thì trước khi submit.
+
+#### 4.7.4 Cơ chế kéo thả sắp xếp thứ tự hiển thị (FR-07.4: Drag-and-Drop Batch Reordering)
+- **Mô tả nghiệp vụ:** Người quản trị có thể thay đổi thứ tự xuất hiện của kỹ năng, dự án, kinh nghiệm trên trang chủ bằng thao tác kéo thả chuột trực quan (Drag-and-Drop) nhờ Angular CDK DragDrop.
+- **Cơ chế đồng bộ Backend:** Sau khi kéo thả hoàn tất, client gửi một mảng các đối tượng chứa `{ id, sort_order }` lên endpoint `PUT /api/v1/admin/{resource}/reorder`. Backend thực hiện câu lệnh batch update trong một giao dịch cơ sở dữ liệu duy nhất (`@Transactional`) để cập nhật trường `sort_order` đồng loạt, đảm bảo tính toàn vẹn và tốc độ tức thì.
+
+#### 4.7.5 Quản trị hộp thư tin nhắn liên hệ (FR-07.5: Message Inbox Management)
+- **Mô tả nghiệp vụ:** Tiếp nhận và quản lý toàn bộ các thông điệp do khách truy cập gửi qua form liên hệ.
+- **Tính năng:**
+  - Hiển thị danh sách tin nhắn kèm huy hiệu số lượng tin nhắn chưa đọc (`is_read = false`) nổi bật trên menu quản trị.
+  - Xem chi tiết nội dung tin nhắn, địa chỉ email và thời điểm gửi.
+  - Đánh dấu tin nhắn đã đọc (`PUT /api/v1/admin/messages/{id}/read`).
+  - Xóa tin nhắn rác hoặc tin nhắn không còn giá trị lưu trữ (`DELETE /api/v1/admin/messages/{id}`).
+
+#### 4.7.6 Dịch vụ lưu trữ tệp tin đám mây Supabase Storage (FR-07.6: Cloud Storage Service)
+- **Mô tả nghiệp vụ:** Cung cấp dịch vụ tải lên và lưu trữ các tệp ảnh tài nguyên (ảnh avatar, ảnh dự án, ảnh bài viết).
+- **Điểm cuối API:** `POST /api/v1/admin/upload` (dạng `multipart/form-data`).
+- **Cơ chế an ninh kiểm soát tệp tải lên:**
+  - Kiểm tra MIME type: Chỉ chấp nhận các định dạng ảnh an toàn: `image/jpeg`, `image/png`, `image/webp`.
+  - Giới hạn kích thước tệp: Dung lượng tối đa không vượt quá 2 MB (2,097,152 bytes).
+  - Tự động sinh tên tệp duy nhất bằng UUID (`UUID.randomUUID() + extension`) để chống tấn công ghi đè tệp tin và Path Traversal.
+  - Tải tệp lên Supabase Storage bucket `portfolio` qua REST API và trả về URL truy cập công khai CDN tốc độ cao.
 
 ---
 
