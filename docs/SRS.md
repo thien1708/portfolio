@@ -130,46 +130,22 @@ Hệ thống được định vị là một **Modern Full-Stack Personal Platfo
 
 ![Sơ đồ phân hệ chức năng chính](images/modules_diagram.png)
 
-```mermaid
-graph TD
-    A["Hệ thống Portfolio & Admin Platform"]
-    A --> B["Phân hệ Public Web"]
-    A --> C["Phân hệ Admin CMS"]
-    A --> D["Phân hệ Hệ thống & Backend API"]
+#### Bảng 2.2: Bảng phân rã chi tiết các phân hệ chức năng
 
-    subgraph Public["1. Phân hệ Public Web"]
-        B1["Trang chủ tương tác: Hero 3D, About, Timeline, Projects, Skills"]
-        B2["Trang Blog chuyên ngành & Đọc bài viết Markdown"]
-        B3["Form Liên hệ & Gửi phản hồi"]
-        B4["Tiện ích: Interactive Terminal, Modal xem CV, GitHub Stats"]
-    end
-    B --> B1
-    B --> B2
-    B --> B3
-    B --> B4
-
-    subgraph Admin["2. Phân hệ Admin CMS"]
-        C1["Xác thực đăng nhập JWT & Quản lý phiên"]
-        C2["Dashboard phân tích truy cập thời gian thực"]
-        C3["Quản lý tài nguyên CRUD & Kéo thả sắp xếp"]
-        C4["Hộp thư tin nhắn liên hệ & Tải ảnh Supabase Storage"]
-    end
-    C --> C1
-    C --> C2
-    C --> C3
-    C --> C4
-
-    subgraph Backend["3. Phân hệ Hệ thống & Backend API"]
-        D1["Spring Boot RESTful Services & Cache 10-min"]
-        D2["Bảo mật đa tầng: Rate-limit, Lockout, CSRF/CORS"]
-        D3["Xử lý tác vụ bất đồng bộ: Dual Mail Sender SMTP/Resend"]
-        D4["Supabase PostgreSQL & Flyway Migration"]
-    end
-    D --> D1
-    D --> D2
-    D --> D3
-    D --> D4
-```
+| Phân hệ chính | Thành phần / Chức năng con | Công nghệ chủ đạo | Trách nhiệm & Mô tả hoạt động |
+| :--- | :--- | :--- | :--- |
+| **1. Public Web**<br>*(Frontend SPA)* | **Trang chủ tương tác** | Angular 20, TailwindCSS, three.js | Hiển thị Hero 3D, About, kỹ năng với thanh đo %, timeline kinh nghiệm trượt 2 bên, lưới dự án kèm bộ lọc công nghệ. |
+| | **Technical Blog** | Angular, Markdown Renderer | Danh sách bài viết `/blog`, đọc chi tiết bài viết `/blog/:slug`, syntax highlight cho code block, bộ đếm lượt xem. |
+| | **Kênh liên hệ trực tuyến** | Reactive Forms, Rate Limit | Form nhập thông điệp liên hệ, xác thực dữ liệu tức thì, rate-limit 3 req/phút/IP, kích hoạt gửi mail thông báo ngầm. |
+| | **Tiện ích tương tác** | Angular Signals, CDK | Terminal giả lập (`Ctrl + ~`), Modal xem/tải CV đa ngôn ngữ (`/cv-vi.pdf`, `/cv-en.pdf`), GitHub live stats counter. |
+| **2. Admin CMS**<br>*(Bảo mật cao)* | **Xác thực & Quản lý phiên** | Spring Security 6, JWT, BCrypt | Đăng nhập tài khoản quản trị, cấp JWT 15m + Refresh Token 7 ngày qua HttpOnly Cookie, khóa tài khoản khi sai 5 lần. |
+| | **Dashboard Analytics** | Chart / Signal state | Biểu đồ theo dõi tổng lượt xem, người dùng duy nhất, tỷ lệ thiết bị (desktop/mobile) và danh sách bài viết xem nhiều nhất. |
+| | **Quản lý tài nguyên CMS** | Angular Dynamic CRUD | Toàn diện Create/Read/Update/Delete 6 thực thể (kỹ năng, kinh nghiệm, dự án, học vấn, chứng chỉ, bài viết); kéo thả sắp xếp thứ tự. |
+| | **Hộp thư & Lưu trữ tệp** | Supabase Storage REST API | Xem và quản lý tin nhắn liên hệ gửi đến, tải ảnh avatar/dự án lên bucket đám mây với kiểm tra định dạng và dung lượng ≤2MB. |
+| **3. Backend & Hạ tầng**<br>*(Core Services)* | **REST API & Caching** | Spring Boot 3.5, Cacheable | Cung cấp chuẩn REST API `/api/v1`, endpoint tổng hợp `/portfolio` cache 10 phút, Global Exception Envelope chuẩn hóa. |
+| | **Bảo mật mạng đa tầng** | Bucket4j, CORS, HSTS, CSP | Giới hạn tốc độ request per IP, kiểm soát chặt domain gọi API qua CORS allowed origins, tiêu đề an ninh HTTP chống XSS/Clickjacking. |
+| | **Gửi Email bất đồng bộ** | JavaMail, Resend HTTPS API | Kiến trúc Dual Mail Sender: tự động chuyển đổi giữa Gmail SMTP và Resend API (cổng 443 không bị chặn bởi đám mây). |
+| | **Cơ sở dữ liệu & DevOps** | Supabase PostgreSQL, Flyway | Quản lý 11 bảng CSDL, tự động nạp dữ liệu và kiểm soát phiên bản qua Flyway migrations (`V1__schema.sql`, `V2__seed.sql`). |
 
 ### 2.3 Phân loại người dùng & Chân dung người dùng (User Classes & Personas)
 
@@ -368,100 +344,35 @@ Hệ thống giải quyết triệt để vấn đề các nhà cung cấp đám
 
 ![Sơ đồ thực thể liên kết ERD](images/erd_diagram.png)
 
+#### Bảng 5.1: Danh mục quan hệ và ràng buộc khóa giữa các thực thể CSDL
+
+| Thực thể cha (Parent) | Bản số (Cardinality) | Thực thể con (Child) | Khóa ngoại (FK) & Ràng buộc toàn vẹn |
+| :--- | :--- | :--- | :--- |
+| **users** | 1 — N *(Một - Nhiều)* | **refresh_tokens** | `user_id` FK → `users(id)` (ON DELETE CASCADE, revoked status). |
+| **users** | 1 — 1 *(Một - Một)* | **profile** | Quản lý thông tin hồ sơ cá nhân và tiểu sử hiển thị. |
+| **users** | 1 — N *(Một - Nhiều)* | **posts** | Quản lý danh sách và xuất bản các bài viết kỹ thuật trên blog. |
+| **profile** | 1 — N *(Một - Nhiều)* | **skills** | Danh mục kỹ năng phân loại theo 5 nhóm chuyên môn. |
+| **profile** | 1 — N *(Một - Nhiều)* | **experiences** | Các mốc kinh nghiệm làm việc sắp xếp theo thứ tự thời gian. |
+| **profile** | 1 — N *(Một - Nhiều)* | **projects** | Danh sách các dự án thực tế tiêu biểu kèm liên kết demo/repo. |
+| **profile** | 1 — N *(Một - Nhiều)* | **education** | Quá trình đào tạo đại học và học vấn chuyên ngành. |
+| **profile** | 1 — N *(Một - Nhiều)* | **certifications** | Danh mục chứng chỉ chuyên môn với liên kết xác minh. |
+| **system** | 1 — N *(Một - Nhiều)* | **contact_messages** | Hộp thư tiếp nhận thông điệp liên hệ gửi từ người dùng công khai. |
+| **system** | 1 — N *(Một - Nhiều)* | **analytics_events** | Nhật ký ghi nhận sự kiện truy cập trang và hành vi người dùng. |
+
 ```mermaid
 erDiagram
-    users ||--o{ refresh_tokens : "owns"
-    profile {
-        BIGINT id PK
-        VARCHAR full_name
-        VARCHAR title
-        TEXT summary
-        VARCHAR avatar_url
-        VARCHAR email
-        VARCHAR phone
-        VARCHAR location
-        VARCHAR cv_url
-        TEXT typing_roles
-        INT years_experience
-    }
-    skills {
-        BIGINT id PK
-        VARCHAR name
-        VARCHAR category
-        INT proficiency
-        VARCHAR icon
-        INT sort_order
-    }
-    experiences {
-        BIGINT id PK
-        VARCHAR company
-        VARCHAR role
-        VARCHAR period
-        TEXT description
-        TEXT tech_stack
-        INT sort_order
-    }
-    projects {
-        BIGINT id PK
-        VARCHAR name
-        VARCHAR period
-        TEXT description
-        TEXT tech_stack
-        VARCHAR image_url
-        VARCHAR demo_url
-        VARCHAR repo_url
-        BOOLEAN featured
-        INT sort_order
-    }
-    posts {
-        BIGINT id PK
-        VARCHAR title
-        VARCHAR slug UK
-        TEXT summary
-        TEXT content
-        VARCHAR cover_image_url
-        VARCHAR tags
-        BOOLEAN published
-        INT views_count
-        INT reading_time_minutes
-        INT sort_order
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
-    }
-    contact_messages {
-        BIGINT id PK
-        VARCHAR name
-        VARCHAR email
-        VARCHAR subject
-        TEXT message
-        TIMESTAMP created_at
-        BOOLEAN is_read
-    }
-    analytics_events {
-        BIGINT id PK
-        VARCHAR event_type
-        VARCHAR path
-        VARCHAR referrer
-        VARCHAR ip_hash
-        VARCHAR device_type
-        TIMESTAMP created_at
-    }
-    users {
-        BIGINT id PK
-        VARCHAR email UK
-        VARCHAR password_hash
-        VARCHAR role
-        INT failed_attempts
-        TIMESTAMP locked_until
-    }
-    refresh_tokens {
-        BIGINT id PK
-        BIGINT user_id FK
-        VARCHAR token_hash UK
-        TIMESTAMP expires_at
-        BOOLEAN revoked
-        TIMESTAMP created_at
-    }
+    USERS ||--o{ REFRESH_TOKENS : "1-to-N: owns"
+    USERS ||--|| PROFILE : "1-to-1: manages"
+    USERS ||--o{ POSTS : "1-to-N: authors"
+
+    PROFILE ||--o{ SKILLS : "1-to-N: contains"
+    PROFILE ||--o{ EXPERIENCES : "1-to-N: timeline"
+    PROFILE ||--o{ PROJECTS : "1-to-N: showcases"
+    PROFILE ||--o{ EDUCATION : "1-to-N: includes"
+    PROFILE ||--o{ CERTIFICATIONS : "1-to-N: awards"
+
+    SYSTEM ||--o{ CONTACT_MESSAGES : "receives"
+    SYSTEM ||--o{ ANALYTICS_EVENTS : "tracks"
 ```
 
 ### 5.2 Từ điển dữ liệu chi tiết 11 bảng CSDL (Data Dictionary)

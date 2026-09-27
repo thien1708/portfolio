@@ -28,6 +28,22 @@ const TEXT_COLOR = '1F2937';      // Dark Slate
 const BORDER_COLOR = 'CBD5E1';    // Slate border
 const TOTAL_TABLE_WIDTH = 9360;   // 6.5 inches in dxa
 
+function getJpegSize(buf) {
+  let offset = 2;
+  while (offset < buf.length) {
+    if (buf[offset] !== 0xFF) break;
+    const marker = buf[offset + 1];
+    if (marker === 0xC0 || marker === 0xC2) {
+      const height = buf.readUInt16BE(offset + 5);
+      const width = buf.readUInt16BE(offset + 7);
+      return { width, height };
+    }
+    const len = buf.readUInt16BE(offset + 2);
+    offset += 2 + len;
+  }
+  return { width: 600, height: 400 };
+}
+
 // Helper: parse inline markdown (bold **text**, inline `code`) into TextRun array
 function parseInlineRuns(text, options = {}) {
   const runs = [];
@@ -273,17 +289,9 @@ for (let i = 0; i < allLines.length; i++) {
 
     if (fs.existsSync(absPath)) {
       const imgBuf = fs.readFileSync(absPath);
-      let imgWidth = 560;
-      let imgHeight = 200;
-
-      // Simple JPEG height estimation if applicable
-      if (absPath.includes('modules_diagram')) {
-        imgWidth = 560;
-        imgHeight = 62;
-      } else if (absPath.includes('erd_diagram')) {
-        imgWidth = 560;
-        imgHeight = 175;
-      }
+      const size = getJpegSize(imgBuf);
+      const targetWidth = 570;
+      const targetHeight = Math.max(80, Math.round(targetWidth * size.height / size.width));
 
       children.push(
         new Paragraph({
@@ -293,8 +301,8 @@ for (let i = 0; i < allLines.length; i++) {
             new ImageRun({
               data: imgBuf,
               transformation: {
-                width: imgWidth,
-                height: imgHeight
+                width: targetWidth,
+                height: targetHeight
               }
             })
           ]
