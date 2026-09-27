@@ -43,11 +43,13 @@ public class PublicController {
     private final EducationService educationService;
     private final CertificationService certificationService;
     private final ContactService contactService;
+    private final com.tranvuthien.portfolio.service.PostService postService;
 
     public PublicController(ProfileService profileService, SkillService skillService,
                             ExperienceService experienceService, ProjectService projectService,
                             EducationService educationService, CertificationService certificationService,
-                            ContactService contactService) {
+                            ContactService contactService,
+                            com.tranvuthien.portfolio.service.PostService postService) {
         this.profileService = profileService;
         this.skillService = skillService;
         this.experienceService = experienceService;
@@ -55,6 +57,7 @@ public class PublicController {
         this.educationService = educationService;
         this.certificationService = certificationService;
         this.contactService = contactService;
+        this.postService = postService;
     }
 
     /** Lightweight liveness probe for hosting health checks (e.g. Render). */
@@ -91,6 +94,16 @@ public class PublicController {
     @GetMapping("/certifications")
     public List<CertificationResponse> certifications() {
         return certificationService.list();
+    }
+
+    @GetMapping("/posts")
+    public List<com.tranvuthien.portfolio.dto.PostResponse> posts() {
+        return postService.list();
+    }
+
+    @GetMapping("/posts/{slug}")
+    public com.tranvuthien.portfolio.dto.PostResponse postBySlug(@org.springframework.web.bind.annotation.PathVariable String slug) {
+        return postService.getBySlug(slug);
     }
 
     /**

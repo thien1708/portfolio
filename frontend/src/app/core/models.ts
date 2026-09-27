@@ -96,6 +96,7 @@ export interface ContactPayload {
   email: string;
   subject: string;
   message: string;
+  honeypot?: string;
 }
 
 export interface PortfolioData {
@@ -106,3 +107,45 @@ export interface PortfolioData {
   education: EducationItem[];
   certifications: Certification[];
 }
+
+export interface Post {
+  id: number;
+  title: string;
+  slug: string;
+  summary: string | null;
+  content: string;
+  coverImageUrl: string | null;
+  tags: string[];
+  published: boolean;
+  viewsCount: number;
+  readingTimeMinutes: number;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DailyStat {
+  date: string;
+  count: number;
+}
+
+export interface ReferrerStat {
+  referrer: string;
+  count: number;
+}
+
+export interface AnalyticsSummary {
+  totalViews: number;
+  uniqueVisitors: number;
+  viewsToday: number;
+  viewsLast7Days: number;
+  viewsLast30Days: number;
+  cvViews: number;
+  cvDownloads: number;
+  projectClicks: number;
+  dailyViews: DailyStat[];
+  deviceBreakdown: Record<string, number>;
+  topReferrers: ReferrerStat[];
+  topEvents: Record<string, number>;
+}
+

@@ -4,9 +4,12 @@ import {
   HostListener,
   computed,
   effect,
+  inject,
   input,
+  output,
   signal,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { Profile } from '../core/models';
 import { Icon } from './icon';
@@ -87,6 +90,8 @@ interface Command {
 })
 export class CommandPalette {
   readonly profile = input<Profile | null>(null);
+  readonly openCv = output<void>();
+  readonly openTerminal = output<void>();
 
   protected readonly open = signal(false);
   protected readonly query = signal('');
@@ -102,14 +107,41 @@ export class CommandPalette {
     { id: 'contact', label: 'Contact' },
   ];
 
+  private readonly router = inject(Router);
+
   private readonly commands = computed<Command[]>(() => {
-    const list: Command[] = this.sections.map((s) => ({
-      label: s.label,
-      hint: 'Section',
-      icon: 'arrow-right',
-      keywords: s.label.toLowerCase(),
-      action: () => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' }),
-    }));
+    const list: Command[] = [
+      {
+        label: 'Open Developer Terminal (CLI)',
+        hint: 'Tool',
+        icon: 'terminal',
+        keywords: 'terminal cli bash console developer shell',
+        action: () => {
+          this.close();
+          this.openTerminal.emit();
+        },
+      },
+      {
+        label: 'Tech Blog & Articles',
+        hint: 'Page',
+        icon: 'sparkles',
+        keywords: 'blog posts articles tech notes writing',
+        action: () => {
+          this.close();
+          this.router.navigate(['/blog']);
+        },
+      },
+    ];
+
+    this.sections.forEach((s) => {
+      list.push({
+        label: s.label,
+        hint: 'Section',
+        icon: 'arrow-right',
+        keywords: s.label.toLowerCase(),
+        action: () => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' }),
+      });
+    });
     const p = this.profile();
     if (p?.githubUrl) {
       list.push({ label: 'GitHub', hint: 'Link', icon: 'github', keywords: 'github code source', action: () => this.openUrl(p.githubUrl!) });
@@ -118,7 +150,23 @@ export class CommandPalette {
       list.push({ label: 'LinkedIn', hint: 'Link', icon: 'linkedin', keywords: 'linkedin', action: () => this.openUrl(p.linkedinUrl!) });
     }
     if (p?.cvUrl) {
-      list.push({ label: 'Download CV', hint: 'Link', icon: 'download', keywords: 'cv resume', action: () => this.openUrl(p.cvUrl!) });
+      list.push({
+        label: 'Preview CV',
+        hint: 'View',
+        icon: 'file-text',
+        keywords: 'cv resume preview view pdf',
+        action: () => {
+          this.close();
+          this.openCv.emit();
+        },
+      });
+      list.push({
+        label: 'Download CV',
+        hint: 'Link',
+        icon: 'download',
+        keywords: 'cv resume download pdf',
+        action: () => this.openUrl(p.cvUrl!),
+      });
     }
     if (p?.email) {
       list.push({ label: 'Email me', hint: 'Link', icon: 'mail', keywords: 'email contact mail', action: () => this.openUrl('mailto:' + p.email) });

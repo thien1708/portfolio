@@ -31,4 +31,32 @@ final class ContactEmailContent {
                 Reply directly to this email to answer, or manage it in the admin panel.
                 """.formatted(request.name(), request.email(), subject, request.message());
     }
+
+    /** Subject line for the auto-reply confirmation email sent to the visitor. */
+    static String autoReplySubject(String rawSubject) {
+        return "Thank you for reaching out! | Cảm ơn bạn đã liên hệ — Trần Vũ Thiện";
+    }
+
+    /** Plain-text body for the auto-reply confirmation email. */
+    static String autoReplyBody(ContactRequest request, String subject) {
+        return """
+                Hi %s,
+
+                Thank you for getting in touch! I have received your message regarding:
+                "%s"
+
+                I will review your inquiry and get back to you as soon as possible (usually within 24–48 hours).
+
+                ---
+                Your message:
+                %s
+
+                ---
+                Best regards,
+                Trần Vũ Thiện
+                Software Development Engineer
+                Hanoi, Vietnam
+                Email: tranvuthien1708@gmail.com
+                """.formatted(request.name(), subject, request.message());
+    }
 }

@@ -62,4 +62,31 @@ public class ResendContactMailSender implements ContactMailSender {
 
         log.info("Contact notification email sent via Resend to {}", to);
     }
+
+    @Override
+    public void sendAutoReply(ContactRequest request) {
+        AppProperties.Mail mail = properties.mail();
+        String subject = request.subject() == null || request.subject().isBlank()
+                ? "(no subject)" : request.subject();
+        String from = mail.from() == null || mail.from().isBlank()
+                ? "Portfolio <onboarding@resend.dev>" : mail.from();
+        String to = request.email();
+
+        Map<String, Object> payload = Map.of(
+                "from", from,
+                "to", new String[]{to},
+                "subject", ContactEmailContent.autoReplySubject(subject),
+                "text", ContactEmailContent.autoReplyBody(request, subject)
+        );
+
+        restClient.post()
+                .uri(RESEND_ENDPOINT)
+                .header("Authorization", "Bearer " + mail.apiKey())
+                .header("Content-Type", "application/json")
+                .body(payload)
+                .retrieve()
+                .toBodilessEntity();
+
+        log.info("Auto-reply confirmation email sent via Resend to {}", to);
+    }
 }

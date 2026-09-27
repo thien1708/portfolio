@@ -115,4 +115,24 @@ export const RESOURCE_CONFIGS: Record<string, ResourceConfig> = {
       { key: 'url', label: 'Credential URL', type: 'text', placeholder: 'https://…' },
     ],
   },
+  posts: {
+    slug: 'posts',
+    title: 'Blog Posts',
+    singular: 'post',
+    icon: '✍️',
+    columns: [
+      { key: 'title', label: 'Title' },
+      { key: 'slug', label: 'Slug' },
+      { key: 'published', label: 'Published' },
+    ],
+    fields: [
+      { key: 'title', label: 'Title', type: 'text', required: true },
+      { key: 'slug', label: 'Slug (leave blank to auto-generate)', type: 'text' },
+      { key: 'summary', label: 'Summary', type: 'textarea', hint: 'Short overview of the post' },
+      { key: 'content', label: 'Content (Markdown)', type: 'textarea', required: true, hint: 'Supports standard markdown formatting and code blocks' },
+      { key: 'coverImageUrl', label: 'Cover image', type: 'image', cropAspect: 16 / 9 },
+      { key: 'tags', label: 'Tags', type: 'chips', hint: 'e.g. Java, Spring Boot, Architecture' },
+      { key: 'published', label: 'Publish post publicly', type: 'toggle' },
+    ],
+  },
 };

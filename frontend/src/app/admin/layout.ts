@@ -116,6 +116,7 @@ export class AdminLayout implements OnInit {
     { path: 'projects', label: 'Projects', icon: '🚀' },
     { path: 'education', label: 'Education', icon: '🎓' },
     { path: 'certifications', label: 'Certifications', icon: '🏅' },
+    { path: 'posts', label: 'Blog Posts', icon: '✍️' },
     { path: 'messages', label: 'Messages', icon: '📬' },
   ];
 

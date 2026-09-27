@@ -40,4 +40,18 @@ public class SmtpContactMailSender implements ContactMailSender {
 
         mailSender.send(message);
     }
+
+    @Override
+    public void sendAutoReply(ContactRequest request) {
+        AppProperties.Mail mail = properties.mail();
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mail.from());
+        message.setTo(request.email());
+        String subject = request.subject() == null || request.subject().isBlank()
+                ? "(no subject)" : request.subject();
+        message.setSubject(ContactEmailContent.autoReplySubject(subject));
+        message.setText(ContactEmailContent.autoReplyBody(request, subject));
+
+        mailSender.send(message);
+    }
 }

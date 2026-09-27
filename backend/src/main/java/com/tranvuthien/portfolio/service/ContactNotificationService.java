@@ -48,6 +48,7 @@ public class ContactNotificationService {
             try {
                 mailSender.send(request);
                 log.info("Contact notification email sent to {}", mail.to());
+                sendAutoReplySafely(request);
                 return;
             } catch (Exception ex) {
                 log.warn("Contact notification email failed (attempt {}/{})", attempt, MAX_ATTEMPTS, ex);
@@ -57,6 +58,15 @@ public class ContactNotificationService {
             }
         }
         log.warn("Giving up on contact notification email after {} attempts", MAX_ATTEMPTS);
+    }
+
+    private void sendAutoReplySafely(ContactRequest request) {
+        try {
+            mailSender.sendAutoReply(request);
+        } catch (Exception ex) {
+            // Auto-reply failure (e.g. unverified domain on testing accounts) must not affect the main flow
+            log.info("Auto-reply confirmation email could not be delivered to {}: {}", request.email(), ex.getMessage());
+        }
     }
 
     private boolean sleepBeforeRetry(int attempt) {

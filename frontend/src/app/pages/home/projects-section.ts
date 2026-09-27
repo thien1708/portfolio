@@ -17,6 +17,8 @@ import { RevealDirective } from '../../shared/reveal.directive';
 import { Icon } from '../../shared/icon';
 import { SpotlightDirective } from '../../shared/spotlight.directive';
 import { initialsOf, splitBullets } from '../../shared/text-utils';
+import { SoundService } from '../../core/sound.service';
+import { AnalyticsService } from '../../core/analytics.service';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,7 +40,7 @@ import { initialsOf, splitBullets } from '../../shared/text-utils';
 
         @if (projects().length > 0) {
           <!-- Tech filter -->
-          <div appReveal class="mb-12 flex flex-wrap items-center justify-center gap-2">
+          <div appReveal class="mb-6 flex flex-wrap items-center justify-center gap-2">
             <button
               type="button"
               class="rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200"
@@ -50,12 +52,12 @@ import { initialsOf, splitBullets } from '../../shared/text-utils';
               [class.chip]="filter() !== null"
               (click)="filter.set(null)"
             >
-              {{ i18n.t('projects.all') }}
+              {{ i18n.t('projects.all') }} ({{ projects().length }})
             </button>
             @for (tech of allTech(); track tech) {
               <button
                 type="button"
-                class="rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200"
+                class="rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 inline-flex items-center gap-1.5"
                 [class.bg-gradient-to-r]="filter() === tech"
                 [class.from-lav-500]="filter() === tech"
                 [class.to-peri-500]="filter() === tech"
@@ -64,10 +66,26 @@ import { initialsOf, splitBullets } from '../../shared/text-utils';
                 [class.chip]="filter() !== tech"
                 (click)="filter.set(tech)"
               >
-                {{ tech }}
+                <span>{{ tech }}</span>
+                <span class="text-xs opacity-75 font-mono">({{ countFor(tech) }})</span>
               </button>
             }
           </div>
+
+          <!-- Active filter status indicator -->
+          @if (filter(); as activeTech) {
+            <div class="mb-10 flex items-center justify-center gap-3 text-sm text-ink/75 dark:text-lav-200/75 animate-fade-in">
+              <span>{{ i18n.t('projects.showing') }} <strong>{{ filtered().length }}</strong> {{ i18n.t('projects.of') }} <strong>{{ projects().length }}</strong> {{ i18n.t('projects.items') }} (<strong>{{ activeTech }}</strong>)</span>
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold text-lav-600 dark:text-lav-300 hover:bg-lav-100 dark:hover:bg-white/10 transition-colors"
+                (click)="filter.set(null)"
+              >
+                <app-icon name="x" class="text-xs" />
+                {{ i18n.t('projects.clearFilter') }}
+              </button>
+            </div>
+          }
 
           <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             @for (project of filtered(); track project.id + '|' + filterKey(); let i = $index) {
@@ -152,9 +170,18 @@ import { initialsOf, splitBullets } from '../../shared/text-utils';
                     </ul>
                   }
                   @if (project.techStack.length > 0) {
-                    <div class="mt-4 flex flex-wrap gap-1.5">
+                    <div class="relative z-10 mt-4 flex flex-wrap gap-1.5">
                       @for (tech of project.techStack; track tech) {
-                        <span class="chip">{{ tech }}</span>
+                        <button
+                          type="button"
+                          class="chip text-xs transition-all hover:bg-lav-200 dark:hover:bg-lav-700/60 hover:scale-105 cursor-pointer"
+                          [class.!bg-lav-500]="filter() === tech"
+                          [class.!text-white]="filter() === tech"
+                          (click)="$event.stopPropagation(); filter.set(tech)"
+                          [attr.aria-label]="'Filter by ' + tech"
+                        >
+                          {{ tech }}
+                        </button>
                       }
                     </div>
                   }
@@ -254,6 +281,25 @@ import { initialsOf, splitBullets } from '../../shared/text-utils';
                 <app-icon name="close" />
               </button>
             </div>
+
+            <!-- Thumbnail strip if multiple images -->
+            @if (selectedImages().length > 1) {
+              <div class="flex gap-2 px-6 py-2.5 bg-lav-50/70 dark:bg-lav-900/30 border-b border-lav-200/50 dark:border-lav-700/30 overflow-x-auto">
+                @for (img of selectedImages(); track $index) {
+                  <button
+                    type="button"
+                    class="h-12 w-20 rounded-lg overflow-hidden border-2 transition-all shrink-0"
+                    [class.border-lav-500]="galleryIndex() === $index"
+                    [class.scale-105]="galleryIndex() === $index"
+                    [class.border-transparent]="galleryIndex() !== $index"
+                    [class.opacity-60]="galleryIndex() !== $index"
+                    (click)="galleryIndex.set($index); sound.playClick()"
+                  >
+                    <img [src]="img" [alt]="p.name + ' thumbnail ' + ($index + 1)" class="h-full w-full object-cover" />
+                  </button>
+                }
+              </div>
+            }
             <div class="flex-1 overflow-y-auto p-7">
               @if (p.period) {
                 <span class="mb-2 flex items-center gap-1.5 text-xs font-medium text-lav-500 dark:text-lav-300"><app-icon name="calendar" class="text-[0.7rem]" /> {{ p.period }}</span>
@@ -309,6 +355,8 @@ export class ProjectsSection {
   readonly projects = input<Project[]>([]);
 
   protected readonly i18n = inject(I18nService);
+  protected readonly sound = inject(SoundService);
+  private readonly analytics = inject(AnalyticsService);
   protected readonly filter = signal<string | null>(null);
   protected readonly selected = signal<Project | null>(null);
   protected readonly galleryIndex = signal(0);
@@ -326,11 +374,13 @@ export class ProjectsSection {
   protected prevImage(): void {
     const count = this.selectedImages().length;
     this.galleryIndex.update((i) => (i - 1 + count) % count);
+    this.sound.playClick();
   }
 
   protected nextImage(): void {
     const count = this.selectedImages().length;
     this.galleryIndex.update((i) => (i + 1) % count);
+    this.sound.playClick();
   }
 
   private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('lightboxClose');
@@ -361,6 +411,20 @@ export class ProjectsSection {
   // Changes whenever the active filter changes, re-keying @for so surviving
   // cards replay the entrance animation on each filter switch.
   protected readonly filterKey = computed(() => this.filter() ?? 'all');
+
+  protected readonly techCounts = computed(() => {
+    const counts = new Map<string, number>();
+    for (const project of this.projects()) {
+      for (const tech of project.techStack) {
+        counts.set(tech, (counts.get(tech) ?? 0) + 1);
+      }
+    }
+    return counts;
+  });
+
+  protected countFor(tech: string): number {
+    return this.techCounts().get(tech) ?? 0;
+  }
 
   protected readonly allTech = computed(() => {
     const set = new Set<string>();
@@ -401,6 +465,8 @@ export class ProjectsSection {
     }
     this.opener = event.currentTarget as HTMLElement;
     this.galleryIndex.set(0);
+    this.analytics.track('PROJECT_CLICK', '/#projects', project.name);
+    this.sound.playChime();
     const show = () => this.selected.set(project);
     const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
     if (doc.startViewTransition) {
@@ -411,6 +477,7 @@ export class ProjectsSection {
   }
 
   protected closeLightbox(): void {
+    this.sound.playClick();
     const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
     const hide = () => this.selected.set(null);
     if (doc.startViewTransition) {

@@ -30,7 +30,8 @@ public class SupabaseStorageService implements StorageService {
             "jpg", MediaType.IMAGE_JPEG,
             "jpeg", MediaType.IMAGE_JPEG,
             "webp", MediaType.parseMediaType("image/webp"),
-            "gif", MediaType.IMAGE_GIF);
+            "gif", MediaType.IMAGE_GIF,
+            "pdf", MediaType.APPLICATION_PDF);
 
     private final AppProperties.Storage.Supabase supabase;
     private final RestClient restClient;

@@ -5,6 +5,8 @@ import com.tranvuthien.portfolio.dto.ContactMessageResponse;
 import com.tranvuthien.portfolio.dto.ContactRequest;
 import com.tranvuthien.portfolio.exception.NotFoundException;
 import com.tranvuthien.portfolio.repository.ContactMessageRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ContactService {
+
+    private static final Logger log = LoggerFactory.getLogger(ContactService.class);
 
     private final ContactMessageRepository repository;
     private final ApplicationEventPublisher eventPublisher;
@@ -25,6 +29,11 @@ public class ContactService {
 
     @Transactional
     public void submit(ContactRequest request) {
+        if (request.honeypot() != null && !request.honeypot().isBlank()) {
+            log.warn("Honeypot field filled ('{}'); silently dropping contact spam from email '{}'",
+                    request.honeypot(), request.email());
+            return;
+        }
         ContactMessage message = new ContactMessage();
         message.setName(request.name());
         message.setEmail(request.email());

@@ -8,6 +8,10 @@ public record ContactRequest(
         @NotBlank @Size(max = 120) String name,
         @NotBlank @Email @Size(max = 160) String email,
         @Size(max = 200) String subject,
-        @NotBlank @Size(max = 5000) String message
+        @NotBlank @Size(max = 5000) String message,
+        String honeypot
 ) {
+    public ContactRequest(String name, String email, String subject, String message) {
+        this(name, email, subject, message, null);
+    }
 }

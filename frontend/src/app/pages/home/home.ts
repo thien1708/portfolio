@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { ApiService } from '../../core/api.service';
 import {
   Certification,
@@ -25,6 +35,10 @@ import { CursorGlow } from '../../shared/cursor-glow';
 import { TechMarquee } from '../../shared/tech-marquee';
 import { SectionDots } from '../../shared/section-dots';
 import { CommandPalette } from '../../shared/command-palette';
+import { CvModal } from '../../shared/cv-modal';
+import { TerminalModal } from '../../shared/terminal-modal';
+import { SeoService } from '../../core/seo.service';
+import { AnalyticsService } from '../../core/analytics.service';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,17 +59,28 @@ import { CommandPalette } from '../../shared/command-palette';
     TechMarquee,
     SectionDots,
     CommandPalette,
+    CvModal,
+    TerminalModal,
   ],
   template: `
     <app-scroll-progress />
     <app-cursor-glow />
     <app-section-dots />
-    <app-command-palette [profile]="profile()" />
+    <app-command-palette [profile]="profile()" (openCv)="cvOpen.set(true)" (openTerminal)="terminalOpen.set(true)" />
+    <app-cv-modal [open]="cvOpen()" [cvUrl]="activeCvUrl()" (closed)="cvOpen.set(false)" />
+    <app-terminal-modal
+      [open]="terminalOpen()"
+      [profile]="profile()"
+      [skills]="skills()"
+      [projects]="projects()"
+      (closed)="terminalOpen.set(false)"
+      (openCv)="cvOpen.set(true)"
+    />
     <div class="grain-overlay"></div>
 
-    <app-navbar [brand]="brand()" />
+    <app-navbar [brand]="brand()" (openTerminal)="terminalOpen.set(true)" />
     <main>
-      <app-hero [profile]="profile()" />
+      <app-hero [profile]="profile()" [cvUrl]="activeCvUrl()" (openCv)="cvOpen.set(true)" />
       @if (techList().length > 0) {
         <app-tech-marquee [items]="techList()" />
       }
@@ -73,6 +98,18 @@ import { CommandPalette } from '../../shared/command-palette';
     </main>
     <app-footer [profile]="profile()" />
 
+    <!-- Floating Quick CLI Terminal Launcher -->
+    <button
+      type="button"
+      class="fixed bottom-6 left-6 z-40 flex items-center gap-2 rounded-2xl bg-[#0c1017]/90 text-emerald-400 border border-emerald-500/30 px-3.5 py-2.5 font-mono text-xs font-bold shadow-soft-lg backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:bg-[#161b22] hover:border-emerald-400/60"
+      (click)="terminalOpen.set(true)"
+      title="Mở Developer Terminal (Ctrl+~)"
+      aria-label="Developer Terminal"
+    >
+      <span class="text-sm font-extrabold">&gt;_</span>
+      <span class="hidden sm:inline">CLI Mode</span>
+    </button>
+
     @if (showTop()) {
       <button
         type="button"
@@ -85,9 +122,13 @@ import { CommandPalette } from '../../shared/command-palette';
     }
   `,
 })
-export class Home implements OnInit {
+export class Home implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly toast = inject(ToastService);
+  private readonly seo = inject(SeoService);
+  private readonly ngZone = inject(NgZone);
+  private scrollTicking = false;
 
   protected readonly profile = signal<Profile | null>(null);
   protected readonly skills = signal<Skill[]>([]);
@@ -96,8 +137,18 @@ export class Home implements OnInit {
   protected readonly education = signal<EducationItem[]>([]);
   protected readonly certifications = signal<Certification[]>([]);
   protected readonly showTop = signal(false);
+  protected readonly cvOpen = signal(false);
+  protected readonly terminalOpen = signal(false);
 
   protected readonly i18n = inject(I18nService);
+
+  protected readonly activeCvUrl = computed(() => {
+    const profileUrl = this.profile()?.cvUrl;
+    if (profileUrl && profileUrl !== '/cv.pdf') {
+      return profileUrl;
+    }
+    return this.i18n.lang() === 'vi' ? '/cv-vi.pdf' : '/cv-en.pdf';
+  });
 
   // Unique technology names across skills, projects and experience for the ticker.
   protected readonly techList = computed(() => {
@@ -121,9 +172,15 @@ export class Home implements OnInit {
   }
 
   ngOnInit(): void {
+    this.analytics.init();
+    this.ngZone.runOutsideAngular(() => {
+      window.addEventListener('scroll', this.onWindowScroll, { passive: true });
+    });
+
     this.api.getPortfolio().subscribe({
       next: (data) => {
         this.profile.set(data.profile);
+        this.seo.updateProfileSeo(data.profile);
         this.skills.set(data.skills);
         this.experiences.set(data.experiences);
         this.projects.set(data.projects);
@@ -134,12 +191,31 @@ export class Home implements OnInit {
     });
   }
 
-  @HostListener('window:scroll')
-  onScroll(): void {
-    this.showTop.set(window.scrollY > 600);
+  @HostListener('window:keydown', ['$event'])
+  onGlobalKey(event: KeyboardEvent): void {
+    if ((event.ctrlKey || event.metaKey) && (event.key === '`' || event.key === '~')) {
+      event.preventDefault();
+      this.terminalOpen.update((o) => !o);
+    }
   }
+
+  private readonly onWindowScroll = (): void => {
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.scrollTicking = false;
+      const shouldShow = window.scrollY > 600;
+      if (this.showTop() !== shouldShow) {
+        this.ngZone.run(() => this.showTop.set(shouldShow));
+      }
+    });
+  };
 
   protected scrollTop(): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('scroll', this.onWindowScroll);
   }
 }

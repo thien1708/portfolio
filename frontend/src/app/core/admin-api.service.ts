@@ -1,14 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ContactMessage, Page, Profile } from './models';
+import { ContactMessage, Page, Profile, AnalyticsSummary } from './models';
 
 export type AdminResource =
   | 'skills'
   | 'experiences'
   | 'projects'
   | 'education'
-  | 'certifications';
+  | 'certifications'
+  | 'posts';
 
 /** Write access to /api/v1/admin/** — requires an authenticated admin. */
 @Injectable({ providedIn: 'root' })
@@ -60,5 +61,11 @@ export class AdminApiService {
     const form = new FormData();
     form.append('file', file);
     return this.http.post<{ url: string }>(`${this.base}/upload`, form);
+  }
+
+  getAnalyticsSummary(days: number = 14): Observable<AnalyticsSummary> {
+    return this.http.get<AnalyticsSummary>(`${this.base}/analytics/summary`, {
+      params: { days: days.toString() },
+    });
   }
 }

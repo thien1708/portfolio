@@ -18,4 +18,14 @@ public interface ContactMailSender {
      * @throws RuntimeException if the send fails; the caller decides how to handle it
      */
     void send(ContactRequest request);
+
+    /**
+     * Send an auto-reply confirmation email to the visitor.
+     *
+     * @param request the submitted contact form payload
+     * @throws RuntimeException if the send fails; the caller decides how to handle it
+     */
+    default void sendAutoReply(ContactRequest request) {
+        // Default no-op if unsupported
+    }
 }

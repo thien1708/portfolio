@@ -3,12 +3,18 @@ import { Directive, ElementRef, OnDestroy, OnInit, inject, input } from '@angula
 // One shared scroll/resize fallback for every pending reveal element —
 // dozens of per-element window listeners otherwise fire on each frame.
 const pending = new Set<RevealDirective>();
+let checkRaf = 0;
 let listening = false;
 
 function checkAllPending(): void {
-  for (const directive of pending) {
-    directive.checkViewport();
-  }
+  if (checkRaf) return;
+  checkRaf = requestAnimationFrame(() => {
+    checkRaf = 0;
+    const windowH = window.innerHeight * 0.95;
+    for (const directive of pending) {
+      directive.checkViewport(windowH);
+    }
+  });
 }
 
 function watch(directive: RevealDirective): void {
@@ -24,6 +30,10 @@ function unwatch(directive: RevealDirective): void {
   pending.delete(directive);
   if (listening && pending.size === 0) {
     listening = false;
+    if (checkRaf) {
+      cancelAnimationFrame(checkRaf);
+      checkRaf = 0;
+    }
     window.removeEventListener('scroll', checkAllPending);
     window.removeEventListener('resize', checkAllPending);
   }
@@ -83,12 +93,13 @@ export class RevealDirective implements OnInit, OnDestroy {
     watch(this);
   }
 
-  checkViewport(): void {
+  checkViewport(windowH?: number): void {
     if (this.revealed) {
       return;
     }
     const rect = this.el.nativeElement.getBoundingClientRect();
-    if (rect.top < window.innerHeight * 0.92 && rect.bottom > 0) {
+    const threshold = windowH ?? window.innerHeight * 0.95;
+    if (rect.top < threshold && rect.bottom > 0) {
       this.show();
     }
   }

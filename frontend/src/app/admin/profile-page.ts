@@ -99,8 +99,27 @@ import { ChipsInput } from '../shared/chips-input';
               <input id="p-facebook" type="text" formControlName="facebookUrl" class="input" placeholder="https://facebook.com/…" />
             </div>
             <div>
-              <label class="label" for="p-cv">CV URL (Download CV button)</label>
-              <input id="p-cv" type="text" formControlName="cvUrl" class="input" placeholder="https://… /uploads/cv.pdf" />
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="label !mb-0" for="p-cv">Curriculum Vitae (CV)</label>
+                <label class="btn-ghost !px-3 !py-1 text-xs cursor-pointer inline-flex items-center gap-1.5" [class.opacity-60]="uploadingCv()">
+                  @if (uploadingCv()) { ⏳ Uploading… } @else { 📄 Upload PDF }
+                  <input type="file" accept="application/pdf,.pdf" class="hidden" (change)="onCvUpload($event)" [disabled]="uploadingCv()" />
+                </label>
+              </div>
+              <div class="flex gap-2">
+                <input id="p-cv" type="text" formControlName="cvUrl" class="input flex-1" placeholder="https://… or /cv.pdf" />
+                @if (form.controls.cvUrl.value) {
+                  <a [href]="form.controls.cvUrl.value" target="_blank" rel="noopener" class="btn-ghost !px-3 !py-2 text-xs shrink-0 inline-flex items-center gap-1" title="Preview document">
+                    ↗ View
+                  </a>
+                  <button type="button" class="text-xs text-rose-500 hover:underline shrink-0 px-1" (click)="form.controls.cvUrl.setValue('')">
+                    Clear
+                  </button>
+                }
+              </div>
+              <p class="mt-1 text-xs text-ink/70 dark:text-lav-100/70">
+                Upload a PDF directly from your computer (max 10 MB) or paste an external link.
+              </p>
             </div>
           </div>
 
@@ -121,6 +140,7 @@ export class ProfilePage implements OnInit {
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly uploading = signal(false);
+  protected readonly uploadingCv = signal(false);
 
   protected readonly form = this.fb.nonNullable.group({
     fullName: ['', [Validators.required, Validators.maxLength(120)]],
@@ -202,6 +222,35 @@ export class ProfilePage implements OnInit {
       error: (err) => {
         this.uploading.set(false);
         this.toast.error(err?.error?.message ?? 'Upload failed.');
+      },
+    });
+  }
+
+  protected onCvUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) {
+      return;
+    }
+    if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+      this.toast.error('Only PDF files are allowed.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      this.toast.error('PDF file is too large (max 10 MB).');
+      return;
+    }
+    this.uploadingCv.set(true);
+    this.adminApi.upload(file).subscribe({
+      next: (res) => {
+        this.uploadingCv.set(false);
+        this.form.controls.cvUrl.setValue(res.url);
+        this.toast.success('CV uploaded successfully! Don\'t forget to click Save profile.');
+      },
+      error: (err) => {
+        this.uploadingCv.set(false);
+        this.toast.error(err?.error?.message ?? 'CV upload failed.');
       },
     });
   }

@@ -98,6 +98,12 @@ import { burstConfetti } from '../../shared/confetti';
                 }
               </div>
             </div>
+            <!-- Honeypot anti-spam trap (hidden from real users, traps bots) -->
+            <div class="hidden" aria-hidden="true" tabindex="-1">
+              <label for="contact-website">Website (Leave blank)</label>
+              <input id="contact-website" type="text" formControlName="honeypot" tabindex="-1" autocomplete="off" />
+            </div>
+
             <div>
               <label class="label" for="contact-subject">{{ i18n.t('contact.subject') }}</label>
               <input id="contact-subject" type="text" formControlName="subject" class="input" [placeholder]="i18n.t('contact.subjectPh')" />
@@ -152,6 +158,7 @@ export class ContactSection implements OnDestroy {
     email: ['', [Validators.required, Validators.email, Validators.maxLength(160)]],
     subject: ['', [Validators.maxLength(200)]],
     message: ['', [Validators.required, Validators.maxLength(5000)]],
+    honeypot: [''],
   });
 
   protected invalid(control: string): boolean {

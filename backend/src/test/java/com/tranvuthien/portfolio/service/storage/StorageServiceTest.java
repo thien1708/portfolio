@@ -32,6 +32,13 @@ class StorageServiceTest {
     }
 
     @Test
+    void validPdfIsAccepted() {
+        byte[] pdfHeader = {'%', 'P', 'D', 'F', '-', '1', '.', '4', 0, 0};
+        assertThat(StorageService.validateAndGetExtension(
+                file("cv.pdf", "application/pdf", pdfHeader))).isEqualTo("pdf");
+    }
+
+    @Test
     void htmlRenamedToPngIsRejected() {
         byte[] html = "<html><script>alert(1)</script></html>".getBytes(StandardCharsets.UTF_8);
 
@@ -62,6 +69,6 @@ class StorageServiceTest {
         assertThatThrownBy(() -> StorageService.validateAndGetExtension(
                 file("photo.svg", "image/svg+xml", PNG_HEADER)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Allowed image types");
+                .hasMessageContaining("Allowed file types");
     }
 }

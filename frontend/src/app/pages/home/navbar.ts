@@ -3,9 +3,12 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
+  EventEmitter,
   HostListener,
+  NgZone,
   OnDestroy,
   OnInit,
+  Output,
   computed,
   effect,
   inject,
@@ -13,7 +16,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { ThemeService } from '../../core/theme.service';
+import { RouterLink } from '@angular/router';
+import { ThemeService, ACCENTS } from '../../core/theme.service';
+import { SoundService } from '../../core/sound.service';
 import { I18nService } from '../../core/i18n.service';
 import { Icon } from '../../shared/icon';
 import { MagneticDirective } from '../../shared/magnetic.directive';
@@ -26,7 +31,7 @@ interface NavLink {
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-navbar',
-  imports: [Icon, MagneticDirective],
+  imports: [RouterLink, Icon, MagneticDirective],
   template: `
     <header
       class="fixed inset-x-0 top-0 z-50 transition-all duration-300"
@@ -69,12 +74,53 @@ interface NavLink {
               </button>
             </li>
           }
+          <li class="relative z-10">
+            <a
+              routerLink="/blog"
+              class="rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-200 hover:text-lav-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 dark:hover:text-lav-300"
+            >
+              Blog
+            </a>
+          </li>
         </ul>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 sm:gap-2">
+          <!-- CLI Terminal Trigger -->
           <button
             type="button"
-            class="grid h-10 min-w-10 place-items-center rounded-xl px-2 font-display text-xs font-bold uppercase tracking-wider text-lav-600 transition-all duration-300 hover:bg-lav-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 dark:text-lav-300 dark:hover:bg-lav-800/40"
+            class="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-xl font-mono text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/25 transition-all hover:scale-105"
+            (click)="openTerminal.emit(); sound.playClick()"
+            title="Mở Developer Terminal (CLI Mode)"
+            aria-label="Developer Terminal"
+          >
+            &gt;_
+          </button>
+
+          <!-- Theme Accent Switcher -->
+          <button
+            type="button"
+            class="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-xl text-sm text-lav-600 hover:bg-lav-100/70 dark:text-lav-300 dark:hover:bg-lav-800/40 transition-all"
+            (click)="cycleAccent()"
+            title="Đổi màu Theme Accent"
+            aria-label="Cycle Theme Accent"
+          >
+            {{ currentAccentIcon() }}
+          </button>
+
+          <!-- Audio FX Toggle -->
+          <button
+            type="button"
+            class="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-xl text-sm text-lav-600 hover:bg-lav-100/70 dark:text-lav-300 dark:hover:bg-lav-800/40 transition-all"
+            (click)="sound.toggle()"
+            [title]="sound.enabled() ? 'Tắt âm thanh tương tác' : 'Bật âm thanh Web Audio'"
+            aria-label="Toggle Sound Effects"
+          >
+            {{ sound.enabled() ? '🔊' : '🔇' }}
+          </button>
+
+          <button
+            type="button"
+            class="grid h-9 min-w-9 sm:h-10 sm:min-w-10 place-items-center rounded-xl px-1.5 font-display text-xs font-bold uppercase tracking-wider text-lav-600 transition-all duration-300 hover:bg-lav-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 dark:text-lav-300 dark:hover:bg-lav-800/40"
             (click)="i18n.toggle()"
             [attr.aria-label]="i18n.lang() === 'en' ? 'Chuyển sang tiếng Việt' : 'Switch to English'"
           >
@@ -83,7 +129,7 @@ interface NavLink {
           <button
             type="button"
             appMagnetic
-            class="grid h-10 w-10 place-items-center rounded-xl text-lg text-lav-600 transition-all duration-300 hover:bg-lav-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 dark:text-lav-300 dark:hover:bg-lav-800/40"
+            class="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-xl text-base text-lav-600 transition-all duration-300 hover:bg-lav-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 dark:text-lav-300 dark:hover:bg-lav-800/40"
             (click)="toggleTheme($event)"
             [attr.aria-label]="theme.dark() ? 'Switch to light mode' : 'Switch to dark mode'"
           >
@@ -95,7 +141,7 @@ interface NavLink {
           </button>
           <button
             type="button"
-            class="grid h-10 w-10 place-items-center rounded-xl text-xl text-lav-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 dark:text-lav-300 md:hidden"
+            class="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-xl text-lg text-lav-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-lav-400 dark:text-lav-300 md:hidden"
             (click)="menuOpen.set(!menuOpen())"
             aria-label="Toggle menu"
           >
@@ -132,12 +178,27 @@ interface NavLink {
 })
 export class Navbar implements OnInit, AfterViewInit, OnDestroy {
   readonly brand = input('TVT');
+  @Output() openTerminal = new EventEmitter<void>();
 
   protected readonly theme = inject(ThemeService);
+  protected readonly sound = inject(SoundService);
   protected readonly i18n = inject(I18nService);
   protected readonly scrolled = signal(false);
   protected readonly menuOpen = signal(false);
   protected readonly active = signal('hero');
+
+  protected readonly currentAccentIcon = computed(() => {
+    const acc = ACCENTS.find((a) => a.id === this.theme.accent());
+    return acc ? acc.icon : '🎨';
+  });
+
+  protected cycleAccent(): void {
+    this.sound.playClick();
+    const curr = this.theme.accent();
+    const idx = ACCENTS.findIndex((a) => a.id === curr);
+    const next = ACCENTS[(idx + 1) % ACCENTS.length];
+    this.theme.setAccent(next.id);
+  }
   protected readonly pill = signal<{ x: number; width: number; visible: boolean }>({
     x: 0,
     width: 0,
@@ -157,7 +218,9 @@ export class Navbar implements OnInit, AfterViewInit, OnDestroy {
   });
 
   private readonly linkList = viewChild<ElementRef<HTMLElement>>('linkList');
+  private readonly ngZone = inject(NgZone);
   private observer?: IntersectionObserver;
+  private scrollTicking = false;
 
   constructor() {
     // Reposition the sliding pill whenever the active section, the language
@@ -177,6 +240,10 @@ export class Navbar implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.ngZone.runOutsideAngular(() => {
+      window.addEventListener('scroll', this.onWindowScroll, { passive: true });
+    });
+
     if (typeof IntersectionObserver === 'undefined') {
       return;
     }
@@ -225,10 +292,17 @@ export class Navbar implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  @HostListener('window:scroll')
-  onScroll(): void {
-    this.scrolled.set(window.scrollY > 24);
-  }
+  private readonly onWindowScroll = (): void => {
+    if (this.scrollTicking) return;
+    this.scrollTicking = true;
+    requestAnimationFrame(() => {
+      this.scrollTicking = false;
+      const isScrolled = window.scrollY > 24;
+      if (this.scrolled() !== isScrolled) {
+        this.ngZone.run(() => this.scrolled.set(isScrolled));
+      }
+    });
+  };
 
   @HostListener('window:resize')
   onResize(): void {
@@ -246,6 +320,7 @@ export class Navbar implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    window.removeEventListener('scroll', this.onWindowScroll);
     this.observer?.disconnect();
   }
 }

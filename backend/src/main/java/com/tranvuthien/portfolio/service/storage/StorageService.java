@@ -10,11 +10,11 @@ import java.util.Set;
 
 public interface StorageService {
 
-    long MAX_SIZE_BYTES = 2L * 1024 * 1024;
-    Set<String> ALLOWED_EXTENSIONS = Set.of("png", "jpg", "jpeg", "webp", "gif");
+    long MAX_SIZE_BYTES = 10L * 1024 * 1024;
+    Set<String> ALLOWED_EXTENSIONS = Set.of("png", "jpg", "jpeg", "webp", "gif", "pdf");
 
     /**
-     * Stores an image and returns the URL it will be publicly served from.
+     * Stores an image or PDF file and returns the URL it will be publicly served from.
      */
     String store(MultipartFile file);
 
@@ -23,11 +23,13 @@ public interface StorageService {
             throw new IllegalArgumentException("File is empty");
         }
         if (file.getSize() > MAX_SIZE_BYTES) {
-            throw new IllegalArgumentException("File too large (max 2 MB)");
+            throw new IllegalArgumentException("File too large (max 10 MB)");
         }
         String contentType = file.getContentType();
-        if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
-            throw new IllegalArgumentException("Only image uploads are allowed");
+        if (contentType == null
+                || (!contentType.toLowerCase(Locale.ROOT).startsWith("image/")
+                && !contentType.equalsIgnoreCase("application/pdf"))) {
+            throw new IllegalArgumentException("Only image and PDF uploads are allowed");
         }
         String originalName = file.getOriginalFilename();
         if (originalName == null || !originalName.contains(".")) {
@@ -36,7 +38,7 @@ public interface StorageService {
         String extension = originalName.substring(originalName.lastIndexOf('.') + 1)
                 .toLowerCase(Locale.ROOT);
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new IllegalArgumentException("Allowed image types: " + ALLOWED_EXTENSIONS);
+            throw new IllegalArgumentException("Allowed file types: " + ALLOWED_EXTENSIONS);
         }
         if (!matchesMagicBytes(extension, file)) {
             throw new IllegalArgumentException("File content does not match its extension");
@@ -47,7 +49,7 @@ public interface StorageService {
     /**
      * The extension and Content-Type header are both client-controlled; the
      * first bytes of the actual content are not. Files are served publicly, so
-     * a renamed HTML/script file must not slip through as an "image".
+     * a renamed HTML/script file must not slip through as an "image" or "pdf".
      */
     private static boolean matchesMagicBytes(String extension, MultipartFile file) {
         byte[] h = new byte[12];
@@ -67,6 +69,8 @@ public interface StorageService {
             case "webp" -> read >= 12
                     && h[0] == 'R' && h[1] == 'I' && h[2] == 'F' && h[3] == 'F'
                     && h[8] == 'W' && h[9] == 'E' && h[10] == 'B' && h[11] == 'P';
+            case "pdf" -> read >= 4
+                    && h[0] == '%' && h[1] == 'P' && h[2] == 'D' && h[3] == 'F';
             default -> false;
         };
     }

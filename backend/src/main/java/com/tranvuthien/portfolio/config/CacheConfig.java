@@ -24,13 +24,14 @@ public class CacheConfig {
     public static final String PROJECTS = "projects";
     public static final String EDUCATION = "education";
     public static final String CERTIFICATIONS = "certifications";
+    public static final String POSTS = "posts";
 
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager manager = new CaffeineCacheManager(
-                PROFILE, SKILLS, EXPERIENCES, PROJECTS, EDUCATION, CERTIFICATIONS);
+                PROFILE, SKILLS, EXPERIENCES, PROJECTS, EDUCATION, CERTIFICATIONS, POSTS);
         manager.setCaffeine(Caffeine.newBuilder()
-                .maximumSize(10)
+                .maximumSize(50)
                 .expireAfterWrite(Duration.ofMinutes(10)));
         return manager;
     }

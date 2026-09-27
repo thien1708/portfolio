@@ -7,6 +7,15 @@ export const routes: Routes = [
     title: 'Trần Vũ Thiện — Software Development Engineer',
   },
   {
+    path: 'blog',
+    loadComponent: () => import('./pages/blog/blog-list').then((m) => m.BlogList),
+    title: 'Bài viết công nghệ — Trần Vũ Thiện',
+  },
+  {
+    path: 'blog/:slug',
+    loadComponent: () => import('./pages/blog/blog-post').then((m) => m.BlogPost),
+  },
+  {
     path: 'admin',
     loadChildren: () => import('./admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },

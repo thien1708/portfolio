@@ -7,6 +7,7 @@ import {
   EducationItem,
   Experience,
   PortfolioData,
+  Post,
   Profile,
   Project,
   Skill,
@@ -53,5 +54,13 @@ export class ApiService {
 
   sendContact(payload: ContactPayload): Observable<void> {
     return this.http.post<void>(`${this.base}/contact`, payload);
+  }
+
+  getPosts(): Observable<Post[]> {
+    return this.http.get<Post[]>(`${this.base}/posts`);
+  }
+
+  getPostBySlug(slug: string): Observable<Post> {
+    return this.http.get<Post>(`${this.base}/posts/${slug}`);
   }
 }

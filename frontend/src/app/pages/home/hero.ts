@@ -5,6 +5,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
 } from '@angular/core';
 import { Profile } from '../../core/models';
@@ -51,15 +52,15 @@ import { HeroScene } from '../../three/hero-scene';
               <button type="button" appMagnetic class="btn-primary" (click)="scrollTo('projects')">
                 <app-icon name="rocket" /> {{ i18n.t('hero.viewProjects') }}
               </button>
-              @if (p.cvUrl) {
-                <a appMagnetic class="btn-ghost" [href]="p.cvUrl" target="_blank" rel="noopener">
-                  <app-icon name="download" /> {{ i18n.t('hero.downloadCv') }}
-                </a>
-              } @else {
-                <button type="button" appMagnetic class="btn-ghost" (click)="scrollTo('contact')">
-                  <app-icon name="mail" /> {{ i18n.t('hero.contactMe') }}
-                </button>
-              }
+              <button type="button" appMagnetic class="btn-ghost" (click)="openCv.emit()">
+                <app-icon name="file-text" /> {{ i18n.t('hero.viewCv') }}
+              </button>
+              <a appMagnetic class="btn-ghost !px-3.5" [href]="cvUrl() || p.cvUrl || '/cv.pdf'" target="_blank" rel="noopener" [attr.aria-label]="i18n.t('hero.downloadCv')" [title]="i18n.t('hero.downloadCv')">
+                <app-icon name="download" />
+              </a>
+              <button type="button" appMagnetic class="btn-ghost" (click)="scrollTo('contact')">
+                <app-icon name="mail" /> {{ i18n.t('hero.contactMe') }}
+              </button>
             </div>
             <div appReveal [revealDelay]="520" class="mt-8 flex items-center justify-center gap-3 lg:justify-start">
               @if (p.githubUrl) {
@@ -134,6 +135,8 @@ import { HeroScene } from '../../three/hero-scene';
 })
 export class Hero implements OnDestroy {
   readonly profile = input<Profile | null>(null);
+  readonly cvUrl = input<string | null>(null);
+  readonly openCv = output<void>();
 
   protected readonly i18n = inject(I18nService);
   protected readonly typed = signal('');

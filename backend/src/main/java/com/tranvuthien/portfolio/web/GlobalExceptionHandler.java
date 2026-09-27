@@ -80,6 +80,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.badRequest().body(ApiError.of(400, "Validation failed", errors));
     }
 
+    @ExceptionHandler(com.tranvuthien.portfolio.exception.BadRequestException.class)
+    public ResponseEntity<ApiError> handleBadRequest(com.tranvuthien.portfolio.exception.BadRequestException e) {
+        return ResponseEntity.badRequest().body(ApiError.of(400, e.getMessage()));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException e) {
         return ResponseEntity.badRequest().body(ApiError.of(400, e.getMessage()));

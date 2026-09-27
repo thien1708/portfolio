@@ -7,6 +7,7 @@ import { Icon } from '../../shared/icon';
 import { SpotlightDirective } from '../../shared/spotlight.directive';
 import { TiltDirective } from '../../shared/tilt.directive';
 import { SkillRadar } from '../../shared/skill-radar';
+import { GithubStats } from '../../shared/github-stats';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,6 +19,7 @@ import { SkillRadar } from '../../shared/skill-radar';
     SpotlightDirective,
     TiltDirective,
     SkillRadar,
+    GithubStats,
   ],
   template: `
     <section id="about" class="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
@@ -97,6 +99,11 @@ import { SkillRadar } from '../../shared/skill-radar';
           <p class="font-display text-4xl font-extrabold gradient-text" [appCountUp]="companies()"></p>
           <p class="mt-2 text-sm text-ink/80 dark:text-lav-100/80">{{ i18n.t('about.companies') }}</p>
         </div>
+      </div>
+
+      <!-- Live GitHub Stats -->
+      <div appReveal class="mt-6">
+        <app-github-stats />
       </div>
     </section>
   `,
