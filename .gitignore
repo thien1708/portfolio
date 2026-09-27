@@ -3,13 +3,16 @@
 .env.*
 !.env.example
 
+# Node modules
+node_modules/
+**/node_modules/
+
 # Backend runtime artifacts
 backend/target/
 backend/data/
 backend/uploads/
 
 # Frontend
-frontend/node_modules/
 frontend/dist/
 frontend/.angular/
 
