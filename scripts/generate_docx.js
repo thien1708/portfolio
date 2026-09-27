@@ -15,7 +15,8 @@ const {
   ShadingType,
   Header,
   Footer,
-  PageNumber
+  PageNumber,
+  ImageRun
 } = require('docx');
 
 const mdPath = path.join(__dirname, '..', 'docs', 'SRS.md');
@@ -25,15 +26,13 @@ const PRIMARY_COLOR = '1E3A8A';   // Dark Blue
 const SECONDARY_COLOR = '2563EB'; // Blue
 const TEXT_COLOR = '1F2937';      // Dark Slate
 const BORDER_COLOR = 'CBD5E1';    // Slate border
-const TOTAL_TABLE_WIDTH = 9360;   // 6.5 inches in dxa (fits page margins)
+const TOTAL_TABLE_WIDTH = 9360;   // 6.5 inches in dxa
 
 // Helper: parse inline markdown (bold **text**, inline `code`) into TextRun array
 function parseInlineRuns(text, options = {}) {
   const runs = [];
-  // Clean markdown links [text](url) -> text
   let cleaned = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
 
-  // Regex to match **bold** or `code`
   const regex = /(\*\*.*?\*\*|`.*?`)/g;
   const parts = cleaned.split(regex);
 
@@ -76,7 +75,6 @@ function parseInlineRuns(text, options = {}) {
 
 // Helper: create a valid TableCell with multiple paragraphs if there are line breaks
 function createTableCell(rawText, isHeader, colWidth) {
-  // Replace <br/> or <br> with newline, split by newline
   const cleanStr = rawText.replace(/<br\s*\/?>/gi, '\n');
   const lines = cleanStr.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
@@ -112,7 +110,7 @@ function createTableCell(rawText, isHeader, colWidth) {
 function parseMarkdownTable(tableLines) {
   if (tableLines.length < 2) return null;
   const headerLine = tableLines[0];
-  const dataLines = tableLines.slice(2); // Skip delimiter line
+  const dataLines = tableLines.slice(2);
 
   const parseCols = (line) =>
     line.split('|')
@@ -123,7 +121,6 @@ function parseMarkdownTable(tableLines) {
   if (headers.length === 0) return null;
 
   const numCols = headers.length;
-  // Calculate column widths
   let colWidths = [];
   if (numCols === 2) {
     colWidths = [2800, 6560];
@@ -139,7 +136,6 @@ function parseMarkdownTable(tableLines) {
   }
 
   const rows = [];
-  // Header row
   rows.push(
     new TableRow({
       tableHeader: true,
@@ -147,7 +143,6 @@ function parseMarkdownTable(tableLines) {
     })
   );
 
-  // Data rows
   for (const line of dataLines) {
     if (!line.includes('|')) continue;
     const cols = parseCols(line);
@@ -179,7 +174,7 @@ children.push(
       new TextRun({
         text: 'TÀI LIỆU ĐẶC TẢ YÊU CẦU PHẦN MỀM (SRS)',
         bold: true,
-        size: 36, // 18pt
+        size: 36,
         color: PRIMARY_COLOR,
         font: 'Arial'
       })
@@ -192,7 +187,7 @@ children.push(
       new TextRun({
         text: 'SOFTWARE REQUIREMENTS SPECIFICATION',
         bold: true,
-        size: 24, // 12pt
+        size: 24,
         color: SECONDARY_COLOR,
         font: 'Arial'
       })
@@ -237,7 +232,7 @@ for (let i = 0; i < allLines.length; i++) {
   if (trimmed.startsWith('```')) {
     if (!inCodeBlock) {
       inCodeBlock = true;
-      codeBlockLang = trimmed.replace('```', '').trim();
+      codeBlockLang = trimmed.replace('```', '').trim().toLowerCase();
     } else {
       inCodeBlock = false;
       codeBlockLang = '';
@@ -246,7 +241,13 @@ for (let i = 0; i < allLines.length; i++) {
     continue;
   }
 
+  // If in code block
   if (inCodeBlock) {
+    // If it's a mermaid block, DO NOT print raw mermaid text (image is already embedded!)
+    if (codeBlockLang === 'mermaid') {
+      continue;
+    }
+    // Normal code block
     children.push(
       new Paragraph({
         spacing: { before: 20, after: 20 },
@@ -261,6 +262,59 @@ for (let i = 0; i < allLines.length; i++) {
       })
     );
     continue;
+  }
+
+  // Handle Markdown Images: ![caption](images/xxx.png)
+  const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
+  if (imgMatch) {
+    const caption = imgMatch[1];
+    let relPath = imgMatch[2];
+    const absPath = path.resolve(path.dirname(mdPath), relPath);
+
+    if (fs.existsSync(absPath)) {
+      const imgBuf = fs.readFileSync(absPath);
+      let imgWidth = 560;
+      let imgHeight = 200;
+
+      // Simple JPEG height estimation if applicable
+      if (absPath.includes('modules_diagram')) {
+        imgWidth = 560;
+        imgHeight = 62;
+      } else if (absPath.includes('erd_diagram')) {
+        imgWidth = 560;
+        imgHeight = 175;
+      }
+
+      children.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 200, after: 80 },
+          children: [
+            new ImageRun({
+              data: imgBuf,
+              transformation: {
+                width: imgWidth,
+                height: imgHeight
+              }
+            })
+          ]
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 },
+          children: [
+            new TextRun({
+              text: `Hình: ${caption}`,
+              italics: true,
+              size: 18,
+              color: '64748B',
+              font: 'Arial'
+            })
+          ]
+        })
+      );
+      continue;
+    }
   }
 
   // Table buffering
@@ -283,7 +337,7 @@ for (let i = 0; i < allLines.length; i++) {
 
   // Headings
   if (trimmed.startsWith('# ')) {
-    continue; // Already processed cover title
+    continue;
   } else if (trimmed.startsWith('## ')) {
     const text = trimmed.replace(/^##\s+/, '');
     children.push(
@@ -445,5 +499,5 @@ const doc = new Document({
 const outPath = path.join(__dirname, '..', 'docs', 'SRS_Portfolio_TranVuThien.docx');
 Packer.toBuffer(doc).then((buffer) => {
   fs.writeFileSync(outPath, buffer);
-  console.log(`[SUCCESS] Word document generated at: ${outPath} (${buffer.length} bytes)`);
+  console.log(`[SUCCESS] Word document with embedded diagram images generated at: ${outPath} (${buffer.length} bytes)`);
 });

@@ -128,26 +128,47 @@ Hệ thống được định vị là một **Modern Full-Stack Personal Platfo
 
 ### 2.2 Các phân hệ chức năng chính (Major System Modules)
 
+![Sơ đồ phân hệ chức năng chính](images/modules_diagram.png)
+
 ```mermaid
 graph TD
-    A[Hệ thống Portfolio & Admin Platform] --> B[Phân hệ Public Web]
-    A --> C[Phân hệ Admin CMS]
-    A --> D[Phân hệ Hệ thống & Backend API]
+    A["Hệ thống Portfolio & Admin Platform"]
+    A --> B["Phân hệ Public Web"]
+    A --> C["Phân hệ Admin CMS"]
+    A --> D["Phân hệ Hệ thống & Backend API"]
 
-    B --> B1[Trang chủ tương tác: Hero 3D, About, Timeline, Projects, Skills]
-    B --> B2[Trang Blog chuyên ngành & Đọc bài viết Markdown]
-    B --> B3[Form Liên hệ & Gửi phản hồi]
-    B --> B4[Tiện ích: Interactive Terminal, Modal xem CV EN/VI, GitHub Stats]
+    subgraph Public["1. Phân hệ Public Web"]
+        B1["Trang chủ tương tác: Hero 3D, About, Timeline, Projects, Skills"]
+        B2["Trang Blog chuyên ngành & Đọc bài viết Markdown"]
+        B3["Form Liên hệ & Gửi phản hồi"]
+        B4["Tiện ích: Interactive Terminal, Modal xem CV, GitHub Stats"]
+    end
+    B --> B1
+    B --> B2
+    B --> B3
+    B --> B4
 
-    C --> C1[Xác thực đăng nhập JWT & Quản lý phiên]
-    C --> C2[Dashboard phân tích truy cập thời gian thực]
-    C --> C3[Quản lý tài nguyên CRUD & Kéo thả sắp xếp]
-    C --> C4[Hộp thư tin nhắn liên hệ & Tải ảnh Supabase Storage]
+    subgraph Admin["2. Phân hệ Admin CMS"]
+        C1["Xác thực đăng nhập JWT & Quản lý phiên"]
+        C2["Dashboard phân tích truy cập thời gian thực"]
+        C3["Quản lý tài nguyên CRUD & Kéo thả sắp xếp"]
+        C4["Hộp thư tin nhắn liên hệ & Tải ảnh Supabase Storage"]
+    end
+    C --> C1
+    C --> C2
+    C --> C3
+    C --> C4
 
-    D --> D1[Spring Boot RESTful Services & Cache 10-min]
-    D --> D2[Bảo mật đa tầng: Rate-limit, Lockout, CSRF/CORS]
-    D --> D3[Xử lý tác vụ bất đồng bộ: Dual Mail Sender SMTP/Resend]
-    D --> D4[Supabase PostgreSQL & Flyway Migration]
+    subgraph Backend["3. Phân hệ Hệ thống & Backend API"]
+        D1["Spring Boot RESTful Services & Cache 10-min"]
+        D2["Bảo mật đa tầng: Rate-limit, Lockout, CSRF/CORS"]
+        D3["Xử lý tác vụ bất đồng bộ: Dual Mail Sender SMTP/Resend"]
+        D4["Supabase PostgreSQL & Flyway Migration"]
+    end
+    D --> D1
+    D --> D2
+    D --> D3
+    D --> D4
 ```
 
 ### 2.3 Phân loại người dùng & Chân dung người dùng (User Classes & Personas)
@@ -344,6 +365,8 @@ Hệ thống giải quyết triệt để vấn đề các nhà cung cấp đám
 ## 5. THIẾT KẾ CƠ SỞ DỮ LIỆU & QUẢN LÝ MIGRATION (DATA MODEL & MIGRATIONS)
 
 ### 5.1 Sơ đồ thực thể liên kết (Entity Relationship Diagram - ERD)
+
+![Sơ đồ thực thể liên kết ERD](images/erd_diagram.png)
 
 ```mermaid
 erDiagram
