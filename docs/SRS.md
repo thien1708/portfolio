@@ -128,7 +128,27 @@ Hệ thống được định vị là một **Modern Full-Stack Personal Platfo
 
 ### 2.2 Các phân hệ chức năng chính (Major System Modules)
 
-![Sơ đồ phân hệ chức năng chính](images/modules_diagram.png)
+```mermaid
+graph TD
+    A[Hệ thống Portfolio & Admin Platform] --> B[Phân hệ Public Web]
+    A --> C[Phân hệ Admin CMS]
+    A --> D[Phân hệ Hệ thống & Backend API]
+
+    B --> B1[Trang chủ tương tác, 3D Hero & GitHub Stats]
+    B --> B2[Kênh liên hệ trực tuyến Rate-limited]
+    B --> B3[Blog kỹ thuật & Trình xem chi tiết Markdown]
+    B --> B4[Terminal CLI giả lập & Bộ xem CV đa ngôn ngữ]
+
+    C --> C1[Xác thực quản trị JWT + Refresh Token HttpOnly]
+    C --> C2[Dashboard thống kê & Giám sát Analytics thời gian thực]
+    C --> C3[Quản lý tài nguyên CRUD & Kéo thả sắp xếp]
+    C --> C4[Hộp thư tin nhắn liên hệ & Tải ảnh Supabase Storage]
+
+    D --> D1[Spring Boot RESTful Services & Cache 10-min]
+    D --> D2[Bảo mật đa tầng: Rate-limit, Lockout, CSRF/CORS]
+    D --> D3[Xử lý tác vụ bất đồng bộ: Dual Mail Sender SMTP/Resend]
+    D --> D4[Supabase PostgreSQL & Flyway Migration]
+```
 
 #### Bảng 2.2: Bảng phân rã chi tiết các phân hệ chức năng
 
@@ -341,8 +361,6 @@ Hệ thống giải quyết triệt để vấn đề các nhà cung cấp đám
 ## 5. THIẾT KẾ CƠ SỞ DỮ LIỆU & QUẢN LÝ MIGRATION (DATA MODEL & MIGRATIONS)
 
 ### 5.1 Sơ đồ thực thể liên kết (Entity Relationship Diagram - ERD)
-
-![Sơ đồ thực thể liên kết ERD](images/erd_diagram.png)
 
 #### Bảng 5.1: Danh mục quan hệ và ràng buộc khóa giữa các thực thể CSDL
 
