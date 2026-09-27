@@ -128,26 +128,51 @@ Hệ thống được định vị là một **Modern Full-Stack Personal Platfo
 
 ### 2.2 Các phân hệ chức năng chính (Major System Modules)
 
+#### Sơ đồ 2.1: Kiến trúc phân tầng 3 phân hệ cốt lõi
 ```mermaid
 graph TD
-    A[Hệ thống Portfolio & Admin Platform] --> B[Phân hệ Public Web]
-    A --> C[Phân hệ Admin CMS]
-    A --> D[Phân hệ Hệ thống & Backend API]
+    ROOT["HỆ THỐNG FULL-STACK PORTFOLIO & CMS"]
+    ROOT --> M1["Phân hệ 1: Public Web (SPA)"]
+    ROOT --> M2["Phân hệ 2: Admin CMS (Quản trị)"]
+    ROOT --> M3["Phân hệ 3: Hệ thống & Backend API"]
+```
 
-    B --> B1[Trang chủ tương tác, 3D Hero & GitHub Stats]
-    B --> B2[Kênh liên hệ trực tuyến Rate-limited]
-    B --> B3[Blog kỹ thuật & Trình xem chi tiết Markdown]
-    B --> B4[Terminal CLI giả lập & Bộ xem CV đa ngôn ngữ]
+#### Sơ đồ 2.2: Luồng tương tác & Chức năng Phân hệ Public Web
+```mermaid
+graph LR
+    subgraph PUBLIC["PHÂN HỆ PUBLIC WEB (ANGULAR 20 SPA)"]
+        direction TB
+        P1["Trang chủ tương tác, Hero 3D (Three.js) & GitHub Stats"]
+        P2["Kỹ năng với thanh %, Timeline trượt & Lưới dự án"]
+        P3["Technical Blog & Trình đọc Markdown chuyên sâu"]
+        P4["Form liên hệ trực tuyến Rate-limited (3 req/phút)"]
+        P5["Terminal CLI giả lập (Ctrl + ~) & Modal xem/tải CV"]
+    end
+```
 
-    C --> C1[Xác thực quản trị JWT + Refresh Token HttpOnly]
-    C --> C2[Dashboard thống kê & Giám sát Analytics thời gian thực]
-    C --> C3[Quản lý tài nguyên CRUD & Kéo thả sắp xếp]
-    C --> C4[Hộp thư tin nhắn liên hệ & Tải ảnh Supabase Storage]
+#### Sơ đồ 2.3: Luồng bảo mật & Chức năng Phân hệ Admin CMS
+```mermaid
+graph LR
+    subgraph ADMIN["PHÂN HỆ ADMIN CMS (BẢO MẬT CAO)"]
+        direction TB
+        A1["Xác thực bảo mật JWT (15p) + Refresh Token (7 ngày)"]
+        A2["Khóa tài khoản tự động sau 5 lần đăng nhập thất bại"]
+        A3["Dashboard Analytics: Thống kê lượt xem, Thiết bị & Top bài"]
+        A4["Dynamic CRUD 6 module & Kéo thả sắp xếp thứ tự"]
+        A5["Hộp thư liên hệ & Upload ảnh Supabase Storage (≤ 2MB)"]
+    end
+```
 
-    D --> D1[Spring Boot RESTful Services & Cache 10-min]
-    D --> D2[Bảo mật đa tầng: Rate-limit, Lockout, CSRF/CORS]
-    D --> D3[Xử lý tác vụ bất đồng bộ: Dual Mail Sender SMTP/Resend]
-    D --> D4[Supabase PostgreSQL & Flyway Migration]
+#### Sơ đồ 2.4: Phân hệ Backend API & Dịch vụ đám mây
+```mermaid
+graph LR
+    subgraph BACKEND["PHÂN HỆ BACKEND & DỊCH VỤ NỀN TẢNG"]
+        direction TB
+        B1["Spring Boot 3.5 RESTful API & In-memory Cache 10 phút"]
+        B2["Bảo mật mạng: Bucket4j Rate-limiting, CORS, HSTS, CSP"]
+        B3["Dịch vụ gửi Email bất đồng bộ: Resend HTTPS & Gmail SMTP"]
+        B4["Supabase PostgreSQL (11 Bảng) & Flyway Migrations"]
+    end
 ```
 
 #### Bảng 2.2: Bảng phân rã chi tiết các phân hệ chức năng
@@ -377,20 +402,108 @@ Hệ thống giải quyết triệt để vấn đề các nhà cung cấp đám
 | **system** | 1 — N *(Một - Nhiều)* | **contact_messages** | Hộp thư tiếp nhận thông điệp liên hệ gửi từ người dùng công khai. |
 | **system** | 1 — N *(Một - Nhiều)* | **analytics_events** | Nhật ký ghi nhận sự kiện truy cập trang và hành vi người dùng. |
 
+#### Sơ đồ 5.1: ERD Phân hệ Xác thực & Quản lý phiên (Authentication Domain)
 ```mermaid
 erDiagram
-    USERS ||--o{ REFRESH_TOKENS : "1-to-N: owns"
-    USERS ||--|| PROFILE : "1-to-1: manages"
-    USERS ||--o{ POSTS : "1-to-N: authors"
+    users ||--o{ refresh_tokens : "owns (1 - N)"
+    users {
+        BIGINT id PK
+        VARCHAR email UK
+        VARCHAR password_hash
+        VARCHAR role
+        INT failed_attempts
+        TIMESTAMP locked_until
+    }
+    refresh_tokens {
+        BIGINT id PK
+        BIGINT user_id FK
+        VARCHAR token_hash UK
+        TIMESTAMP expires_at
+        BOOLEAN revoked
+    }
+```
 
-    PROFILE ||--o{ SKILLS : "1-to-N: contains"
-    PROFILE ||--o{ EXPERIENCES : "1-to-N: timeline"
-    PROFILE ||--o{ PROJECTS : "1-to-N: showcases"
-    PROFILE ||--o{ EDUCATION : "1-to-N: includes"
-    PROFILE ||--o{ CERTIFICATIONS : "1-to-N: awards"
+#### Sơ đồ 5.2: ERD Phân hệ Hồ sơ cá nhân & Năng lực (Profile & Portfolio Domain)
+```mermaid
+erDiagram
+    profile ||--o{ skills : "contains (1 - N)"
+    profile ||--o{ experiences : "timeline (1 - N)"
+    profile ||--o{ projects : "showcases (1 - N)"
+    profile ||--o{ education : "includes (1 - N)"
+    profile ||--o{ certifications : "awards (1 - N)"
 
-    SYSTEM ||--o{ CONTACT_MESSAGES : "receives"
-    SYSTEM ||--o{ ANALYTICS_EVENTS : "tracks"
+    profile {
+        BIGINT id PK
+        VARCHAR full_name
+        VARCHAR title
+        VARCHAR email
+        INT years_experience
+    }
+    skills {
+        BIGINT id PK
+        VARCHAR name
+        VARCHAR category
+        INT proficiency
+    }
+    experiences {
+        BIGINT id PK
+        VARCHAR company
+        VARCHAR role
+        VARCHAR period
+    }
+    projects {
+        BIGINT id PK
+        VARCHAR name
+        VARCHAR tech_stack
+        BOOLEAN featured
+    }
+    education {
+        BIGINT id PK
+        VARCHAR institution
+        VARCHAR degree
+        VARCHAR gpa
+    }
+    certifications {
+        BIGINT id PK
+        VARCHAR name
+        VARCHAR issuer
+        VARCHAR credential_id
+    }
+```
+
+#### Sơ đồ 5.3: ERD Phân hệ Blog, Tương tác & Giám sát (Engagement Domain)
+```mermaid
+erDiagram
+    users ||--o{ posts : "authors (1 - N)"
+    system ||--o{ contact_messages : "receives (1 - N)"
+    system ||--o{ analytics_events : "tracks (1 - N)"
+
+    users {
+        BIGINT id PK
+        VARCHAR email
+        VARCHAR role
+    }
+    posts {
+        BIGINT id PK
+        VARCHAR title
+        VARCHAR slug UK
+        BOOLEAN published
+        INT views_count
+    }
+    contact_messages {
+        BIGINT id PK
+        VARCHAR name
+        VARCHAR email
+        VARCHAR subject
+        BOOLEAN is_read
+    }
+    analytics_events {
+        BIGINT id PK
+        VARCHAR event_type
+        VARCHAR path
+        VARCHAR device_type
+        VARCHAR ip_hash
+    }
 ```
 
 ### 5.2 Từ điển dữ liệu chi tiết 11 bảng CSDL (Data Dictionary)
